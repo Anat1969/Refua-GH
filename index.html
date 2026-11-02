@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>רפואה: גוף, מחלה, בריאות</title>
+<meta name="description" content="מפת הגוף: שש מערכות, ולכל אחת תפקיד, כשל וסימן לפנייה. כל פריט מסומן: ידוע, נאמר או מאמינים. לא מאבחנת ולא מטפלת.">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<script src="https://appofapp-gh.vercel.app/ai-menu.js" defer></script>
+</head>
+<body>
+<div class="app-shell">
+
+  <header class="bar" dir="rtl">
+    <a class="brand press-soft" href="#s=cardio" aria-label="רפואה, לדף הבית">
+      <img src="icons/icon.svg" alt="" width="28" height="28">
+      <span class="brand-name">רפואה</span>
+      <span class="brand-sub">גוף, מחלה, בריאות</span>
+    </a>
+    <nav class="nav" aria-label="ניווט">
+      <button class="chip" data-view="system">מפת הגוף</button>
+      <button class="chip chip-urgent" data-view="emergency">סימני חירום</button>
+      <button class="chip" data-view="sources">מקורות</button>
+    </nav>
+    <ai-menu chat="https://claude.ai/code/session_018qeN1Aq3ktfkuybhgGGGf2"></ai-menu>
+  </header>
+
+  <main class="work" dir="rtl">
+
+    <aside class="intro" aria-label="איך קוראים את המפה">
+      <p class="label">מפת הגוף</p>
+      <h1 class="headline">כל מערכת בגוף: <mark>תפקיד, כשל, וסימן לפנייה.</mark></h1>
+      <p class="lede">בוחרים מערכת בגוף.<br>רואים מה ידוע, מה נאמר, ומה רק מאמינים.</p>
+
+      <section class="legend-block">
+        <h2 class="label">שלוש תובנות</h2>
+        <ol class="triad">
+          <li><b>הכרה</b><span>התפקיד: מה המערכת עושה.</span></li>
+          <li><b>הבנה</b><span>הכשל: מה משבש אותה.</span></li>
+          <li><b>שימוש</b><span>הפנייה: מתי פונים, ומה שואלים.</span></li>
+        </ol>
+      </section>
+
+      <section class="legend-block">
+        <h2 class="label">שלוש שכבות, שלושה קווים</h2>
+        <ul class="layers-legend" id="layers-legend"></ul>
+      </section>
+
+      <p class="inspo">בהשראת <b>וסאליוס</b> <span class="latin" dir="ltr">Andreas Vesalius, De humani corporis fabrica, 1543</span>: הגוף כאטלס של שכבות.</p>
+    </aside>
+
+    <section class="stage" aria-label="דמות הגוף">
+      <div class="figure" id="figure"></div>
+      <p class="figure-note">כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.</p>
+      <div class="museum">
+        <figure class="quote">
+          <blockquote>
+            <p class="q-he">„בריאות היא מצב של רווחה גופנית, נפשית וחברתית מלאה, ולא רק היעדר מחלה או מום.”</p>
+            <p class="q-tag">תרגום</p>
+            <p class="q-en" dir="ltr" lang="en">“Health is a state of complete physical, mental and social well-being and not merely the absence of disease or infirmity.”</p>
+          </blockquote>
+          <figcaption><a class="src" href="https://www.who.int/about/governance/constitution" target="_blank" rel="noopener">חוקת ארגון הבריאות העולמי (WHO), 1948</a></figcaption>
+        </figure>
+        <figure class="haiku">
+          <p>לב פועם בעיר<br>כל רמזור נושם לאט<br>דם שב הביתה</p>
+          <figcaption>הגוף הוא רשת של יציאה ושיבה, כמו עיר.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <article class="panel" id="panel" aria-live="polite" tabindex="-1"></article>
+
+  </main>
+
+  <footer class="foot" dir="rtl">
+    <p class="disclaimer"><b>האפליקציה לא מאבחנת ולא מטפלת.</b> היא מלמדת לקרוא מידע רפואי.</p>
+    <p class="sos">במצב חירום:
+      <a href="tel:101">מד"א <b class="num" dir="ltr">101</b></a>
+      <a href="tel:1201">ער"ן <b class="num" dir="ltr">1201</b></a>
+      <a href="tel:047771900">הרעלות <b class="num" dir="ltr">04-7771900</b></a>
+    </p>
+  </footer>
+
+</div>
+<noscript><p dir="rtl" style="padding:24px">המפה צריכה JavaScript. במצב חירום: מד"א 101.</p></noscript>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

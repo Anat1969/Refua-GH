@@ -1,0 +1,142 @@
+// Single source of truth for the body map. Every view is derived from here.
+// Rules (docs/DATA_MODEL.md, docs/SAFETY.md):
+//   known    -> must have evidence + source_id (from SOURCES)
+//   said     -> must have tradition + source_id
+//   believed -> must have status ("לא נבדק" / "לא אוששה")
+//   no dosage, calorie, weight or "effect size" fields.
+// Rich text: **bold**, ==insight==. Numbers are bolded by the renderer.
+
+export const SOURCES = {
+  'guyton-2020': { title: 'Guyton and Hall, Textbook of Medical Physiology', type: 'ספר יסוד', year: 2020, note: 'מהדורה 14', url: 'https://shop.elsevier.com/books/guyton-and-hall-textbook-of-medical-physiology/hall/978-0-323-59712-8' },
+  'gray-2020': { title: "Gray's Anatomy", type: 'ספר יסוד', year: 2020, note: 'מהדורה 42', url: 'https://shop.elsevier.com/books/grays-anatomy/standring/978-0-7020-7705-0' },
+  'janeway-2022': { title: "Janeway's Immunobiology", type: 'ספר יסוד', year: 2022, note: 'מהדורה 10', url: 'https://wwnorton.com/books/9780393884890' },
+  'azevedo-2009': { title: 'Azevedo et al., J Comp Neurol', type: 'מחקר', year: 2009, note: 'ספירת תאי עצב במוח האדם', url: 'https://doi.org/10.1002/cne.21974' },
+  'sender-2016': { title: 'Sender, Fuchs & Milo, PLoS Biology', type: 'מחקר', year: 2016, note: 'מכון ויצמן (Weizmann Institute)', url: 'https://doi.org/10.1371/journal.pbio.1002533' },
+  'who-ghe-2023': { title: 'WHO, The top 10 causes of death', type: 'הנחיה רשמית', year: 2026, note: 'אומדנים לשנת 2023', url: 'https://www.who.int/news-room/fact-sheets/detail/the-top-10-causes-of-death' },
+  'who-copd': { title: 'WHO, Chronic obstructive pulmonary disease', type: 'הנחיה רשמית', year: 2026, note: 'אומדנים לשנת 2023', url: 'https://www.who.int/news-room/fact-sheets/detail/chronic-obstructive-pulmonary-disease-(copd)' },
+  'who-aqg-2021': { title: 'WHO Global Air Quality Guidelines', type: 'הנחיה רשמית', year: 2021, note: '', url: 'https://www.who.int/publications/i/item/9789240034228' },
+  'who-immunization': { title: 'WHO, Vaccines and immunization', type: 'הנחיה רשמית', year: 2024, note: '', url: 'https://www.who.int/health-topics/vaccines-and-immunization' },
+  'who-alcohol-2023': { title: 'WHO, No level of alcohol consumption is safe for our health', type: 'הודעה רשמית', year: 2023, note: '', url: 'https://www.who.int/europe/news/item/04-01-2023-no-level-of-alcohol-consumption-is-safe-for-our-health' },
+  'who-constitution': { title: 'WHO, Constitution', type: 'מסמך יסוד', year: 1948, note: '', url: 'https://www.who.int/about/governance/constitution' },
+  'iarc-globocan-2022': { title: 'IARC, GLOBOCAN', type: 'מאגר רשמי', year: 2022, note: '', url: 'https://gco.iarc.who.int/' },
+  'iof': { title: 'International Osteoporosis Foundation', type: 'ארגון מקצועי', year: 2024, note: '', url: 'https://www.osteoporosis.foundation/' },
+  'predimed-2018': { title: 'PREDIMED, NEJM', type: 'ניסוי מבוקר', year: 2018, note: 'פרסום מחודש', url: 'https://doi.org/10.1056/NEJMoa1800389' },
+  'smiles-2017': { title: 'SMILES, BMC Medicine', type: 'ניסוי מבוקר', year: 2017, note: 'מדגם קטן, ללא סמיות מלאה', url: 'https://doi.org/10.1186/s12916-017-0791-y' },
+  'reynolds-2019': { title: 'Reynolds et al., The Lancet', type: 'סקירה ומטה-אנליזה', year: 2019, note: 'מחקרי תצפית', url: 'https://doi.org/10.1016/S0140-6736(18)31809-9' },
+  'deweber-2011': { title: 'deWeber et al., J Am Board Fam Med', type: 'מחקר', year: 2011, note: '', url: 'https://doi.org/10.3122/jabfm.2011.02.100156' },
+  'nhs-stroke': { title: 'NHS, Stroke: symptoms', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/stroke/symptoms/' },
+  'nhs-breath': { title: 'NHS, Shortness of breath', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/symptoms/shortness-of-breath/' },
+  'nhs-heart-attack': { title: 'NHS, Heart attack: symptoms', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/heart-attack/symptoms/' },
+  'nhs-bowel': { title: 'NHS, Bowel cancer: symptoms', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/bowel-cancer/symptoms/' },
+  'nhs-fracture': { title: 'NHS, Broken bones', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/broken-or-dislocated-bones/' },
+  'nhs-anaphylaxis': { title: 'NHS, Anaphylaxis', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/anaphylaxis/' },
+  'porter-1997': { title: 'Roy Porter, The Greatest Benefit to Mankind', type: 'היסטוריה של הרפואה', year: 1997, note: '', url: 'https://wwnorton.com/books/the-greatest-benefit-to-mankind/' },
+  'vesalius-1543': { title: 'Andreas Vesalius, De humani corporis fabrica', type: 'מקור היסטורי', year: 1543, note: '', url: 'https://www.nlm.nih.gov/exhibition/historicalanatomies/vesalius_home.html' },
+  'snow-1855': { title: 'John Snow, On the Mode of Communication of Cholera', type: 'מקור היסטורי', year: 1855, note: '', url: 'https://archive.org/details/b28985266' },
+  'rambam-deot': { title: 'רמב"ם, משנה תורה, הלכות דעות ד', type: 'מסורת', year: 1180, note: 'הלכה ב', url: 'https://www.sefaria.org.il/Mishneh_Torah,_Human_Dispositions.4' },
+};
+
+// Each system: role (הכרה), failure (הבנה), action (שימוש), bridge (חיבור).
+// bridge.link is the contract with the nutrition app: { app: 'nutrition', food_id | topic }.
+export const SYSTEMS = [
+  {
+    id: 'nervous',
+    name_he: 'מערכת העצבים',
+    name_en: 'Nervous system',
+    insight: '==**86** מיליארד תאים, ושבץ קוטע את הרשת.==',
+    city: 'רשת התקשורת של העיר: אותות עוברים בה מהר, לכל הכיוונים.',
+    role: { layer: 'known', text_he: 'במוח האדם כ-**86** מיליארד **תאי עצב**.', evidence: 'גבוהה', source_id: 'azevedo-2009' },
+    failure: [
+      { layer: 'known', text_he: '**שבץ** הוא סיבת המוות השנייה בעולם.', evidence: 'גבוהה', source_id: 'who-ghe-2023' },
+      { layer: 'said', text_he: '**אריסטו** (Aristotle) ראה בלב את מקום המחשבה, ובמוח איבר שמקרר את הדם.', tradition: 'פילוסופיה יוונית', source_id: 'porter-1997' },
+      { layer: 'believed', text_he: 'משתמשים רק ב-**10%** מהמוח.', status: 'לא אוששה' },
+    ],
+    action: { urgency: 'emergency', sign_he: 'פנים שמוטות, חולשה ביד או קושי בדיבור', go_he: 'מד"א **101**, מיד', source_id: 'nhs-stroke', question_he: 'מה גורמי הסיכון לשבץ אצלי, ואיך בודקים אותם?' },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: 'בניסוי **SMILES**, שיפור התזונה לווה בשיפור בתסמיני דיכאון.', evidence: 'ראשונית', source_id: 'smiles-2017', next_he: 'תזונה ים-תיכונית', link: { app: 'nutrition', topic: 'mediterranean-diet' } },
+  },
+  {
+    id: 'respiratory',
+    name_he: 'מערכת הנשימה',
+    name_en: 'Respiratory system',
+    insight: '==חצי ליטר בכל נשימה, ואוויר העיר נכנס איתו.==',
+    city: 'מערכת האוורור של העיר: אוויר נכנס, מתחלף ויוצא.',
+    role: { layer: 'known', text_he: 'בנשימה רגילה במנוחה נכנס כ**חצי ליטר** אוויר.', evidence: 'גבוהה', source_id: 'guyton-2020' },
+    failure: [
+      { layer: 'known', text_he: '**מחלת ריאות חסימתית כרונית** היא סיבת המוות השלישית בעולם: **3.4** מיליון מקרי מוות ב-**2023**.', evidence: 'גבוהה', source_id: 'who-copd' },
+      { layer: 'said', text_he: '**אריסטו** סבר שהנשימה נועדה לקרר את חום הלב.', tradition: 'פילוסופיה יוונית', source_id: 'porter-1997' },
+    ],
+    action: { urgency: 'emergency', sign_he: 'קוצר נשימה פתאומי או קשה', go_he: 'מד"א **101**, מיד', source_id: 'nhs-breath', question_he: 'האם בדיקת תפקודי ריאות רלוונטית לי?' },
+    bridge: { kind: 'city', layer: 'known', text_he: '**זיהום אוויר** הוא גורם סיכון מוכר למחלות נשימה.', evidence: 'גבוהה', source_id: 'who-aqg-2021', next_he: 'איכות האוויר ברחוב שלי', link: { app: 'city', topic: 'air-quality' } },
+  },
+  {
+    id: 'cardio',
+    name_he: 'הלב וכלי הדם',
+    name_en: 'Cardiovascular system',
+    insight: '==**5** ליטר בדקה, וסיבת המוות המובילה.==',
+    city: 'רשת הכבישים: אספקה לכל בית, ופינוי בחזרה.',
+    role: { layer: 'known', text_he: 'במנוחה הלב מזרים כ-**5** ליטר דם בדקה.', evidence: 'גבוהה', source_id: 'guyton-2020' },
+    failure: [
+      { layer: 'known', text_he: '**מחלת לב איסכמית** היא סיבת המוות המובילה בעולם: **16%** מכלל מקרי המוות.', evidence: 'גבוהה', source_id: 'who-ghe-2023' },
+      { layer: 'said', text_he: '**גלנוס** (Galen) לימד שהדם נוצר בכבד ונצרך באיברים. ההנחה החזיקה עד **הארווי** (William Harvey), ב-**1628**.', tradition: 'רפואה יוונית-רומית', source_id: 'porter-1997' },
+      { layer: 'believed', text_he: 'כוס יין ביום שומרת על הלב.', status: 'לא אוששה' },
+    ],
+    action: { urgency: 'emergency', sign_he: 'כאב או לחץ בחזה, שמתפשט ליד, ללסת או לגב', go_he: 'מד"א **101**, מיד', source_id: 'nhs-heart-attack', question_he: 'מה לחץ הדם שלי, ומה הוא אומר?' },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: 'בתזונה ים-תיכונית עשירה ב**שמן זית** נמצא שיעור נמוך יותר של אירועי לב.', evidence: 'בינונית', source_id: 'predimed-2018', next_he: 'שמן זית', link: { app: 'nutrition', food_id: 'olive-oil' } },
+  },
+  {
+    id: 'digestive',
+    name_he: 'מערכת העיכול',
+    name_en: 'Digestive system',
+    insight: '==בגוף יש חיידקים כמספר תאיו.==',
+    city: 'הנמל והשוק: סחורה נכנסת, ממוינת ומחולקת. כמו **נמל אשדוד** (Ashdod Port).',
+    role: { layer: 'known', text_he: 'בגוף חיים כ-**38** טריליון **חיידקים**, רובם במעי הגס. בערך כמספר תאי הגוף.', evidence: 'גבוהה', source_id: 'sender-2016' },
+    failure: [
+      { layer: 'known', text_he: '**סרטן המעי הגס** הוא השלישי בשכיחותו בעולם.', evidence: 'גבוהה', source_id: 'iarc-globocan-2022' },
+      { layer: 'said', text_he: '„לא יאכל אדם אלא כשהוא רעב, ולא ישתה אלא כשהוא צמא”.', tradition: 'הרמב"ם', source_id: 'rambam-deot' },
+      { layer: 'believed', text_he: 'מסטיק שנבלע נשאר בקיבה שבע שנים.', status: 'לא אוששה' },
+    ],
+    action: { urgency: 'doctor', sign_he: 'דם בצואה, צואה שחורה, או שינוי מתמשך ביציאות', go_he: 'פנייה לרופא', source_id: 'nhs-bowel', question_he: 'האם אני בגיל או בסיכון שמתאים לבדיקת סקר למעי הגס?' },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: 'תזונה עשירה ב**סיבים תזונתיים** נקשרה בסיכון נמוך יותר לסרטן המעי הגס.', evidence: 'בינונית', source_id: 'reynolds-2019', next_he: 'סיבים תזונתיים', link: { app: 'nutrition', topic: 'fiber' } },
+  },
+  {
+    id: 'skeletal',
+    name_he: 'השלד והשרירים',
+    name_en: 'Musculoskeletal system',
+    insight: '==**206** עצמות, שמתחדשות כל החיים.==',
+    city: 'שלד הבניין: קורות ועמודים שנושאים הכול, ומתחדשים בלי הפסקה.',
+    role: { layer: 'known', text_he: 'בשלד של אדם בוגר **206** עצמות. העצם נבנית ומתפרקת כל הזמן.', evidence: 'גבוהה', source_id: 'gray-2020' },
+    failure: [
+      { layer: 'known', text_he: '**אוסטאופורוזיס** מחלישה את העצם, עד שבר בנפילה קלה.', evidence: 'גבוהה', source_id: 'iof' },
+      { layer: 'said', text_he: '**גלנוס** תיאר לסת תחתונה משתי עצמות, לפי ניתוח בעלי חיים. **וסאליוס** (Andreas Vesalius) הראה ב-**1543** שבאדם זו עצם אחת.', tradition: 'רפואה יוונית-רומית', source_id: 'vesalius-1543' },
+      { layer: 'believed', text_he: 'פיצוח מפרקי האצבעות גורם לדלקת מפרקים.', status: 'לא אוששה' },
+    ],
+    action: { urgency: 'doctor', sign_he: 'נפילה עם כאב חד, נפיחות או עיוות באיבר', go_he: 'מוקד רפואי או מיון', source_id: 'nhs-fracture', question_he: 'האם בדיקת צפיפות עצם רלוונטית לי?' },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: '**סידן** הוא חומר הבניין העיקרי של העצם.', evidence: 'גבוהה', source_id: 'guyton-2020', next_he: 'סידן במזון', link: { app: 'nutrition', topic: 'calcium' } },
+  },
+  {
+    id: 'immune',
+    name_he: 'מערכת החיסון',
+    name_en: 'Immune system',
+    insight: '==זיכרון של פולשים הוא הבסיס לכל חיסון.==',
+    city: 'מערך הביטחון והתברואה: מזהה, מסמן ומפנה.',
+    role: { layer: 'known', text_he: 'מערכת החיסון **זוכרת** פולש שפגשה. על הזיכרון הזה נשען כל חיסון, שמונע **3.5** עד **5** מיליון מקרי מוות בשנה.', evidence: 'גבוהה', source_id: 'who-immunization' },
+    failure: [
+      { layer: 'known', text_he: '**אלרגיה** היא תגובה של מערכת החיסון לחומר לא מזיק, כמו אבקה או מזון.', evidence: 'גבוהה', source_id: 'janeway-2022' },
+      { layer: 'said', text_he: 'תורת ה**מיאזמה**: מחלות נגרמות מ„אוויר רע”. היא שלטה עד המאה ה-**19**.', tradition: 'רפואה אירופית', source_id: 'porter-1997' },
+    ],
+    action: { urgency: 'emergency', sign_he: 'התנפחות בפנים או בגרון, או קושי בנשימה אחרי מזון או עקיצה', go_he: 'מד"א **101**, מיד', source_id: 'nhs-anaphylaxis', question_he: 'האם יש לי אלרגיה שכדאי לברר?' },
+    bridge: { kind: 'city', layer: 'known', text_he: '**ג׳ון סנואו** (John Snow) מיפה ב-**1854** מקרי כולרה ב**לונדון** (London), ומצא אותם סביב משאבת מים אחת.', evidence: 'גבוהה', source_id: 'snow-1855', next_he: 'מפה אחת הולידה את האפידמיולוגיה', link: { app: 'city', topic: 'water' } },
+  },
+];
+
+export const LAYERS = {
+  known: { he: 'ידוע', def: 'ממצא מחקרי, עם מקור ועוצמת ראיה.' },
+  said: { he: 'נאמר', def: 'מה שמסורת אמרה, עם מקור והקשר.' },
+  believed: { he: 'מאמינים', def: 'טענה שלא נבדקה או לא אוששה.' },
+};
+
+export const EMERGENCY = [
+  { he: 'מד"א', en: 'Magen David Adom', num: '101' },
+  { he: 'ער"ן, עזרה נפשית ראשונה', en: 'ERAN', num: '1201' },
+  { he: 'המרכז הארצי למידע בהרעלות', en: 'Israel Poison Information Center', num: '04-7771900' },
+];
