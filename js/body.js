@@ -98,7 +98,7 @@ const MARKS = {
 
 export function bodySVG(systems) {
   const layers = systems
-    .map((s) => `<g class="sys" data-id="${s.id}" aria-hidden="true">${LAYERS[s.id]}</g>`)
+    .map((s, i) => `<g class="sys" data-id="${s.id}" style="--i:${i}" aria-hidden="true">${LAYERS[s.id]}</g>`)
     .join('');
   const marks = systems
     .map((s) => {
@@ -106,7 +106,7 @@ export function bodySVG(systems) {
       const right = m.side === 'r';
       const tx = right ? 552 : 8;
       const lx = right ? 422 : 138;
-      return `<g class="sysmark" data-id="${s.id}" role="button" tabindex="0" aria-pressed="false" aria-label="${s.name_he}">
+      return `<g class="sysmark" data-id="${s.id}" style="--i:${systems.indexOf(s)}" role="button" tabindex="0" aria-pressed="false" aria-label="${s.name_he}">
         <rect class="hit" x="${right ? 414 : 0}" y="${m.y - 21}" width="146" height="32"/>
         <path class="lead" d="M${lx},${m.y - 4} L${right ? lx - 14 : lx + 14},${m.y - 4} L${m.ax},${m.ay}"/>
         <circle class="dot" cx="${m.ax}" cy="${m.ay}" r="3.2"/>

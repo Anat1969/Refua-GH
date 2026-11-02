@@ -116,7 +116,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       ok(await page.evaluate(() => document.querySelector('.sysmark.on').dataset.id === 'respiratory'), 'state restored from URL after reload');
       // Brand goes home
       await page.click('.brand');
-      await page.waitForFunction(() => location.hash === '#s=cardio');
+      await page.waitForFunction(() => location.hash === '#v=home' && document.body.classList.contains('is-home'));
       ok(true, 'app name links home');
       // Installability
       const cdp = await ctx.newCDPSession(page);
@@ -442,6 +442,36 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.keyboard.press('Escape');
       await page.waitForFunction(() => !location.hash.includes('v=history') && !document.querySelector('#figure').hidden && document.querySelector('#map-figure').hidden);
       ok(true, 'leaving the timeline restores the body figure');
+
+      // ---------- Home: on one foot, and the live bridge to nutrition ----------
+      await page.goto(BASE);
+      await page.waitForSelector('#home-lead .hillel');
+      ok(await page.evaluate(() => document.body.classList.contains('is-home') && document.querySelectorAll('.line').length === 7 && !document.querySelector('.sys.on')), 'home: the default page, seven lines, no system preselected');
+      ok(!(await page.textContent('body')).includes('כללי אצבע'), 'home: the lines act without being labelled as rules of thumb');
+      for (let i = 0; i < 7; i++) {
+        await page.goto(BASE + '#v=home');
+        await page.waitForSelector(`[data-line="${i}"]`);
+        await page.click(`[data-line="${i}"]`);
+        await page.waitForFunction(() => !location.hash.includes('v=home') && location.hash.length > 2);
+      }
+      ok(true, 'home: each of the seven lines opens its screen');
+      await page.goto(BASE + '#v=home');
+      await page.waitForSelector('#quiz-box .q-row');
+      const keys = await page.evaluate(async () => { const { SYSTEMS } = await import('./js/data.js'); const s = (id) => SYSTEMS.find((x) => x.id === id); return [s('skeletal').failure.find((f) => f.layer === 'believed').layer, s('cardio').role.layer, s('nervous').failure.find((f) => f.layer === 'said').layer]; });
+      for (let i = 0; i < 3; i++) await page.click(`[data-q="${i}"][data-a="${keys[i]}"]`);
+      ok((await page.textContent('.q-score')).includes('3') && await page.evaluate(() => JSON.parse(localStorage.getItem('refua.quiz.v1')).best === 3), 'one-minute check: three right answers, score kept on the device');
+      await page.click('[data-quiz-reset]');
+      ok(await page.evaluate(() => !document.querySelector('.q-opt[disabled]')), 'one-minute check: again');
+      await page.screenshot({ path: path.join(SHOTS, `home-quiz-${tag}.png`) });
+      await page.click('.numcell[data-view-go="diseases"]');
+      await page.waitForFunction(() => location.hash.includes('v=diseases'));
+      ok(true, 'home: the numbers lead to their screens');
+      await page.goto(BASE + '#s=cardio');
+      await page.waitForSelector('.bridge-go');
+      ok((await page.getAttribute('.bridge-go', 'href')).startsWith('https://tzuna-gh.vercel.app/#/foods?id=olive'), 'bridge: heart card links to olive in the nutrition app');
+      await page.goto(BASE + '#s=cardio&v=redlist');
+      await page.waitForSelector('.red-item .bridge-go');
+      ok((await page.getAttribute('.red-item .bridge-go', 'href')).includes('id=turmeric'), 'bridge: turmeric in the red list links to turmeric as food');
     }
 
     if (w === 390) {

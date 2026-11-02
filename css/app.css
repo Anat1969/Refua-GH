@@ -232,6 +232,7 @@ ai-menu { margin-inline-start: auto; }
   .work { grid-template-columns: minmax(0, 1fr) minmax(320px, 26rem); grid-template-rows: auto minmax(0, 1fr); }
   .intro { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--s4); overflow: visible; }
   .intro > .label, .intro .headline, .intro .lede { grid-column: 1; }
+  .home-lead { grid-column: 1 / -1; overflow: visible; }
   .intro .legend-block { grid-row: 1 / span 3; border-top: 0; padding-top: 0; }
   .inspo, .museum .haiku { display: none; }
   .museum { grid-template-columns: minmax(0, 1fr); }
@@ -485,6 +486,44 @@ ai-menu { margin-inline-start: auto; }
 .trad dt { color: var(--graphite); font-size: 12.5px; font-weight: 600; }
 .trad dd { margin: 0; }
 .trad-warn { font-size: 13px; background: var(--urgent-wash); border-inline-start: 3px solid var(--urgent); padding: 4px 8px; }
+
+/* ---------- Home: on one foot ---------- */
+body.is-home .intro { display: none; }
+.home-lead { display: flex; flex-direction: column; gap: var(--s3); min-height: 0; overflow: auto; padding-inline-end: var(--s1); }
+.hillel { margin: 0; padding: var(--s2) var(--s3); border-inline-start: 3px dotted var(--said); background: #fff; }
+.hillel .h-ar { font-weight: 600; font-size: 15px; line-height: 1.5; }
+.hillel .h-tr { font-size: 13.5px; color: var(--graphite); margin-top: 2px; }
+.hillel .q-tag { font-size: 11px; font-weight: 600; }
+.home-nums { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.numcell { width: 100%; border: 1px solid var(--hair); background: #fff; padding: 8px 4px; display: grid; justify-items: center; gap: 2px; cursor: pointer; font: inherit; color: var(--ink); box-shadow: var(--lift); }
+.numcell .num { font-size: 24px; line-height: 1; }
+.numcell span:last-child { font-size: 12px; color: var(--graphite); }
+.lines { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; counter-reset: none; }
+.line { display: grid; grid-template-columns: 2em minmax(0, 1fr); gap: 0 var(--s2); align-items: baseline; padding-bottom: 6px; border-bottom: 1px solid var(--hair); }
+.line .ln { grid-row: 1 / span 2; font-size: 20px; color: var(--graphite); text-align: center; }
+.line .lt { font-size: 15.5px; line-height: 1.4; }
+.line .imeta .linkish { margin-inline-start: auto; font-size: 12.5px; }
+.bridge-go { display: grid; gap: 0; text-decoration: none; color: var(--ink); border: 1px solid var(--said); background: #fff; padding: 6px var(--s3); justify-self: start; }
+.bridge-go .label { color: var(--said); }
+.bridge-go b { font-size: 15px; }
+.quiz .q-row { display: grid; gap: 4px; padding: 6px 0; border-bottom: 1px solid var(--hair); }
+.q-text { font-size: 14.5px; }
+.q-opts { display: flex; gap: 6px; }
+.q-opt { font: inherit; font-size: 13px; border: 1px solid var(--hair); background: linear-gradient(#fff, #f3f4f6); padding: 4px 10px; cursor: pointer; box-shadow: var(--lift); border-radius: 0; }
+.q-opt:disabled { cursor: default; box-shadow: none; opacity: .55; }
+.q-opt.picked { opacity: 1; color: #fff; }
+.q-opt.picked.l-known { background: var(--known); border-color: var(--known); }
+.q-opt.picked.l-said { background: var(--said); border-color: var(--said); }
+.q-opt.picked.l-believed { background: var(--believed); border-color: var(--believed); }
+.q-fb { font-size: 13px; color: var(--graphite); }
+.q-row.ok .q-fb::before { content: ''; }
+.q-row.miss .q-fb { color: var(--ink); }
+.q-score { font-size: 13.5px; }
+/* The figure on the home page: each system draws in turn, one transparency after another. */
+body.is-home .sys path, body.is-home .sys rect { animation: sys-cycle 14s infinite; animation-delay: calc(var(--i) * 2s); }
+body.is-home .sysmark text { animation: mark-cycle 14s infinite; animation-delay: calc(var(--i) * 2s); }
+@keyframes sys-cycle { 0% { stroke: var(--silver); } 3%, 11% { stroke: var(--ink); stroke-width: 1.9; } 15%, 100% { stroke: var(--silver); stroke-width: 1.1; } }
+@keyframes mark-cycle { 0% { fill: #6b7480; } 3%, 11% { fill: var(--ink); } 15%, 100% { fill: #6b7480; } }
 
 /* Short screens: the figure keeps its room, the museum strip gets shorter */
 @media (min-width: 1000px) and (max-height: 820px) {
