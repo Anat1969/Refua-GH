@@ -115,7 +115,7 @@ if (detect('תאוריה של אור', KEYWORDS).length || detect('הלב שלי
 for (const i of PROFILE_ITEMS) if (BANNED_KEYS.test(i.id)) err(`profile item ${i.id}: banned field`);
 
 // Forbidden words in all user-facing text
-const files = ['js/data.js', 'index.html', 'js/app.js', 'js/match.js', 'js/circulation.js'];
+const files = ['js/data.js', 'index.html', 'js/app.js', 'js/match.js', 'js/circulation.js', 'js/atlas3d.js'];
 for (const f of files) {
   let text = readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
   for (const p of ALLOWED_PHRASES) text = text.split(p).join('');
