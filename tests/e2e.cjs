@@ -64,16 +64,37 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       ok(ids.length === 7, 'seven system labels');
       for (const id of ids) {
         await page.click(`.sysmark[data-id="${id}"] text`);
-        await page.waitForFunction((i) => location.hash.includes(`s=${i}`) && document.querySelector(`.sys[data-id="${i}"]`).classList.contains('on') && document.querySelectorAll('.panel .block').length === 4, id);
+        await page.waitForFunction((i) => location.hash.includes(`s=${i}`) && document.querySelector(`.sys[data-id="${i}"]`).classList.contains('on') && document.querySelector('.panel .wonder'), id);
         const st = await page.evaluate((i) => ({
           on: document.querySelector(`.sys[data-id="${i}"]`).classList.contains('on'),
           pressed: document.querySelector(`.sysmark[data-id="${i}"]`).getAttribute('aria-pressed'),
-          blocks: document.querySelectorAll('.panel .block').length,
-          src: document.querySelectorAll('.panel .item.l-known .src').length,
-          known: document.querySelectorAll('.panel .item.l-known').length,
+          wsrc: !!document.querySelector('.panel .wonder .src'),
+          plate: !!document.querySelector('.panel .plate img'),
+          tab: document.querySelector('.depth-tab[aria-selected="true"]')?.dataset.l,
         }), id);
-        ok(st.on && st.pressed === 'true' && st.blocks === 4 && st.src === st.known, `system ${id}: layer on, 4 blocks, ${st.known} known items all sourced`);
+        ok(st.on && st.pressed === 'true' && st.wsrc && st.plate && st.tab === '1', `system ${id}: layer on, level 1 opens with a sourced wonder and a plate`);
       }
+      // Three depth levels on one system
+      await page.goto(BASE + '#s=nervous');
+      await page.waitForSelector('.next-depth');
+      await page.click('.next-depth');
+      await page.waitForFunction(() => location.hash.includes('l=2') && document.querySelectorAll('.panel .block').length === 3);
+      ok(await page.evaluate(() => [...document.querySelectorAll('.panel .item.l-known')].every((x) => x.querySelector('.src')) && !!document.querySelector('.quiet-care')), 'level 2: role, failure and bridge, every known item sourced, care in a quiet line');
+      await page.click('.next-depth');
+      await page.waitForFunction(() => location.hash.includes('l=3') && document.querySelector('.open-q'));
+      ok(await page.evaluate(() => /\?$/.test(document.querySelector('.open-q').textContent.trim()) && document.querySelectorAll('.src-list li').length > 0), 'level 3: an open question and the sources');
+      await page.click('[data-go="1"]');
+      await page.waitForFunction(() => location.hash.includes('s=respiratory') && location.hash.includes('l=3'));
+      ok(true, 'next system keeps the depth level');
+      await page.click('.depth-tab[data-l="1"]');
+      await page.waitForFunction(() => !location.hash.includes('l=') && document.querySelector('.panel .wonder'));
+      ok(true, 'depth tabs go back to level 1');
+      await page.screenshot({ path: path.join(SHOTS, `level1-${tag}.png`) });
+      await page.goto(BASE + '#s=cardio&v=history&e=8');
+      await page.waitForSelector('.panel .flag');
+      ok((await page.getAttribute('.panel .flag', 'src')).includes('/gb.svg'), 'a moment shows the flag of its country');
+      await page.goto(BASE + '#s=digestive');
+      await page.waitForSelector('.sys[data-id="digestive"].on');
       // Click on an organ (not the label)
       await page.locator('.sys[data-id="digestive"] path').nth(1).dispatchEvent('click');
       await page.waitForFunction(() => location.hash.includes('s=digestive'));
@@ -208,7 +229,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       ok(nSrc >= 30, `sources view includes red list sources (${nSrc})`);
 
       // ---------- Stage 2: cardio in depth ----------
-      await page.goto(BASE + '#s=cardio');
+      await page.goto(BASE + '#s=cardio&l=3');
       await page.waitForSelector('.deep-cta');
       await page.click('.deep-cta');
       await page.waitForFunction(() => location.hash.includes('v=deep') && document.querySelectorAll('#deep-figure .seg').length === 8);
@@ -337,7 +358,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       const dzList = await page.evaluate(async () => (await import('./js/data.js')).DISEASES.map((d) => [d.id, d.system, d.action.urgency]));
       let allOk = true; const bad = [];
       for (const [id, sys, urg] of dzList) {
-        await page.goto(BASE + `#s=${sys}&v=disease&d=${id}`);
+        await page.goto(BASE + `#s=${sys}&v=disease&d=${id}&l=3`);
         await page.waitForFunction((i) => document.querySelector('#sys-title') && document.title.includes('|'), id);
         const r = await page.evaluate(() => ({
           src: [...document.querySelectorAll('#panel .item.l-known')].every((x) => x.querySelector('.src')),
@@ -350,7 +371,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
         if (!good) { allOk = false; bad.push(id); }
       }
       ok(allOk, `all ${dzList.length} disease cards: sourced, a question, the right system on the figure, emergencies to 101 ${bad.join(',')}`);
-      await page.goto(BASE + '#s=nervous&v=disease&d=depression');
+      await page.goto(BASE + '#s=nervous&v=disease&d=depression&l=3');
       await page.waitForSelector('#panel .alert .go');
       ok((await page.textContent('#panel .alert .go')).includes('1201'), 'depression card points to ERAN 1201');
       await page.goto(BASE + '#s=respiratory&v=diseases&f=respiratory');
@@ -370,7 +391,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.click('[data-open-dz="diabetes"]');
       await page.waitForFunction(() => location.hash.includes('d=diabetes') && document.querySelector('.sysmark.on')?.dataset.id === 'digestive');
       ok(true, 'search finds a disease and opens its card on the right system');
-      await page.goto(BASE + '#s=cardio&v=disease&d=hypertension');
+      await page.goto(BASE + '#s=cardio&v=disease&d=hypertension&l=3');
       await page.waitForSelector('[data-deep-dz]');
       await page.click('[data-deep-dz]');
       await page.waitForFunction(() => location.hash.includes('v=deep') && location.hash.includes('d=hypertension'));
@@ -387,11 +408,13 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.screenshot({ path: path.join(SHOTS, `cancer-${tag}.png`) });
       await page.click('[data-open-dz="breast-cancer"]');
       await page.waitForFunction(() => location.hash.includes('d=breast-cancer') && document.querySelector('.sysmark.on')?.dataset.id === 'reproductive');
-      ok((await page.textContent('#panel')).includes('80%'), 'breast cancer card: on the reproductive system, with the 80% fact');
       await page.click('[data-group-go="cancer"]');
       await page.waitForFunction(() => location.hash.includes('f=cancer') && location.hash.includes('v=diseases'));
       ok(true, 'a cancer card links back to the cancer overview');
-      await page.goto(BASE + '#s=digestive&v=disease&d=obesity');
+      await page.goto(BASE + '#s=reproductive&v=disease&d=breast-cancer&l=2');
+      await page.waitForSelector('.quiet-care');
+      ok((await page.textContent('#panel')).includes('80%'), 'breast cancer card: on the reproductive system, with the 80% fact');
+      await page.goto(BASE + '#s=digestive&v=disease&d=obesity&l=3');
       await page.waitForSelector('#panel .alert .go');
       const ob = await page.evaluate(() => ({ t: document.querySelector('#panel').textContent, go: document.querySelector('#panel .alert .go').textContent }));
       ok(ob.go.includes('1201') && !/משקל|BMI|קלוריות/.test(ob.t), 'obesity card: help line 1201, and no weight, BMI or calories on screen');
@@ -466,7 +489,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.click('.numcell[data-view-go="diseases"]');
       await page.waitForFunction(() => location.hash.includes('v=diseases'));
       ok(true, 'home: the numbers lead to their screens');
-      await page.goto(BASE + '#s=cardio');
+      await page.goto(BASE + '#s=cardio&l=2');
       await page.waitForSelector('.bridge-go');
       ok((await page.getAttribute('.bridge-go', 'href')).startsWith('https://tzuna-gh.vercel.app/#/foods?id=olive'), 'bridge: heart card links to olive in the nutrition app');
       await page.goto(BASE + '#s=cardio&v=redlist');

@@ -1,7 +1,7 @@
 // Safety gate (docs/SAFETY.md, docs/CONTENT_RULES.md). Exit 1 blocks merge.
 // Run: node scripts/check-safety.mjs
-import { readFileSync } from 'node:fs';
-import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, nutritionHref } from '../js/data.js';
+import { readFileSync, existsSync, statSync } from 'node:fs';
+import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, nutritionHref, WONDERS, IMAGES, COUNTRIES } from '../js/data.js';
 import { detect } from '../js/match.js';
 
 const errors = [];
@@ -182,6 +182,25 @@ for (const f of files) {
   for (const p of ALLOWED_PHRASES) text = text.split(p).join('');
   for (const w of FORBIDDEN) if (text.includes(w)) err(`${f}: forbidden word "${w}"`);
 }
+
+// Discovery layer: every wonder has a source and an open question; every image is a real file; every flag is a known country.
+for (const s of SYSTEMS) {
+  const w = WONDERS[s.id];
+  if (!w) { err(`wonder: ${s.id} missing`); continue; }
+  if (!SOURCES[w.source_id]) err(`wonder ${s.id}: source "${w.source_id}" missing`);
+  if (!/\?$/.test(w.open_q_he || '')) err(`wonder ${s.id}: open question must end with "?"`);
+  if (w.image && !IMAGES[w.image]) err(`wonder ${s.id}: image "${w.image}" not in IMAGES`);
+}
+for (const [id, im] of Object.entries(IMAGES)) {
+  const f = new URL('../' + im.src, import.meta.url);
+  if (!existsSync(f) || statSync(f).size < 10000) err(`image ${id}: file ${im.src} missing or broken`);
+  if (!/^https:\/\/commons\.wikimedia\.org\//.test(im.page) || !(im.year < 1900)) err(`image ${id}: needs a Commons page and a public-domain year`);
+}
+for (const e of TIMELINE) {
+  if (e.cc && !COUNTRIES[e.cc]) err(`timeline ${e.id}: unknown country ${e.cc}`);
+  if (e.image && !IMAGES[e.image]) err(`timeline ${e.id}: image "${e.image}" not in IMAGES`);
+}
+for (const t of TRADITIONS) for (const cc of t.flags || []) if (!COUNTRIES[cc]) err(`tradition ${t.id}: unknown country ${cc}`);
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 if (!html.includes('לא מאבחנת ולא מטפלת')) err('index.html: declaration missing from the first screen');

@@ -128,11 +128,12 @@ export function bodySVG(systems) {
 
 // Standalone sheet images for the 3D atlas: one system (or the outline) per sheet,
 // inline styles only (CSS does not reach an SVG drawn into a canvas).
-export function sheetSVG(id, px = 512) {
-  const w = px, h = px * 2;
+export function sheetSVG(id, px = 512, vb = '0 0 400 800') {
+  const [, , vw, vh] = vb.split(' ').map(Number);
+  const w = px, h = Math.round(px * vh / vw);
   const ink = '#16202b';
   const body = id === 'outline'
     ? `<g fill="#fbfbfc" stroke="#8d96a1" stroke-width="1.6" stroke-linejoin="round">${mirror(OUTLINE_HALF)}</g>`
     : `<g fill="rgba(22,32,43,0.07)" stroke="${ink}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${LAYERS[id]}</g>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 400 800">${body}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="${vb}">${body}</svg>`;
 }

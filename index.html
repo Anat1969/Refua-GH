@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
 <script src="https://appofapp-gh.vercel.app/ai-menu.js" defer></script>
 </head>
@@ -27,10 +27,7 @@
     <nav class="nav" aria-label="ניווט">
       <button class="chip" data-view="system"><span class="xl">מפת </span>הגוף</button>
       <button class="chip" data-view="diseases">מחלות</button>
-      <button class="chip" data-view="history"><span class="xl">ציר </span>זמן</button>
-      <button class="chip chip-urgent" data-view="emergency"><span class="xl">סימני </span>חירום</button>
-      <button class="chip chip-urgent" data-view="redlist"><span class="xl">רשימה </span>אדומה</button>
-      <button class="chip" data-view="profile"><span class="xl">ה</span>בטיחות<span class="xl"> שלי</span></button>
+      <button class="chip" data-view="history">גילויים</button>
       <button class="chip" data-view="sources">מקורות</button>
     </nav>
     <div class="search" role="search">
@@ -46,16 +43,16 @@
   <main class="work" dir="rtl">
 
     <aside class="intro" aria-label="איך קוראים את המפה">
-      <p class="label">מפת הגוף</p>
-      <h1 class="headline">כל מערכת בגוף: <mark>תפקיד, כשל, וסימן לפנייה.</mark></h1>
-      <p class="lede">בוחרים מערכת בגוף.<br>רואים מה ידוע, מה נאמר, ומה רק מאמינים.</p>
+      <p class="label">אטלס של גילויים</p>
+      <h1 class="headline display">הגוף כעיר של רשתות. <mark>כל רשת היא גילוי.</mark></h1>
+      <p class="lede">בוחרים מערכת, ונכנסים בשלוש רמות עומק.<br>כל פריט מסומן: ידוע, נאמר, או מאמינים.</p>
 
       <section class="legend-block">
-        <h2 class="label">שלוש תובנות</h2>
+        <h2 class="label">שלוש רמות עומק</h2>
         <ol class="triad">
-          <li><b>הכרה</b><span>התפקיד: מה המערכת עושה.</span></li>
-          <li><b>הבנה</b><span>הכשל: מה משבש אותה.</span></li>
-          <li><b>שימוש</b><span>הפנייה: מתי פונים, ומה שואלים.</span></li>
+          <li><b>מבט</b><span>המספר המפתיע, והתמונה.</span></li>
+          <li><b>הבנה</b><span>איך הרשת עובדת, ומה משבש אותה.</span></li>
+          <li><b>עומק</b><span>מי גילה, איפה, והשאלה שעוד פתוחה.</span></li>
         </ol>
       </section>
 
@@ -127,8 +124,13 @@
   </main>
 
   <footer class="foot" dir="rtl">
-    <p class="disclaimer"><b>האפליקציה לא מאבחנת ולא מטפלת.</b> היא מלמדת לקרוא מידע רפואי. <a href="#v=about" id="about-link">מה זה, ומה לא</a></p>
-    <p class="sos">במצב חירום:
+    <p class="disclaimer">האפליקציה לא מאבחנת ולא מטפלת. <a href="#v=about" id="about-link">מה זה, ומה לא</a></p>
+    <nav class="foot-nav" aria-label="בטיחות">
+      <button class="chip chip-foot" data-view="emergency"><span class="xl">סימני </span>חירום</button>
+      <button class="chip chip-foot" data-view="redlist"><span class="xl">רשימה </span>אדומה</button>
+      <button class="chip chip-foot" data-view="profile"><span class="xl">הבטיחות </span>שלי</button>
+    </nav>
+    <p class="sos">
       <a href="tel:101">מד"א <b class="num" dir="ltr">101</b></a>
       <a href="tel:1201">ער"ן <b class="num" dir="ltr">1201</b></a>
       <a href="tel:047771900">הרעלות <b class="num" dir="ltr">04-7771900</b></a>
