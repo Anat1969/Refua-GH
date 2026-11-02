@@ -566,54 +566,54 @@ export const GROUPS = {
 // ---------- Stage 5: a timeline of medicine on a map, and four traditions ----------
 // Places: Hebrew name bold, Latin name small (anat-design-language 2.3). Ordered by year: a numbered chain.
 export const TIMELINE = [
-  { id: 'hippocrates', year: -400, year_he: 'כ-400 לפנה"ס', person_he: 'היפוקרטס', person_en: 'Hippocrates', place_he: 'קוס', place_en: 'Kos', lat: 36.89, lon: 27.29,
+  { id: 'hippocrates', cc: 'gr', year: -400, year_he: 'כ-400 לפנה"ס', person_he: 'היפוקרטס', person_en: 'Hippocrates', place_he: 'קוס', place_en: 'Kos', lat: 36.89, lon: 27.29,
     layer: 'said', text_he: 'מחלה היא תופעה טבעית, ולא עונש של האלים. הבריאות היא **איזון של ארבע ליחות**.', tradition: 'רפואה יוונית', source_id: 'porter-1997', system: 'immune' },
-  { id: 'galen', year: 170, year_he: 'כ-170', person_he: 'גלנוס', person_en: 'Galen', place_he: 'רומא', place_en: 'Rome', lat: 41.9, lon: 12.5,
+  { id: 'galen', cc: 'it', year: 170, year_he: 'כ-170', person_he: 'גלנוס', person_en: 'Galen', place_he: 'רומא', place_en: 'Rome', lat: 41.9, lon: 12.5,
     layer: 'said', text_he: 'הדם נוצר **בכבד** מן המזון, ונצרך באיברים. התורה הזאת החזיקה כ-1,400 שנה.', tradition: 'רפואה יוונית-רומית', source_id: 'porter-1997', system: 'cardio' },
-  { id: 'avicenna', year: 1025, year_he: '1025', person_he: 'אבן סינא', person_en: 'Avicenna (Ibn Sina)', place_he: 'המדאן', place_en: 'Hamadan', lat: 34.8, lon: 48.5,
+  { id: 'avicenna', cc: 'ir', year: 1025, year_he: '1025', person_he: 'אבן סינא', person_en: 'Avicenna (Ibn Sina)', place_he: 'המדאן', place_en: 'Hamadan', lat: 34.8, lon: 48.5,
     layer: 'known', text_he: '**הקאנון ברפואה** שלו היה ספר לימוד מרכזי באוניברסיטאות של אירופה במשך מאות שנים.', evidence: 'גבוהה', source_id: 'porter-1997' },
-  { id: 'rambam', year: 1180, year_he: 'כ-1180', person_he: 'הרמב"ם', person_en: 'Maimonides', place_he: 'פוסטאט', place_en: 'Fustat (Cairo)', lat: 30.0, lon: 31.23,
+  { id: 'rambam', cc: 'eg', year: 1180, year_he: 'כ-1180', person_he: 'הרמב"ם', person_en: 'Maimonides', place_he: 'פוסטאט', place_en: 'Fustat (Cairo)', lat: 30.0, lon: 31.23,
     layer: 'said', text_he: '„לא יאכל אדם אלא כשהוא רעב, ולא ישתה אלא כשהוא צמא”: הבריאות כדרך חיים מאוזנת.', tradition: 'הרמב"ם', source_id: 'rambam-deot', system: 'digestive' },
-  { id: 'vesalius', year: 1543, year_he: '1543', person_he: 'וסאליוס', person_en: 'Andreas Vesalius', place_he: 'פדובה', place_en: 'Padua', lat: 45.41, lon: 11.88,
+  { id: 'vesalius', cc: 'it', image: 'vesalius-fabrica', year: 1543, year_he: '1543', person_he: 'וסאליוס', person_en: 'Andreas Vesalius', place_he: 'פדובה', place_en: 'Padua', lat: 45.41, lon: 11.88,
     layer: 'known', text_he: 'אטלס אנטומי מנתיחה של **גוף האדם**, שתיקן טעויות של גלנוס. ההשראה של האפליקציה הזו.', evidence: 'גבוהה', source_id: 'vesalius-1543', system: 'skeletal' },
-  { id: 'harvey', year: 1628, year_he: '1628', person_he: 'הארווי', person_en: 'William Harvey', place_he: 'לונדון', place_en: 'London', lat: 51.51, lon: -0.13,
+  { id: 'harvey', cc: 'gb', image: 'harvey-veins', year: 1628, year_he: '1628', person_he: 'הארווי', person_en: 'William Harvey', place_he: 'לונדון', place_en: 'London', lat: 51.51, lon: -0.13,
     layer: 'known', text_he: 'הדם **מסתובב במעגל**: הלב מזרים בשעה יותר דם ממה שהגוף יכול לייצר.', evidence: 'גבוהה', source_id: 'harvey-1628', system: 'cardio', deep: true },
-  { id: 'jenner', year: 1796, year_he: '1796', person_he: 'ג׳נר', person_en: 'Edward Jenner', place_he: 'ברקלי', place_en: 'Berkeley', lat: 51.69, lon: -2.46,
+  { id: 'jenner', cc: 'gb', year: 1796, year_he: '1796', person_he: 'ג׳נר', person_en: 'Edward Jenner', place_he: 'ברקלי', place_en: 'Berkeley', lat: 51.69, lon: -2.46,
     layer: 'known', text_he: 'החיסון הראשון: חשיפה ל**אבעבועות הבקר** הגנה מפני **אבעבועות שחורות**.', evidence: 'גבוהה', source_id: 'porter-1997', system: 'immune' },
-  { id: 'semmelweis', year: 1847, year_he: '1847', person_he: 'זמלווייס', person_en: 'Ignaz Semmelweis', place_he: 'וינה', place_en: 'Vienna', lat: 48.21, lon: 16.37,
+  { id: 'semmelweis', cc: 'at', year: 1847, year_he: '1847', person_he: 'זמלווייס', person_en: 'Ignaz Semmelweis', place_he: 'וינה', place_en: 'Vienna', lat: 48.21, lon: 16.37,
     layer: 'known', text_he: '**שטיפת ידיים** של רופאים הורידה את התמותה מקדחת לידה. עמיתיו דחו אותו.', evidence: 'גבוהה', source_id: 'porter-1997', system: 'immune' },
-  { id: 'snow', year: 1854, year_he: '1854', person_he: 'ג׳ון סנואו', person_en: 'John Snow', place_he: 'לונדון', place_en: 'London', lat: 51.51, lon: -0.14,
+  { id: 'snow', cc: 'gb', image: 'snow-cholera-map', year: 1854, year_he: '1854', person_he: 'ג׳ון סנואו', person_en: 'John Snow', place_he: 'לונדון', place_en: 'London', lat: 51.51, lon: -0.14,
     layer: 'known', text_he: 'מפה של מקרי **כולרה** הובילה למשאבת מים אחת. ידית המשאבה הוסרה, והאפידמיולוגיה נולדה.', evidence: 'גבוהה', source_id: 'snow-1855', disease: 'diarrhoeal' },
-  { id: 'koch', year: 1882, year_he: '1882', person_he: 'קוך', person_en: 'Robert Koch', place_he: 'ברלין', place_en: 'Berlin', lat: 52.52, lon: 13.4,
+  { id: 'koch', cc: 'de', year: 1882, year_he: '1882', person_he: 'קוך', person_en: 'Robert Koch', place_he: 'ברלין', place_en: 'Berlin', lat: 52.52, lon: 13.4,
     layer: 'known', text_he: 'זיהוי **החיידק שגורם לשחפת**. תורת החיידקים מחליפה את תורת המיאזמה.', evidence: 'גבוהה', source_id: 'porter-1997', disease: 'tuberculosis' },
-  { id: 'rontgen', year: 1895, year_he: '1895', person_he: 'רנטגן', person_en: 'Wilhelm Röntgen', place_he: 'וירצבורג', place_en: 'Würzburg', lat: 49.79, lon: 9.95,
+  { id: 'rontgen', cc: 'de', year: 1895, year_he: '1895', person_he: 'רנטגן', person_en: 'Wilhelm Röntgen', place_he: 'וירצבורג', place_en: 'Würzburg', lat: 49.79, lon: 9.95,
     layer: 'known', text_he: 'קרני **X**: לראשונה רואים את השלד בתוך גוף חי.', evidence: 'גבוהה', source_id: 'porter-1997', system: 'skeletal' },
-  { id: 'fleming', year: 1928, year_he: '1928', person_he: 'פלמינג', person_en: 'Alexander Fleming', place_he: 'לונדון', place_en: 'London', lat: 51.52, lon: -0.17,
+  { id: 'fleming', cc: 'gb', year: 1928, year_he: '1928', person_he: 'פלמינג', person_en: 'Alexander Fleming', place_he: 'לונדון', place_en: 'London', lat: 51.52, lon: -0.17,
     layer: 'known', text_he: 'גילוי **הפניצילין**, האנטיביוטיקה הראשונה, מעובש בצלחת מעבדה.', evidence: 'גבוהה', source_id: 'porter-1997', disease: 'pneumonia' },
-  { id: 'who', year: 1948, year_he: '1948', person_he: 'ארגון הבריאות העולמי', person_en: 'WHO', place_he: 'ז׳נבה', place_en: 'Geneva', lat: 46.2, lon: 6.14,
+  { id: 'who', cc: 'ch', year: 1948, year_he: '1948', person_he: 'ארגון הבריאות העולמי', person_en: 'WHO', place_he: 'ז׳נבה', place_en: 'Geneva', lat: 46.2, lon: 6.14,
     layer: 'known', text_he: 'בריאות מוגדרת כ**רווחה גופנית, נפשית וחברתית**, ולא רק היעדר מחלה.', evidence: 'גבוהה', source_id: 'who-constitution' },
-  { id: 'smallpox', year: 1980, year_he: '1980', person_he: 'ארגון הבריאות העולמי', person_en: 'WHO', place_he: 'ז׳נבה', place_en: 'Geneva', lat: 46.22, lon: 6.16,
+  { id: 'smallpox', cc: 'ch', year: 1980, year_he: '1980', person_he: 'ארגון הבריאות העולמי', person_en: 'WHO', place_he: 'ז׳נבה', place_en: 'Geneva', lat: 46.22, lon: 6.16,
     layer: 'known', text_he: '**אבעבועות שחורות הוכרזו כמוכחדות**: המחלה הראשונה שהאנושות מחקה, בזכות חיסון.', evidence: 'גבוהה', source_id: 'who-smallpox', system: 'immune' },
-  { id: 'weizmann', year: 2016, year_he: '2016', person_he: 'סנדר, פוקס ומילוא', person_en: 'Sender, Fuchs & Milo', place_he: 'רחובות', place_en: 'Rehovot', lat: 31.9, lon: 34.81,
+  { id: 'weizmann', cc: 'il', year: 2016, year_he: '2016', person_he: 'סנדר, פוקס ומילוא', person_en: 'Sender, Fuchs & Milo', place_he: 'רחובות', place_en: 'Rehovot', lat: 31.9, lon: 34.81,
     layer: 'known', text_he: 'ב**מכון ויצמן** ספרו מחדש: בגוף כ-**38** טריליון חיידקים, בערך כמספר תאי הגוף.', evidence: 'גבוהה', source_id: 'sender-2016', system: 'digestive' },
 ];
 
 // Four traditions, the same three fields each (fixed format: compare, then see what is unique).
 export const TRADITIONS = [
-  { id: 'greek', name_he: 'יוונית', era_he: 'מהמאה ה-5 לפנה"ס', layer: 'said', tradition: 'רפואה יוונית', source_id: 'porter-1997',
+  { id: 'greek', flags: ['gr'], name_he: 'יוונית', era_he: 'מהמאה ה-5 לפנה"ס', layer: 'said', tradition: 'רפואה יוונית', source_id: 'porter-1997',
     disease_he: 'הפרה של **איזון ארבע הליחות**: דם, ליחה, מרה צהובה ומרה שחורה.',
     look_he: 'התבוננות בחולה, בדופק ובהפרשות, ומעקב אחרי מהלך המחלה.',
     act_he: 'החזרת האיזון: תזונה, מנוחה, אוויר, ולעיתים הקזת דם.' },
-  { id: 'rambam', name_he: 'הרמב"ם', era_he: 'המאה ה-12', layer: 'said', tradition: 'הרמב"ם', source_id: 'rambam-deot',
+  { id: 'rambam', flags: ['es', 'eg'], name_he: 'הרמב"ם', era_he: 'המאה ה-12', layer: 'said', tradition: 'הרמב"ם', source_id: 'rambam-deot',
     disease_he: '„היות הגוף בריא ושלם” הוא חלק מ**דרך חיים נכונה**, ולא רק עניין רפואי.',
     look_he: 'הרגלים: מתי אוכלים, כמה ישנים, איך מתנועעים.',
     act_he: 'שמירת הבריאות לפני ריפוי: סדר יום, אכילה בזמן רעב, ותנועה.' },
-  { id: 'chinese', name_he: 'סינית', era_he: 'אלפי שנים', layer: 'said', tradition: 'רפואה סינית', source_id: 'porter-1997',
+  { id: 'chinese', flags: ['cn'], name_he: 'סינית', era_he: 'אלפי שנים', layer: 'said', tradition: 'רפואה סינית', source_id: 'porter-1997',
     disease_he: 'חוסר איזון של **צ׳י** ושל **יין ויאנג** בגוף.',
     look_he: '**בדיקת הדופק** ובדיקת הלשון.',
     act_he: 'דיקור, תכשירי צמחים, וטאי צ׳י.',
     warn_he: 'ידוע: חלק מתכשירי הצמחים הסיניים נמצאו מזוהמים במתכות כבדות ובחומרים רעילים.', warn_source: 'nccih-tcm' },
-  { id: 'modern', name_he: 'מודרנית', era_he: 'מהמאה ה-19', layer: 'known', evidence: 'גבוהה', source_id: 'porter-1997',
+  { id: 'modern', flags: ['gb', 'de', 'at', 'ch'], name_he: 'מודרנית', era_he: 'מהמאה ה-19', layer: 'known', evidence: 'גבוהה', source_id: 'porter-1997',
     disease_he: 'מנגנון שאפשר למדוד: **חיידק**, נגיף, תא שהשתבש, או כלי דם שנחסם.',
     look_he: 'בדיקות, הדמיה, ו**ניסויים מבוקרים** שבודקים מה עובד.',
     act_he: 'מניעה, חיסון, תרופה או ניתוח, לפי ראיות. ובריאות כרווחה, לפי WHO.' },
@@ -640,18 +640,47 @@ export const HOME = {
   hillel_he: 'דעלך סני לחברך לא תעביד, זו היא כל התורה כולה, ואידך פירושה הוא, זיל גמור.',
   hillel_tr: 'מה ששנוא עליך, אל תעשה לחברך. זו כל התורה כולה, והשאר פירוש. לך ולמד.',
   hillel_source: 'bavli-shabbat-31a',
-  one_foot: '==גוף אחד, שבע רשתות, ושאלה טובה לרופא.==',
-  one_foot_more: 'לכל מערכת: תפקיד, כשל, וסימן לפנייה.\nלכל משפט: ידוע, נאמר, או רק מאמינים.\nכל השאר פירוש.',
-  // Seven sentences to act by. Each one is born in a screen of the app, and leads back to it.
+  one_foot: '==הגוף: עיר של רשתות, וכל רשת היא גילוי.==',
+  one_foot_more: 'לכל מערכת: מבנה, תפקוד, וסיפור הגילוי שלה.\nלכל משפט: ידוע, נאמר, או רק מאמינים.\nכל השאר פירוש: זיל גמור.',
+  // Seven insights for someone who studies systems. Each one is born in a screen of the app, and leads back to it.
   lines: [
-    { text_he: '**סימן חירום? מתקשרים קודם,** וקוראים אחר כך.', source_id: 'nhs-stroke', go: { v: 'emergency' }, go_he: 'סימני חירום' },
-    { text_he: '**שואלים מה המקור:** ידוע, נאמר, או רק מאמינים.', go: { v: 'sources' }, go_he: 'מקורות' },
-    { text_he: '**מה שלא מרגישים, מודדים:** לחץ דם מגלים במדידה.', source_id: 'who-hypertension', go: { v: 'disease', d: 'hypertension' }, go_he: 'יתר לחץ דם' },
-    { text_he: '**בדיקת סקר מקדימה את הגוף:** היא מגלה מה שעוד לא כואב.', source_id: 'who-crc', go: { v: 'diseases', f: 'cancer' }, go_he: 'סרטן' },
-    { text_he: '**טבעי אינו בהכרח בטוח:** לפני צמח או תוסף, שואלים רוקח.', source_id: 'livertox-germander', go: { v: 'redlist' }, go_he: 'רשימה אדומה' },
-    { text_he: '**גורם סיכון אינו אשמה:** לרוב מקרי סרטן השד אין גורם מיוחד, מלבד מין וגיל.', source_id: 'who-breast', go: { v: 'disease', d: 'breast-cancer' }, go_he: 'סרטן השד' },
-    { text_he: '**העיר היא חלק מהגוף:** אוויר, מים ורחוב שמזמין הליכה.', source_id: 'who-obesity', go: { v: 'history', e: 8 }, go_he: 'ג׳ון סנואו, 1854' },
+    { text_he: '**הצורה היא התשובה:** ארבעה חללים וארבעה מסתמים, כדי שהדם יזרום לכיוון אחד.', source_id: 'guyton-2020', go: { v: 'deep', s: 'cardio', t: 'organs' }, go_he: 'הלב, לעומק' },
+    { text_he: '**הגוף הוא עיר של רשתות:** אספקה, תקשורת, אוורור ופינוי, שבע מערכות.', go: { v: 'system', s: 'nervous' }, go_he: 'מפת הגוף' },
+    { text_he: '**אנחנו מערכת אקולוגית:** בגוף חיידקים כמספר התאים שלו.', source_id: 'sender-2016', go: { v: 'system', s: 'digestive' }, go_he: 'מערכת העיכול' },
+    { text_he: '**החומר זורם, הצורה נשארת:** העצם נבנית ומתפרקת כל החיים.', source_id: 'gray-2020', go: { v: 'system', s: 'skeletal' }, go_he: 'השלד' },
+    { text_he: '**גילוי מתחיל בשאלה מוזרה:** הארווי שאל כמה דם יוצא מהלב בשעה.', source_id: 'harvey-1628', go: { v: 'history', e: 5 }, go_he: 'הארווי, 1628' },
+    { text_he: '**מסורת היא השערה שמחכה לבדיקה:** חלקן אוששו, חלקן הופרכו.', go: { v: 'history', h: 'traditions' }, go_he: 'ארבע מסורות' },
+    { text_he: '**מה שנשבר מלמד איך זה עובד:** כל מחלה היא חלון אל המערכת שלה.', go: { v: 'diseases' }, go_he: '24 מחלות' },
   ],
   haiku: ['על רגל אחת', 'שבע רשתות בעיר', 'שאלה ביד'],
   haiku_note: 'הגוף כעיר, והידע כשאלה שמביאים לרופא.',
 };
+
+// ---------- Discovery layer: wonder, image, flag, open question (Anat, 02.11.2026) ----------
+// The app is a cabinet of wonders and a research atlas, not a warning campaign.
+// Three depth levels on every page: glance (wonder), understand (mechanism), depth (discovery and open question).
+
+// Historical plates, public domain on Wikimedia Commons, kept in img/ (credit on every use).
+export const IMAGES = {
+  'vesalius-fabrica': { src: 'img/vesalius-fabrica.jpg', title_he: 'לוח מתוך "על מבנה גוף האדם"', by_he: 'אנדראס וסאליוס', by_en: 'Andreas Vesalius', year: 1543, page: 'https://commons.wikimedia.org/wiki/File:Vesalius_Fabrica_p190.jpg' },
+  'harvey-veins': { src: 'img/harvey-veins.jpg', title_he: 'הניסוי בווריד החסום: הדם זורם רק לכיוון הלב', by_he: 'ויליאם הארווי', by_en: 'William Harvey', year: 1628, page: 'https://commons.wikimedia.org/wiki/File:William_Harvey_(1578-1657)_Venenbild.jpg' },
+  'snow-cholera-map': { src: 'img/snow-cholera-map.jpg', title_he: 'מפת הכולרה של רחוב ברוד', by_he: 'ג׳ון סנואו', by_en: 'John Snow', year: 1854, page: 'https://commons.wikimedia.org/wiki/File:Snow-cholera-map-1.jpg' },
+};
+
+// Glance level for each system: one number that makes you stop, and the question still open.
+export const WONDERS = {
+  nervous: { big: '86', unit_he: 'מיליארד', line_he: 'תאי עצב במוח אחד', source_id: 'azevedo-2009', open_q_he: 'איך נוצרת תודעה מתוך רשת של תאים?' },
+  respiratory: { big: '½', unit_he: 'ליטר', line_he: 'אוויר נכנס בכל נשימה רגילה', source_id: 'guyton-2020', open_q_he: 'איך הריאה מבחינה, בכל נשימה, בין אוויר לבין חיידק?' },
+  cardio: { big: '5', unit_he: 'ליטר בדקה', line_he: 'דם שהלב מזרים, במנוחה', source_id: 'guyton-2020', image: 'harvey-veins', open_q_he: 'איך שומר הלב על קצב, פעימה אחרי פעימה, עשרות שנים?' },
+  digestive: { big: '38', unit_he: 'טריליון', line_he: 'חיידקים בגוף, בערך כמספר התאים', source_id: 'sender-2016', open_q_he: 'מה בדיוק עושים בשבילנו החיידקים שבמעי?' },
+  skeletal: { big: '206', unit_he: 'עצמות', line_he: 'בשלד של אדם בוגר, שנבנה ומתפרק כל החיים', source_id: 'gray-2020', image: 'vesalius-fabrica', open_q_he: 'איך יודעת העצם היכן להתחזק, לפי העומס שהיא נושאת?' },
+  immune: { big: '3.5–5', unit_he: 'מיליון', line_he: 'חיים בשנה, בזכות הזיכרון שחיסונים מלמדים', source_id: 'who-immunization', open_q_he: 'איך זוכרת מערכת החיסון פולש במשך עשרות שנים?' },
+  reproductive: { big: 'HPV', unit_he: '', line_he: 'נגיף אחד, ונגדו חיסון שמונע סרטן', source_id: 'who-cervical', open_q_he: 'למה רוב מקרי סרטן השד מופיעים בלי גורם סיכון מזוהה?' },
+};
+
+// Flags of today's countries (flag-icons, MIT), for every culture and place.
+export const COUNTRIES = {
+  gr: 'יוון', it: 'איטליה', ir: 'איראן', eg: 'מצרים', es: 'ספרד', gb: 'בריטניה', at: 'אוסטריה',
+  de: 'גרמניה', ch: 'שווייץ', il: 'ישראל', cn: 'סין',
+};
+export const FLAG_URL = (cc) => `https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/${cc}.svg`;

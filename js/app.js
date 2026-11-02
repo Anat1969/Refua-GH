@@ -1,7 +1,7 @@
-import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, NUTRITION_APP, nutritionHref } from './data.js';
+import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, NUTRITION_APP, nutritionHref, IMAGES, WONDERS, COUNTRIES, FLAG_URL } from './data.js';
 import { historySVG, setEvent } from './history.js';
 import { detect, textMatches, normalize } from './match.js';
-import { bodySVG } from './body.js';
+import { bodySVG, sheetSVG } from './body.js';
 import { circulationSVG } from './circulation.js';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -83,15 +83,40 @@ const callCard = (id) => {
 };
 
 // ---------- Views ----------
-function systemView(s) {
+// ---------- Discovery layer: three depths, plates, flags ----------
+const DEPTHS = [[1, 'מבט', 'הפלא במספר אחד'], [2, 'הבנה', 'איך זה עובד'], [3, 'עומק', 'הגילוי, והשאלה הפתוחה']];
+function depthBar(l) {
+  return `<div class="depth" role="tablist" aria-label="רמת עומק">${DEPTHS.map(([n, he, sub]) => `<button class="depth-tab" role="tab" data-l="${n}" aria-selected="${l === n}"><span class="num">${n}</span><b>${he}</b><small>${sub}</small></button>`).join('')}</div>`;
+}
+const flag = (cc) => (cc && COUNTRIES[cc] ? `<img class="flag" src="${FLAG_URL(cc)}" alt="${COUNTRIES[cc]}" title="${COUNTRIES[cc]}" width="20" height="15" loading="lazy">` : '');
+// Close-up crops of each ink sheet (viewBox in the 400x800 sheet), 2:1 for the cabinet tiles.
+const CROP = { nervous: '120 25 160 80', respiratory: '26 128 348 174', cardio: '80 140 240 120', digestive: '0 150 400 200', skeletal: '80 140 240 120', immune: '60 140 280 140', reproductive: '23 252 354 177' };
+// A plate: a historical image when one is verified, otherwise the system's own ink sheet.
+function plate(imgId, sysId, cls = '') {
+  const im = imgId && IMAGES[imgId];
+  if (im) {
+    return `<figure class="plate ${cls}"><img src="${im.src}" alt="${esc(im.title_he)}" loading="lazy"><figcaption><b>${esc(im.title_he)}</b><span>${esc(im.by_he)} <span class="latin" dir="ltr">${esc(im.by_en)}</span>, <span class="num">${im.year}</span>. <a class="src" href="${im.page}" target="_blank" rel="noopener">ויקישיתוף, נחלת הכלל</a></span></figcaption></figure>`;
+  }
+  if (!sysId) return '';
+  const svg = encodeURIComponent(sheetSVG(sysId, 400));
+  return `<figure class="plate plate-sheet ${cls}"><img src="data:image/svg+xml,${svg}" alt="שקף: ${sysName(sysId)}"><figcaption><b>שקף: ${sysName(sysId)}</b><span>קו דיו, מתוך מפת הגוף של האפליקציה</span></figcaption></figure>`;
+}
+const wonderBlock = (w) => `<div class="wonder"><span class="w-big">${esc(w.big)}</span><span class="w-unit">${esc(w.unit_he)}</span><p class="w-line">${rich(w.line_he)}</p><p class="imeta">${srcLine(w.source_id)}</p></div>`;
+const seeAlso = (n) => (n < 3 ? `<button class="next-depth press-soft" data-l="${n + 1}">${n === 1 ? 'איך זה עובד' : 'הגילוי, והשאלה הפתוחה'}</button>` : '');
+const momentsFor = (pred) => TIMELINE.map((e, i) => ({ e, i })).filter(({ e }) => pred(e));
+const momentRow = ({ e, i }) => `<li><button class="moment press-soft" data-ev-go="${i}">${flag(e.cc)}<span class="num">${e.year < 0 ? -e.year : e.year}</span><b>${e.person_he}</b><span>${e.place_he}</span></button></li>`;
+const sourcesOf = (items) => [...new Set(items.filter(Boolean).map((x) => x.source_id).filter((id) => id && SOURCES[id]))];
+
+function systemView(s, l) {
   const i = SYSTEMS.indexOf(s);
   const a = s.action;
   const b = s.bridge;
+  const w = WONDERS[s.id];
   const bridgeLabel = b.kind === 'nutrition' ? 'חיבור לתזונה' : 'חיבור לעיר';
-  return `
+  const head = `
   <header class="panel-head">
     <div>
-      <p class="label">מערכת ${i + 1} מתוך ${SYSTEMS.length}</p>
+      <p class="label">גיליון ${i + 1} מתוך ${SYSTEMS.length}</p>
       <h2 id="sys-title">${s.name_he}</h2>
       <p class="latin-line" dir="ltr">${s.name_en}</p>
     </div>
@@ -101,35 +126,35 @@ function systemView(s) {
       <button class="icon press" data-go="1" title="הבאה" aria-label="המערכת הבאה">${ico.next}</button>
     </div>
   </header>
-  <p class="insight rise">${rich(s.insight)}</p>
-  <p class="city rise"><span class="label">בעיר</span>${rich(s.city)} <span class="ev">פרשנות</span></p>
+  ${depthBar(l)}`;
+  if (l === 1) {
+    return `${head}
+    <section class="glance rise">
+      ${wonderBlock(w)}
+      ${plate(w.image, s.id)}
+      <p class="city"><span class="label">בעיר</span>${rich(s.city)} <span class="ev">פרשנות</span></p>
+      ${seeAlso(1)}
+    </section>`;
+  }
+  if (l === 2) {
+    return `${head}
+    <p class="insight rise">${rich(s.insight)}</p>
+    <section class="block rise" aria-labelledby="h-know"><h3 id="h-know"><span class="label">מבנה</span>מה המערכת עושה</h3>${item(s.role)}</section>
+    <section class="block rise" aria-labelledby="h-under"><h3 id="h-under"><span class="label">כשל</span>מה משבש אותה</h3>${s.failure.map(item).join('')}</section>
+    <section class="block bridge rise" aria-labelledby="h-bridge"><h3 id="h-bridge"><span class="label">${bridgeLabel}</span>${rich(b.next_he)}</h3>${item(b)}${bridgeGo(b)}</section>
+    <p class="quiet-care"><span class="label">ומתי פונים</span>${rich(a.sign_he)}: ${rich(a.go_he)}. <span class="ev">${esc(a.question_he)}</span></p>
+    ${seeAlso(2)}`;
+  }
+  const moments = momentsFor((e) => e.system === s.id || (e.disease && DISEASES.find((d) => d.id === e.disease)?.system === s.id));
+  const said = s.failure.filter((f) => f.layer === 'said');
+  const src = sourcesOf([s.role, ...s.failure, b, a, w]);
+  return `${head}
+  <section class="block rise"><h3><span class="label">שאלה פתוחה</span>מה עוד לא ידוע</h3><p class="open-q">${esc(w.open_q_he)}</p></section>
+  ${moments.length ? `<section class="block rise"><h3><span class="label">גילויים</span>מי ראה את זה ראשון</h3><ul class="moments">${moments.map(momentRow).join('')}</ul></section>` : ''}
+  ${said.length ? `<section class="block rise"><h3><span class="label">מסורת</span>מה אמרו לפני הראיות</h3>${said.map(item).join('')}</section>` : ''}
   ${DEEP[s.id] ? `<button class="deep-cta press rise" data-view-go="deep"><span class="label">לעומק</span><b>${DEEP[s.id].title_he}</b><span>שמונה שלבים, איברים, ושלוש מחלות</span></button>` : ''}
-
-  <section class="block rise" aria-labelledby="h-know">
-    <h3 id="h-know"><span class="label">הכרה</span>תפקיד</h3>
-    ${item(s.role)}
-  </section>
-
-  <section class="block rise" aria-labelledby="h-under">
-    <h3 id="h-under"><span class="label">הבנה</span>כשל</h3>
-    ${s.failure.map(item).join('')}
-  </section>
-
-  <section class="block rise" aria-labelledby="h-use">
-    <h3 id="h-use"><span class="label">שימוש</span>מתי פונים, ומה שואלים</h3>
-    <div class="alert ${a.urgency === 'emergency' ? 'tone-urgent' : 'tone-doctor'}">
-      <p class="sign">${rich(a.sign_he)}</p>
-      <p class="go">${rich(a.go_he)}</p>
-      <p class="imeta">${srcLine(a.source_id)}</p>
-    </div>
-    <p class="question"><span class="label">שאלה לרופא</span>${rich(a.question_he)}</p>
-  </section>
-
-  <section class="block bridge rise" aria-labelledby="h-bridge">
-    <h3 id="h-bridge"><span class="label">${bridgeLabel}</span>${rich(b.next_he)}</h3>
-    ${item(b)}
-    ${bridgeGo(b)}
-  </section>`;
+  <button class="linkish rise" data-sys-dz="${s.id}">כל המחלות של ${s.name_he}</button>
+  <section class="block rise"><h3><span class="label">מקורות</span>על מה זה נשען</h3><ul class="src-list">${src.map((id) => `<li>${srcLine(id)}</li>`).join('')}</ul></section>`;
 }
 
 function emergencyView() {
@@ -344,15 +369,16 @@ function diseasesView(f) {
   <p class="fine">לפי גיליונות העובדות של ארגון הבריאות העולמי (WHO). שלוש הקווים בכל כרטיס: אילו שכבות יש בו.</p>`;
 }
 
-function diseaseView(id, f) {
+function diseaseView(id, f, l) {
   const d = DISEASES.find((x) => x.id === id) || DISEASES[0];
   const list = diseasesIn(f);
   const i = Math.max(0, list.indexOf(d));
   const inDeep = DEEP[d.system]?.diseases?.some((x) => x.id === d.id);
-  return `
+  const known = d.items.filter((x) => x.layer === 'known');
+  const head = `
   <header class="panel-head">
     <div>
-      <button class="label linkish-label" data-pick="${d.system}">${sysName(d.system)}</button>
+      <button class="label linkish-label" data-pick="${d.system}">תיק חקירה: ${sysName(d.system)}</button>
       <h2 id="sys-title">${d.name_he}</h2>
       <p class="latin-line" dir="ltr">${d.name_en}</p>
     </div>
@@ -363,23 +389,31 @@ function diseaseView(id, f) {
       <button class="icon press" data-view-go="diseases" title="לכל המחלות" aria-label="לכל המחלות">${ico.close}</button>
     </div>
   </header>
-  <p class="insight rise">${rich(d.insight)}</p>
-  ${groupOf(d.id) ? `<button class="linkish rise" data-group-go="${groupOf(d.id)}">כל סוגי ה${GROUPS[groupOf(d.id)].name_he}, והתמונה הכוללת</button>` : ''}
-  <section class="block rise" aria-labelledby="h-dz-l">
-    <h3 id="h-dz-l"><span class="label">הבנה</span>מה ידוע, מה נאמר, מה מאמינים</h3>
-    ${d.items.map(item).join('')}
-  </section>
-  <section class="block rise">
-    <h3><span class="label">שימוש</span>מתי פונים, ומה שואלים</h3>
-    <div class="alert ${d.action.urgency === 'emergency' ? 'tone-urgent' : 'tone-doctor'}">
-      <p class="sign">${rich(d.action.sign_he)}</p>
-      <p class="go">${rich(d.action.go_he)}</p>
-      <p class="imeta">${srcLine(d.action.source_id)}</p>
-    </div>
-    <p class="question"><span class="label">שאלה לרופא</span>${rich(d.action.question_he)}</p>
-  </section>
+  ${depthBar(l)}`;
+  if (l === 1) {
+    return `${head}
+    <section class="glance rise">
+      <p class="case-headline">${rich(d.insight)}</p>
+      ${known[0] ? item(known[0]) : ''}
+      ${groupOf(d.id) ? `<button class="linkish" data-group-go="${groupOf(d.id)}">כל סוגי ה${GROUPS[groupOf(d.id)].name_he}, והתמונה הכוללת</button>` : ''}
+      ${seeAlso(1)}
+    </section>`;
+  }
+  if (l === 2) {
+    return `${head}
+    <section class="block rise" aria-labelledby="h-dz-l"><h3 id="h-dz-l"><span class="label">המנגנון</span>מה ידוע, מה נאמר, מה מאמינים</h3>${d.items.map(item).join('')}</section>
+    <p class="quiet-care"><span class="label">ומתי פונים</span>${rich(d.action.sign_he)}: ${rich(d.action.go_he)}. <span class="ev">${esc(d.action.question_he)}</span></p>
+    ${seeAlso(2)}`;
+  }
+  const moments = momentsFor((e) => e.disease === d.id || e.system === d.system);
+  const src = sourcesOf([...d.items, d.action, d.bridge]);
+  return `${head}
+  ${moments.length ? `<section class="block rise"><h3><span class="label">גילויים</span>הדרך אל ההבנה</h3><ul class="moments">${moments.map(momentRow).join('')}</ul></section>` : ''}
   ${d.bridge ? `<section class="block bridge rise"><h3><span class="label">${d.bridge.kind === 'nutrition' ? 'חיבור לתזונה' : 'חיבור לעיר'}</span>${rich(d.bridge.next_he)}</h3>${item(d.bridge)}${bridgeGo(d.bridge)}</section>` : ''}
-  ${inDeep ? `<button class="deep-cta press rise" data-deep-dz="${d.id}"><span class="label">לעומק</span><b>${DEEP[d.system].title_he}</b><span>המחלה בתוך התרשים, עם האיברים והתהליך</span></button>` : ''}`;
+  ${inDeep ? `<button class="deep-cta press rise" data-deep-dz="${d.id}"><span class="label">לעומק</span><b>${DEEP[d.system].title_he}</b><span>המחלה בתוך התרשים, עם האיברים והתהליך</span></button>` : ''}
+  <section class="block rise"><h3><span class="label">מקורות</span>על מה זה נשען</h3><ul class="src-list">${src.map((x) => `<li>${srcLine(x)}</li>`).join('')}</ul></section>
+  <div class="alert ${d.action.urgency === 'emergency' ? 'tone-urgent' : 'tone-doctor'}"><p class="sign">${rich(d.action.sign_he)}</p><p class="go">${rich(d.action.go_he)}</p><p class="imeta">${srcLine(d.action.source_id)}</p></div>
+  <p class="question"><span class="label">שאלה לרופא</span>${rich(d.action.question_he)}</p>`;
 }
 
 // ---------- Home: the whole teaching on one foot ----------
@@ -406,16 +440,16 @@ function homeLead() {
       <p class="h-tr"><span class="q-tag">תרגום</span> ${HOME.hillel_tr}</p>
       <p class="imeta">${srcLine(HOME.hillel_source)}</p>
     </blockquote>
-    <h1 class="headline">${rich(HOME.one_foot)}</h1>
+    <h1 class="headline display">${rich(HOME.one_foot)}</h1>
     <p class="lede">${HOME.one_foot_more.split('\n').map(rich).join('<br>')}</p>
     <ul class="home-nums" aria-label="במספרים">
       <li><button class="numcell press-soft" data-view-go="system">${n(SYSTEMS.length)}<span>מערכות</span></button></li>
       <li><button class="numcell press-soft" data-view-go="diseases">${n(DISEASES.length)}<span>מחלות</span></button></li>
-      <li><button class="numcell press-soft" data-view-go="history">${n(TIMELINE.length)}<span>רגעים</span></button></li>
+      <li><button class="numcell press-soft" data-view-go="history">${n(TIMELINE.length)}<span>גילויים</span></button></li>
       <li><button class="numcell press-soft" data-view-go="sources">${n(Object.keys(SOURCES).length)}<span>מקורות</span></button></li>
     </ul>
     <div id="quiz-box"></div>
-    <p class="inspo">בהשראת <b>הלל הזקן</b>, ו<b>וסאליוס</b> <span class="latin" dir="ltr">Andreas Vesalius, 1543</span>: הכול במבט אחד, והפירוט בשקפים.</p>`;
+    <p class="inspo">בהשראת <b>הלל הזקן</b>, ו<b>ארונות הפלאות</b> של אירופה, <span class="num">1600</span> לערך: כל פריט מעורר שאלה.</p>`;
 }
 
 function quizHTML() {
@@ -441,16 +475,27 @@ function quizHTML() {
 function homeView() {
   return `
   <header class="panel-head">
-    <div><p class="label">ואידך פירושה</p><h2 id="sys-title">שבעה משפטים לדרך</h2></div>
+    <div><p class="label">ארון פלאות</p><h2 id="sys-title">שבעה פלאות, שבע מערכות</h2></div>
   </header>
-  <ol class="lines">${HOME.lines.map((l, i) => `
-    <li class="line rise">
-      <span class="ln num">${i + 1}</span>
-      <p class="lt">${rich(l.text_he)}</p>
-      <p class="imeta">${l.source_id ? srcLine(l.source_id) : '<span class="ev">השיטה של האפליקציה</span>'}<button class="linkish" data-line="${i}">${l.go_he}</button></p>
-    </li>`).join('')}</ol>
-
-`;
+  <ul class="cabinet">${SYSTEMS.map((x) => {
+    const w = WONDERS[x.id];
+    const im = w.image && IMAGES[w.image];
+    return `<li><button class="wonder-tile press rise" data-pick="${x.id}">
+      ${im ? `<img src="${im.src}" alt="" loading="lazy">` : `<img class="sheet" src="data:image/svg+xml,${encodeURIComponent(sheetSVG(x.id, 360, CROP[x.id]))}" alt="">`}
+      <span class="wt-big">${esc(w.big)}</span><span class="wt-unit">${esc(w.unit_he)}</span>
+      <span class="wt-line">${esc(w.line_he)}</span>
+      <span class="wt-sys">${x.short_he || x.name_he}</span>
+    </button></li>`;
+  }).join('')}</ul>
+  <section class="block" aria-labelledby="h-lines">
+    <h3 id="h-lines"><span class="label">ואידך פירושה</span>שבע תובנות על מערכות</h3>
+    <ol class="lines">${HOME.lines.map((ln, i) => `
+      <li class="line">
+        <span class="ln num">${i + 1}</span>
+        <p class="lt">${rich(ln.text_he)}</p>
+        <p class="imeta">${ln.source_id ? srcLine(ln.source_id) : '<span class="ev">העדשה של האפליקציה</span>'}<button class="linkish" data-line="${i}">${ln.go_he}</button></p>
+      </li>`).join('')}</ol>
+  </section>`;
 }
 
 // ---------- Stage 5: timeline and traditions ----------
@@ -462,7 +507,7 @@ function historyView(ei, h) {
     body = `<p class="note-line">${rich('אותן שלוש שאלות לכל מסורת, כדי לראות מה משותף ומה ייחודי.')}</p>
     <div class="trad-list">${TRADITIONS.map((t) => `
       <section class="trad l-${t.layer} rise" aria-labelledby="tr-${t.id}">
-        <header><h3 id="tr-${t.id}">${t.name_he}</h3><span class="ltag">${LAYERS[t.layer].he}</span><span class="ev">${esc(t.era_he)}</span></header>
+        <header><span class="flags">${(t.flags || []).map(flag).join('')}</span><h3 id="tr-${t.id}">${t.name_he}</h3><span class="ltag">${LAYERS[t.layer].he}</span><span class="ev">${esc(t.era_he)}</span></header>
         <dl>
           <dt>מהי מחלה</dt><dd>${rich(t.disease_he)}</dd>
           <dt>איך בודקים</dt><dd>${rich(t.look_he)}</dd>
@@ -475,12 +520,16 @@ function historyView(ei, h) {
     const e = TIMELINE[ei];
     const rel = e.disease ? DISEASES.find((d) => d.id === e.disease) : null;
     const relSys = e.system ? SYSTEMS.find((x) => x.id === e.system) : null;
+    const lv = readState().l;
     body = `
+    ${depthBar(lv)}
     <section class="event rise" aria-labelledby="ev-title">
       <p class="ev-year"><span class="num">${e.year < 0 ? -e.year : e.year}</span>${e.year < 0 ? ' לפנה״ס' : ''}</p>
-      <h3 id="ev-title">${e.person_he}<span class="latin" dir="ltr">${esc(e.person_en)}</span></h3>
-      <p class="ev-place"><b>${e.place_he}</b><span class="latin" dir="ltr">${esc(e.place_en)}</span></p>
-      ${item(e)}
+      <h3 id="ev-title">${flag(e.cc)}${e.person_he}<span class="latin" dir="ltr">${esc(e.person_en)}</span></h3>
+      <p class="ev-place"><b>${e.place_he}</b><span class="latin" dir="ltr">${esc(e.place_en)}</span>${e.cc ? ` <span class="ev">${COUNTRIES[e.cc]} של היום</span>` : ''}</p>
+      ${lv === 1 ? `${plate(e.image)}${seeAlso(1)}` : ''}
+      ${lv === 2 ? `${item(e)}${seeAlso(2)}` : ''}
+      ${lv === 3 ? item(e) : ''}
       <div class="ev-links">
         ${relSys ? `<button class="linkish" data-pick="${relSys.id}">למערכת: ${relSys.name_he}</button>` : ''}
         ${rel ? `<button class="linkish" data-open-dz="${rel.id}">למחלה: ${rel.name_he}</button>` : ''}
@@ -492,10 +541,10 @@ function historyView(ei, h) {
   }
   return `
   <header class="panel-head">
-    <div><p class="label">היסטוריה</p><h2 id="sys-title">${h === 'traditions' ? 'ארבע מסורות, שלוש שאלות' : `${TIMELINE.length} רגעים ברפואה`}</h2></div>
+    <div><p class="label">היסטוריה</p><h2 id="sys-title">${h === 'traditions' ? 'ארבע מסורות, שלוש שאלות' : `${TIMELINE.length} גילויים, יומן מסע`}</h2></div>
     ${closeBtn}
   </header>
-  <p class="insight">${rich(h === 'traditions' ? '==המסורות שאלו את אותן שאלות. הראיות שינו את התשובות.==' : '==מאיזון ליחות לחיידק: הידע עבר מעיר לעיר.==')}</p>
+  <p class="insight">${rich(h === 'traditions' ? '==המסורות שאלו את אותן שאלות. הראיות שינו את התשובות.==' : '==מאיזון ליחות לחיידק: מסע של 2,400 שנה, מעיר לעיר.==')}</p>
   ${tabs}
   ${body}`;
 }
@@ -561,7 +610,8 @@ function readState() {
   const f = SYSTEMS.some((x) => x.id === p.get('f')) || GROUPS[p.get('f')] ? p.get('f') : '';
   const e = Math.min(Math.max(parseInt(p.get('e'), 10) || 0, 0), TIMELINE.length - 1);
   const h = p.get('h') === 'traditions' ? 'traditions' : 'timeline';
-  return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m, f, e, h };
+  const l = [1, 2, 3].includes(parseInt(p.get('l'), 10)) ? parseInt(p.get('l'), 10) : 1;
+  return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m, f, e, h, l };
 }
 const VIEWS = ['home', 'emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease', 'history'];
 function go(s, v = 'system', extra = {}, replace = false) {
@@ -579,6 +629,7 @@ function go(s, v = 'system', extra = {}, replace = false) {
     if (extra.k) prm.set('k', String(extra.k));
     if (extra.d) prm.set('d', extra.d);
   }
+  if (extra.l && extra.l > 1 && ['system', 'disease', 'history'].includes(v)) prm.set('l', String(extra.l));
   const h = '#' + prm.toString();
   if (replace) { history.replaceState(null, '', h); render(); return; }
   if (location.hash !== h) location.hash = h;
@@ -640,7 +691,7 @@ function stopHistoryPlay() {
 }
 function eventTo(i, replace = false) {
   const n = TIMELINE.length;
-  go(readState().s, 'history', { e: (i + n) % n }, replace);
+  go(readState().s, 'history', { e: (i + n) % n, l: readState().l }, replace);
 }
 
 function renderStage(s, v, k) {
@@ -729,9 +780,9 @@ function stepTo(k, replace = false) {
 function render() {
   const { s, v, q, a } = readState();
   const panel = $('#panel');
-  const { t, k, d, f, e, h } = readState();
-  const views = { home: homeView, history: () => historyView(e, h), diseases: () => diseasesView(f), disease: () => diseaseView(d, f), emergency: emergencyView, sources: sourcesView, redlist: () => redlistView(a), profile: profileView, about: aboutView, search: () => searchView(q), deep: () => deepView(s, t, k, d) };
-  panel.innerHTML = (views[v] || (() => systemView(s)))();
+  const { t, k, d, f, e, h, l } = readState();
+  const views = { home: homeView, history: () => historyView(e, h), diseases: () => diseasesView(f), disease: () => diseaseView(d, f, l), emergency: emergencyView, sources: sourcesView, redlist: () => redlistView(a), profile: profileView, about: aboutView, search: () => searchView(q), deep: () => deepView(s, t, k, d) };
+  panel.innerHTML = (views[v] || (() => systemView(s, l)))();
   renderStage(s, v, k);
   const box = $('#search');
   if (v === 'search' && document.activeElement !== box) box.value = q;
@@ -768,7 +819,7 @@ function render() {
 
 function openDisease(id, f = '') {
   const x = DISEASES.find((y) => y.id === id);
-  go(SYSTEMS.find((y) => y.id === x.system), 'disease', { d: id, f });
+  go(SYSTEMS.find((y) => y.id === x.system), 'disease', { d: id, f, l: readState().v === 'disease' ? readState().l : 1 });
 }
 function stepDisease(dir) {
   const st = readState();
@@ -875,7 +926,7 @@ function boot() {
     if (step) {
       const { s } = readState();
       const i = (SYSTEMS.indexOf(s) + Number(step.dataset.go) + SYSTEMS.length) % SYSTEMS.length;
-      go(SYSTEMS[i]);
+      go(SYSTEMS[i], 'system', { l: readState().l });
     }
     if (e.target.closest('[data-close]')) go(readState().s);
     if (step || e.target.closest('[data-close]')) return;
@@ -901,7 +952,13 @@ function boot() {
     if (ch && ch.dataset.ev !== undefined) { stopHistoryPlay(); eventTo(Number(ch.dataset.ev)); }
     else if (ch) { stopPlay(); stepTo(Number(ch.dataset.step)); }
     const ln = e.target.closest('[data-line]');
-    if (ln) { const g = HOME.lines[Number(ln.dataset.line)].go; const x = g.d && DISEASES.find((y) => y.id === g.d); go(x ? SYSTEMS.find((y) => y.id === x.system) : readState().s, g.v, g); }
+    if (ln) { const g = HOME.lines[Number(ln.dataset.line)].go; const x = g.d && DISEASES.find((y) => y.id === g.d); go(x ? SYSTEMS.find((y) => y.id === x.system) : SYSTEMS.find((y) => y.id === g.s) || readState().s, g.v, g); }
+    const lt = e.target.closest('[data-l]');
+    if (lt) { const st = readState(); go(st.s, st.v, { ...st, l: Number(lt.dataset.l) }); }
+    const evg = e.target.closest('[data-ev-go]');
+    if (evg) go(readState().s, 'history', { e: Number(evg.dataset.evGo) });
+    const sdz = e.target.closest('[data-sys-dz]');
+    if (sdz) go(SYSTEMS.find((y) => y.id === sdz.dataset.sysDz), 'diseases', { f: sdz.dataset.sysDz });
     const ht = e.target.closest('[data-htab]');
     if (ht) go(readState().s, 'history', { h: ht.dataset.htab, e: readState().e });
     const dsys = e.target.closest('[data-deep-sys]');
