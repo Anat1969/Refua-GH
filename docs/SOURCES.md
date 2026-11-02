@@ -72,3 +72,11 @@
 - Saper et al., JAMA 2008;300(8):915-923, PMID 18728265. ב-20.7% מ-193 תכשירים נמצאו מתכות.
 - Debelle, Vanherweghem & Nortier, Kidney International 2008;74(2):158-169.
 - IARC Monographs vol. 82, 2002.
+
+## מערכת לעומק: נוספו ב-02.11.2026 (שלב 2)
+נבדקו ברשת באותו יום.
+- WHO, Hypertension: 1.4 מיליארד מבוגרים (גילי 30 עד 79) ב-2024. 44% לא יודעים. לרוב אין תסמינים.
+- WHO, Cardiovascular diseases: גורמי הסיכון ההתנהגותיים העיקריים, וחסימה כגורם עיקרי להתקף לב.
+- NHS, Heart failure: symptoms. תסמינים, ומתי מתקשרים לחירום.
+- William Harvey, De Motu Cordis, 1628, פרק 8, תרגום Willis (1847). הציטוט על "תנועה במעגל".
+- DASH-Sodium, NEJM 2001. NCCIH, רפואה סינית.

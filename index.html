@@ -67,8 +67,21 @@
 
     <section class="stage" aria-label="דמות הגוף">
       <div class="figure" id="figure"></div>
-      <p class="figure-note">כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.</p>
-      <div class="museum">
+      <div class="figure deep-figure" id="deep-figure" hidden></div>
+      <div class="deep-controls" id="deep-controls" hidden>
+        <div class="ctl-ops" role="group" aria-label="שלבי מחזור הדם">
+          <button class="icon press" id="step-prev" title="השלב הקודם" aria-label="השלב הקודם"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+          <button class="icon press" id="step-play" title="הפעלה" aria-label="הפעלה" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-play" d="M16 6v12L7 12z"/><path class="i-pause" d="M9 6v12M15 6v12"/></svg></button>
+          <button class="icon press" id="step-next" title="השלב הבא" aria-label="השלב הבא"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+        </div>
+        <p class="ctl-step" id="ctl-step" aria-live="polite"></p>
+        <ul class="ctl-legend" aria-label="מקרא">
+          <li><span class="lg lg-rich" aria-hidden="true"></span>דם עשיר בחמצן</li>
+          <li><span class="lg lg-poor" aria-hidden="true"></span>דם דל בחמצן</li>
+        </ul>
+      </div>
+      <p class="figure-note" id="figure-note">כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.</p>
+      <div class="museum" id="museum">
         <figure class="quote">
           <blockquote>
             <p class="q-he">„בריאות היא מצב של רווחה גופנית, נפשית וחברתית מלאה, ולא רק היעדר מחלה או מום.”</p>

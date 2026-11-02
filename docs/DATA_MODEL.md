@@ -128,3 +128,18 @@
 - נשמר ב-`localStorage`, במפתח `refua.profile.v1`, ולא יוצא מהמכשיר.
 - `special: true`: מפעיל "צמח או תוסף מרוכז: לא מתאים בלי ייעוץ" (SAFETY.md, סעיף 5).
 - `organ`: מחבר לפריטים ברשימה האדומה עם אותו איבר.
+
+## מערכת לעומק (DEEP), שלב 2
+```json
+{ "cardio": {
+  "title_he": "מחזור הדם", "insight": "==...==", "insight_note": "...",
+  "steps": [{ "seg": "cava", "name_he": "...", "layer": "known", "text_he": "...", "evidence": "גבוהה", "source_id": "...", "oxy": "poor" }],
+  "organs": [{ "name_he": "הלב", "layer": "known", "...": "..." }],
+  "diseases": [{ "id": "hypertension", "name_he": "...", "name_en": "...", "insight": "...", "items": ["..."], "action": { "...": "..." }, "bridge": { "...": "..." } }],
+  "museum": { "quote_he": "...", "quote_en": "...", "quote_source": "...", "quote_by_he": "...", "haiku": ["", "", ""], "haiku_note": "..." }
+} }
+```
+- `steps[].seg` הוא מזהה קטע בתרשים (`js/circulation.js`). `oxy`: "rich", "poor" או "swap" (חילוף גזים).
+- כל `items`, `steps` ו-`organs` עוברים את אותם כללי שכבות כמו `SYSTEMS`.
+- כל מחלה: לפחות פריט ידוע אחד, סימן לפנייה (חירום מפנה ל-101) ושאלה לרופא.
+- כתובת: `#s=<system>&v=deep&t=<process|organs|diseases>&k=<step>&d=<disease>`.
