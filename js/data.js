@@ -39,6 +39,12 @@ export const SOURCES = {
   'iarc-82': { title: 'IARC Monographs, vol. 82', type: 'סיווג רשמי', year: 2002, note: 'תכשירים צמחיים עם אריסטולוכיה', url: 'https://publications.iarc.who.int/' },
   'debelle-2008': { title: 'Debelle, Vanherweghem & Nortier, Kidney International', type: 'סקירה', year: 2008, note: 'כרך 74, עמ׳ 158-169', url: 'https://pubmed.ncbi.nlm.nih.gov/?term=Aristolochic+acid+nephropathy+a+worldwide+problem' },
   'saper-2008': { title: 'Saper et al., JAMA', type: 'מחקר', year: 2008, note: '193 תכשירים שנבדקו', url: 'https://pubmed.ncbi.nlm.nih.gov/18728265/' },
+  'harvey-1628': { title: 'William Harvey, De Motu Cordis', type: 'מקור היסטורי', year: 1628, note: 'פרק 8, תרגום Willis, 1847', url: 'https://en.wikisource.org/wiki/The_Works_of_William_Harvey/An_Anatomical_Disquisition_on_the_Motion_of_the_Heart_and_Blood_in_Animals/Chapter_8' },
+  'who-cvd': { title: 'WHO, Cardiovascular diseases', type: 'הנחיה רשמית', year: 2025, note: '', url: 'https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds)' },
+  'who-hypertension': { title: 'WHO, Hypertension', type: 'הנחיה רשמית', year: 2025, note: 'נתוני 2024', url: 'https://www.who.int/news-room/fact-sheets/detail/hypertension' },
+  'nhs-heart-failure': { title: 'NHS, Heart failure: symptoms', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/heart-failure/symptoms/' },
+  'dash-2001': { title: 'DASH-Sodium, NEJM', type: 'ניסוי מבוקר', year: 2001, note: '', url: 'https://doi.org/10.1056/NEJM200101043440101' },
+  'nccih-tcm': { title: 'NCCIH, Traditional Chinese Medicine', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nccih.nih.gov/health/traditional-chinese-medicine-what-you-need-to-know' },
   'rambam-deot': { title: 'רמב"ם, משנה תורה, הלכות דעות ד', type: 'מסורת', year: 1180, note: 'הלכה ב', url: 'https://www.sefaria.org.il/Mishneh_Torah,_Human_Dispositions.4' },
 };
 
@@ -257,3 +263,81 @@ export const PROFILE_ITEMS = [
   { id: 'meds', he: 'תרופות קבועות' },
   { id: 'allergy', he: 'אלרגיה ידועה' },
 ];
+
+// ---------- Stage 2: one system in depth (pilot: cardio) ----------
+// Same layer rules as SYSTEMS. Steps form a numbered chain on the circulation diagram.
+export const DEEP = {
+  cardio: {
+    title_he: 'מחזור הדם',
+    insight: '==בעורק הריאה זורם דם דל בחמצן.==',
+    insight_note: 'עורק מוגדר לפי הכיוון, מהלב החוצה. לא לפי החמצן.',
+    steps: [
+      { seg: 'cava', name_he: 'חזרה מהגוף', layer: 'known', text_he: 'דם דל בחמצן חוזר מהגוף דרך **הוורידים הנבובים** אל **העלייה הימנית**.', evidence: 'גבוהה', source_id: 'guyton-2020', oxy: 'poor' },
+      { seg: 'ra-rv', name_he: 'עלייה לחדר, ימין', layer: 'known', text_he: 'הדם עובר דרך **המסתם התלת-צניפי** אל **החדר הימני**.', evidence: 'גבוהה', source_id: 'guyton-2020', oxy: 'poor' },
+      { seg: 'pa', name_he: 'אל הריאות', layer: 'known', text_he: 'החדר הימני דוחף את הדם ב**עורק הריאה** אל הריאות.', evidence: 'גבוהה', source_id: 'guyton-2020', oxy: 'poor' },
+      { seg: 'lungs', name_he: 'בריאות', layer: 'known', text_he: 'בנימי הריאה הדם **קולט חמצן** ופולט **פחמן דו-חמצני**.', evidence: 'גבוהה', source_id: 'guyton-2020', oxy: 'swap' },
+      { seg: 'pv', name_he: 'חזרה ללב', layer: 'known', text_he: 'דם עשיר בחמצן חוזר ב**ורידי הריאה** אל **העלייה השמאלית**.', evidence: 'גבוהה', source_id: 'guyton-2020', oxy: 'rich' },
+      { seg: 'la-lv', name_he: 'עלייה לחדר, שמאל', layer: 'known', text_he: 'הדם עובר דרך **המסתם הדו-צניפי** אל **החדר השמאלי**, בעל הדופן העבה בלב.', evidence: 'גבוהה', source_id: 'guyton-2020', oxy: 'rich' },
+      { seg: 'aorta', name_he: 'אל הגוף', layer: 'known', text_he: 'החדר השמאלי דוחף את הדם ל**אאורטה**, העורק הגדול בגוף.', evidence: 'גבוהה', source_id: 'guyton-2020', oxy: 'rich' },
+      { seg: 'body', name_he: 'ברקמות', layer: 'known', text_he: 'בנימי הגוף הדם **מוסר חמצן** לתאים, ואוסף מהם **פחמן דו-חמצני**.', evidence: 'גבוהה', source_id: 'guyton-2020', oxy: 'swap' },
+    ],
+    organs: [
+      { name_he: 'הלב', layer: 'known', text_he: '**ארבעה** חללים ו**ארבעה** מסתמים. המסתמים מכוונים את הזרימה לכיוון אחד.', evidence: 'גבוהה', source_id: 'guyton-2020' },
+      { name_he: 'הקצב', layer: 'known', text_he: 'במנוחה בערך **70** פעימות בדקה: יותר מ-**100,000** פעימות ביממה.', evidence: 'גבוהה', source_id: 'guyton-2020' },
+      { name_he: 'עורקים וורידים', layer: 'known', text_he: '**עורקים** מובילים דם מהלב. **ורידים** מחזירים אותו אליו.', evidence: 'גבוהה', source_id: 'gray-2020' },
+      { name_he: 'נימים', layer: 'known', text_he: 'דופן הנימים בעובי של **שכבת תאים אחת**. שם עוברים חמצן ופסולת בין הדם לתאים.', evidence: 'גבוהה', source_id: 'guyton-2020' },
+      { name_he: 'הגילוי', layer: 'known', text_he: '**הארווי** חישב שהלב מזרים בשעה יותר דם ממה שהגוף יכול לייצר. מכאן הסיק: הדם חוזר, במעגל.', evidence: 'גבוהה', source_id: 'harvey-1628' },
+      { name_he: 'לפני הארווי', layer: 'said', text_he: '**גלנוס** (Galen) לימד שהדם נוצר בכבד מן המזון, ונצרך באיברים.', tradition: 'רפואה יוונית-רומית', source_id: 'porter-1997' },
+    ],
+    diseases: [
+      {
+        id: 'ischemic',
+        name_he: 'מחלת לב איסכמית',
+        name_en: 'Ischaemic heart disease',
+        insight: '==עורק חסום, ושריר הלב נשאר בלי חמצן.==',
+        items: [
+          { layer: 'known', text_he: 'התקף לב נגרם בעיקר מ**חסימה** שמונעת זרימת דם אל הלב.', evidence: 'גבוהה', source_id: 'who-cvd' },
+          { layer: 'known', text_he: 'גורמי הסיכון ההתנהגותיים העיקריים: **תזונה לא בריאה**, **חוסר פעילות גופנית**, **עישון** ו**שתיית אלכוהול מזיקה**.', evidence: 'גבוהה', source_id: 'who-cvd' },
+          { layer: 'said', text_he: '**ויליאם הברדן** (William Heberden) תיאר ב-**1768** כאב בחזה שמופיע בהליכה ונרגע במנוחה, וקרא לו אנגינה פקטוריס.', tradition: 'רפואה אנגלית', source_id: 'porter-1997' },
+          { layer: 'believed', text_he: 'התקף לב מתחיל תמיד בכאב חד ביד שמאל.', status: 'לא אוששה' },
+        ],
+        action: { urgency: 'emergency', sign_he: 'כאב או לחץ בחזה, שמתפשט ליד, ללסת או לגב', go_he: 'מד"א **101**, מיד', source_id: 'nhs-heart-attack', question_he: 'מה גורמי הסיכון שלי ללב, ואיך בודקים אותם?' },
+        bridge: { kind: 'nutrition', layer: 'known', text_he: 'בתזונה ים-תיכונית עשירה ב**שמן זית** נמצא שיעור נמוך יותר של אירועי לב.', evidence: 'בינונית', source_id: 'predimed-2018', next_he: 'שמן זית', link: { app: 'nutrition', food_id: 'olive-oil' } },
+      },
+      {
+        id: 'hypertension',
+        name_he: 'יתר לחץ דם',
+        name_en: 'Hypertension',
+        insight: '==**1.4** מיליארד מבוגרים, ורובם לא מרגישים דבר.==',
+        items: [
+          { layer: 'known', text_he: 'ב-**2024** חיו בעולם **1.4** מיליארד מבוגרים עם יתר לחץ דם. **44%** מהם לא ידעו על כך.', evidence: 'גבוהה', source_id: 'who-hypertension' },
+          { layer: 'known', text_he: 'לרוב האנשים עם יתר לחץ דם **אין תסמינים**. רק מדידה מגלה אותו.', evidence: 'גבוהה', source_id: 'who-hypertension' },
+          { layer: 'said', text_he: 'ברפואה הסינית **בדיקת הדופק** היא כלי מרכזי להערכת מצב הגוף.', tradition: 'רפואה סינית', source_id: 'nccih-tcm' },
+          { layer: 'believed', text_he: 'כאב ראש הוא סימן אמין ללחץ דם גבוה.', status: 'לא אוששה' },
+        ],
+        action: { urgency: 'doctor', sign_he: 'אין סימן אמין. הדרך היחידה לדעת: מדידה', go_he: 'מדידה אצל רופא המשפחה או באחות', source_id: 'who-hypertension', question_he: 'מה לחץ הדם שלי, ומתי כדאי למדוד שוב?' },
+        bridge: { kind: 'nutrition', layer: 'known', text_he: 'בניסוי **DASH-Sodium**, הפחתת **נתרן** במזון לוותה בירידה בלחץ הדם.', evidence: 'גבוהה', source_id: 'dash-2001', next_he: 'מלח ונתרן', link: { app: 'nutrition', topic: 'sodium' } },
+      },
+      {
+        id: 'heart-failure',
+        name_he: 'אי ספיקת לב',
+        name_en: 'Heart failure',
+        insight: '==הלב פועם, אבל לא מספיק.==',
+        items: [
+          { layer: 'known', text_he: 'הלב **לא מזרים מספיק דם** לצורכי הגוף. נוזלים מצטברים בריאות ובגפיים.', evidence: 'גבוהה', source_id: 'guyton-2020' },
+          { layer: 'known', text_he: 'תסמינים מוכרים: **קוצר נשימה** בפעילות יומיומית או בשכיבה, **עייפות**, ו**נפיחות** בכפות הרגליים ובקרסוליים.', evidence: 'גבוהה', source_id: 'nhs-heart-failure' },
+          { layer: 'believed', text_he: 'אי ספיקת לב פירושה שהלב הפסיק לפעום.', status: 'לא אוששה' },
+        ],
+        action: { urgency: 'emergency', sign_he: 'קושי קשה בנשימה, שפתיים או עור כחלחלים, או התעלפות', go_he: 'מד"א **101**, מיד', source_id: 'nhs-heart-failure', question_he: 'קוצר נשימה בשכיבה ונפיחות בקרסוליים: האם זה דורש בירור?' },
+      },
+    ],
+    museum: {
+      quote_he: 'התחלתי לחשוב שמא יש תנועה, כביכול, במעגל.',
+      quote_en: 'I began to think whether there might not be a motion, as it were, in a circle.',
+      quote_source: 'harvey-1628',
+      quote_by_he: 'ויליאם הארווי (William Harvey), על תנועת הלב, 1628',
+      haiku: ['דם יוצא לעיר', 'שב דרך הוורידים', 'סוגר מעגל'],
+      haiku_note: 'הארווי ראה מעגל, במקום שבו אחרים ראו נהר שנגמר.',
+    },
+  },
+};

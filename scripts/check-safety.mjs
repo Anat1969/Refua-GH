@@ -1,7 +1,7 @@
 // Safety gate (docs/SAFETY.md, docs/CONTENT_RULES.md). Exit 1 blocks merge.
 // Run: node scripts/check-safety.mjs
 import { readFileSync } from 'node:fs';
-import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS } from '../js/data.js';
+import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP } from '../js/data.js';
 import { detect } from '../js/match.js';
 
 const errors = [];
@@ -63,6 +63,25 @@ for (const [id, src] of Object.entries(SOURCES)) {
   if (!src.title || !src.year || !src.url) err(`source ${id}: needs title, year and url`);
 }
 
+// Systems in depth (stage 2): same layer rules, every disease has a sign and a question
+for (const [sid, D] of Object.entries(DEEP)) {
+  if (!SYSTEMS.find((x) => x.id === sid)) err(`deep ${sid}: unknown system`);
+  D.steps.forEach((st, i) => { checkItem(st, `deep.${sid}.steps[${i}]`); if (!['rich', 'poor', 'swap'].includes(st.oxy)) err(`deep.${sid}.steps[${i}]: oxy`); });
+  D.organs.forEach((o, i) => checkItem(o, `deep.${sid}.organs[${i}]`));
+  for (const dz of D.diseases) {
+    const w = `deep.${sid}.${dz.id}`;
+    dz.items.forEach((it, i) => checkItem(it, `${w}.items[${i}]`));
+    if (!dz.items.some((it) => it.layer === 'known')) err(`${w}: needs a known item`);
+    const a = dz.action;
+    if (!SOURCES[a.source_id]) err(`${w}.action: missing source`);
+    if (a.urgency === 'emergency' && !a.go_he.includes('101')) err(`${w}.action: emergency must point to 101`);
+    if (!a.question_he.endsWith('?')) err(`${w}.action: question must end with ?`);
+    if (dz.bridge) checkItem(dz.bridge, `${w}.bridge`);
+  }
+  if (!SOURCES[D.museum.quote_source]) err(`deep.${sid}.museum: quote without source`);
+  walkKeys(D, `deep.${sid}`);
+}
+
 // Red list (SAFETY.md section 4): scientific name, risk, source, review date
 for (const r of REDLIST) {
   if (!r.name_he || !r.name_la || !r.risk_he) err(`redlist ${r.id}: needs name_he, name_la and risk_he`);
@@ -96,7 +115,7 @@ if (detect('תאוריה של אור', KEYWORDS).length || detect('הלב שלי
 for (const i of PROFILE_ITEMS) if (BANNED_KEYS.test(i.id)) err(`profile item ${i.id}: banned field`);
 
 // Forbidden words in all user-facing text
-const files = ['js/data.js', 'index.html', 'js/app.js', 'js/match.js'];
+const files = ['js/data.js', 'index.html', 'js/app.js', 'js/match.js', 'js/circulation.js'];
 for (const f of files) {
   let text = readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
   for (const p of ALLOWED_PHRASES) text = text.split(p).join('');

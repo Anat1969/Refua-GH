@@ -197,6 +197,58 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.waitForFunction(() => document.querySelectorAll('.sources li').length > 0);
       const nSrc = await page.$$eval('.sources li', (l) => l.length);
       ok(nSrc >= 30, `sources view includes red list sources (${nSrc})`);
+
+      // ---------- Stage 2: cardio in depth ----------
+      await page.goto(BASE + '#s=cardio');
+      await page.waitForSelector('.deep-cta');
+      await page.click('.deep-cta');
+      await page.waitForFunction(() => location.hash.includes('v=deep') && document.querySelectorAll('#deep-figure .seg').length === 8);
+      ok(await page.isHidden('#figure') && await page.isVisible('#deep-figure'), 'deep: circulation diagram replaces the body figure');
+      await page.click('#deep-figure .seg[data-step="4"] .badge', { force: true });
+      await page.waitForFunction(() => location.hash.includes('k=4') && document.querySelector('#deep-figure .seg.on').dataset.step === '4');
+      ok(true, 'deep: click on a numbered step selects it');
+      await page.click('#step-next');
+      await page.waitForFunction(() => location.hash.includes('k=5'));
+      await page.click('#step-prev');
+      await page.waitForFunction(() => location.hash.includes('k=4'));
+      await page.keyboard.press('ArrowLeft');
+      await page.waitForFunction(() => location.hash.includes('k=5'));
+      ok(true, 'deep: previous, next and arrow keys move along the chain');
+      await page.click('#step-play');
+      await page.waitForFunction(() => location.hash.includes('k=6'), null, { timeout: 4000 });
+      await page.click('#step-play');
+      ok(await page.getAttribute('#step-play', 'aria-pressed') === 'false', 'deep: play advances, and stops');
+      await page.click('.chain-row[data-step="0"]');
+      await page.waitForFunction(() => document.querySelector('#deep-figure .seg.on').dataset.step === '0');
+      ok(true, 'deep: chain list in the panel selects a step');
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: path.join(SHOTS, `deep-process-${tag}.png`) });
+      await page.click('[data-tab="organs"]');
+      await page.waitForFunction(() => location.hash.includes('t=organs') && document.querySelectorAll('.organ').length >= 5);
+      const orgSrc = await page.$$eval('.organ .item.l-known', (l) => l.every((x) => x.querySelector('.src')));
+      ok(orgSrc, 'deep organs: every known item has a source');
+      await page.click('[data-tab="diseases"]');
+      await page.waitForFunction(() => location.hash.includes('t=diseases') && document.querySelectorAll('.dz-btn').length === 3);
+      for (const id of ['ischemic', 'hypertension', 'heart-failure']) {
+        await page.click(`.dz-btn[data-dz="${id}"]`);
+        await page.waitForFunction((i) => location.hash.includes(`d=${i}`) && document.querySelector('.dz-btn.on').dataset.dz === i, id);
+        const dz = await page.evaluate(() => ({
+          known: [...document.querySelectorAll('#panel .item.l-known')].every((x) => x.querySelector('.src')),
+          alert: !!document.querySelector('#panel .alert .go'), q: /\?$/.test(document.querySelector('#panel .question').textContent.trim()),
+        }));
+        ok(dz.known && dz.alert && dz.q, `disease ${id}: sourced facts, a sign to seek care and a question`);
+      }
+      await page.waitForTimeout(700);
+      await page.screenshot({ path: path.join(SHOTS, `deep-diseases-${tag}.png`) });
+      ok(await page.textContent('#museum .q-he').then((t) => t.includes('במעגל')), 'deep: museum strip shows the Harvey quote');
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => !location.hash.includes('v=deep') && !document.querySelector('#figure').hidden);
+      ok(await page.textContent('#museum .q-he').then((t) => t.includes('רווחה')), 'leaving deep restores the body figure and the WHO quote');
+      await page.fill('#search', 'יתר לחץ דם');
+      await page.waitForSelector('[data-dz-open="hypertension"]');
+      await page.click('[data-dz-open="hypertension"]');
+      await page.waitForFunction(() => location.hash.includes('v=deep') && location.hash.includes('d=hypertension'));
+      ok(true, 'search finds a disease and opens it in depth');
     }
 
     if (w === 390) {
@@ -209,6 +261,10 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.waitForTimeout(500);
       ok(await page.evaluate(() => { const r = document.querySelector('.alert-card').getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight; }), 'mobile: emergency card in view');
       await page.screenshot({ path: path.join(SHOTS, `alert-chest-${tag}.png`) });
+      await page.goto(BASE + '#s=cardio&v=deep&k=6');
+      await page.waitForSelector('#deep-figure .seg.on');
+      ok(await page.evaluate(() => { const r = document.querySelector('#deep-figure').getBoundingClientRect(); return r.top < innerHeight * 0.4 && r.height > 300; }), 'mobile deep: the diagram is the first thing on screen');
+      await page.screenshot({ path: path.join(SHOTS, `deep-${tag}.png`) });
     }
 
     ok(errors.length === 0, `${tag} no JS errors ${errors.join(' | ')}`);
@@ -223,6 +279,9 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
   await p.waitForSelector('.panel h2');
   const anim = await p.evaluate(() => getComputedStyle(document.querySelector('.rise')).animationName);
   ok(anim === 'none', 'reduced motion disables animation');
+  await p.goto(BASE + '#s=cardio&v=deep');
+  await p.waitForSelector('#deep-figure .seg');
+  ok(await p.$$eval('#deep-figure .dot', (d) => d.length) === 0, 'reduced motion: no moving dots in the circulation diagram');
   await ctx.close();
 
   await browser.close();
