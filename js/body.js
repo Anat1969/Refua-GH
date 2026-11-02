@@ -77,6 +77,12 @@ const LAYERS = {
     single('M204,180 L204,400') +
     mirror('M222,142 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M274,232 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M230,440 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M244,620 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0') +
     mirror('M218,146 C240,170 262,200 270,228 M226,444 C236,500 240,560 240,616'),
+  // Breast tissue on the chest wall, and a neutral pelvic organ outline (no sex-specific detail).
+  reproductive:
+    mirror('M212,252 C220,276 248,284 264,264') +
+    mirror('M243,266 a3,3 0 1,0 -6,0 a3,3 0 1,0 6,0') +
+    single('M186,404 C186,393 214,393 214,404 C214,418 205,428 200,429 C195,428 186,418 186,404 Z') +
+    mirror('M214,404 C220,400 226,400 230,404'),
 };
 
 // Label placement: side ('r' = right column, 'l' = left column), label y, anchor point.
@@ -87,6 +93,7 @@ const MARKS = {
   cardio: { side: 'r', y: 250, ax: FIG_X + 228, ay: 250 },
   digestive: { side: 'r', y: 336, ax: FIG_X + 238, ay: 312 },
   skeletal: { side: 'l', y: 532, ax: FIG_X + 163, ay: 532 },
+  reproductive: { side: 'r', y: 430, ax: FIG_X + 214, ay: 412 },
 };
 
 export function bodySVG(systems) {
@@ -103,11 +110,11 @@ export function bodySVG(systems) {
         <rect class="hit" x="${right ? 414 : 0}" y="${m.y - 21}" width="146" height="32"/>
         <path class="lead" d="M${lx},${m.y - 4} L${right ? lx - 14 : lx + 14},${m.y - 4} L${m.ax},${m.ay}"/>
         <circle class="dot" cx="${m.ax}" cy="${m.ay}" r="3.2"/>
-        <text x="${tx}" y="${m.y}" text-anchor="${right ? 'end' : 'start'}">${s.name_he}</text>
+        <text x="${tx}" y="${m.y}" text-anchor="${right ? 'end' : 'start'}">${s.short_he || s.name_he}</text>
       </g>`;
     })
     .join('');
-  return `<svg class="body-svg" viewBox="0 0 560 800" role="group" aria-label="מפת הגוף: שש מערכות" preserveAspectRatio="xMidYMid meet">
+  return `<svg class="body-svg" viewBox="0 0 560 800" role="group" aria-label="מפת הגוף: שבע מערכות" preserveAspectRatio="xMidYMid meet">
     <defs>
       <filter id="paper" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#16202b" flood-opacity="0.10"/></filter>
     </defs>

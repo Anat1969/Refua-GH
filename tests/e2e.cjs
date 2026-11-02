@@ -61,7 +61,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     if (w === 1440) {
       // Every system via its label
       const ids = await page.$$eval('.sysmark', (els) => els.map((e) => e.dataset.id));
-      ok(ids.length === 6, 'six system labels');
+      ok(ids.length === 7, 'seven system labels');
       for (const id of ids) {
         await page.click(`.sysmark[data-id="${id}"] text`);
         await page.waitForFunction((i) => location.hash.includes(`s=${i}`) && document.querySelector(`.sys[data-id="${i}"]`).classList.contains('on') && document.querySelectorAll('.panel .block').length === 4, id);
@@ -97,7 +97,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       // Views
       await page.click('[data-view="emergency"]');
       await page.waitForFunction(() => location.hash.includes('v=emergency') && document.querySelectorAll('.signs li').length > 0);
-      ok((await page.$$('.signs li')).length === 6, 'emergency view lists 6 signs');
+      ok((await page.$$('.signs li')).length === 7, 'emergency view lists a sign for each of the 7 systems');
       await page.screenshot({ path: path.join(SHOTS, `emergency-${tag}.png`) });
       await page.click('.sign-row[data-pick="cardio"]');
       await page.waitForFunction(() => location.hash === '#s=cardio');
@@ -265,7 +265,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.waitForSelector('[data-mode="3d"]');
       ok(await page.isVisible('#figure') && await page.isHidden('#atlas'), '3D is off by default: the 2D figure shows');
       await page.click('[data-mode="3d"]');
-      await page.waitForFunction(() => location.hash.includes('m=3d') && document.querySelectorAll('.atlas-label').length === 6, null, { timeout: 20000 });
+      await page.waitForFunction(() => location.hash.includes('m=3d') && document.querySelectorAll('.atlas-label').length === 7, null, { timeout: 20000 });
       await page.waitForTimeout(800);
       const drawn = await page.evaluate(() => {
         const c = document.querySelector('.atlas-canvas');
@@ -287,7 +287,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
         const inside = r.every((x) => x.left >= host.left - 1 && x.right <= host.right + 1 && x.top >= host.top - 1 && x.bottom <= host.bottom + 1);
         return { overlap, inside, on: document.querySelector('.atlas-label.on')?.dataset.id };
       });
-      ok(!lab.overlap && lab.inside && lab.on === 'cardio', '3D: six names, inside the frame, no overlap, selected system marked');
+      ok(!lab.overlap && lab.inside && lab.on === 'cardio', '3D: seven names, inside the frame, no overlap, selected system marked');
       await page.screenshot({ path: path.join(SHOTS, `atlas-${tag}.png`) });
       await page.click('.atlas-label[data-id="nervous"]');
       await page.waitForFunction(() => location.hash.includes('s=nervous') && location.hash.includes('m=3d') && document.querySelector('.atlas-label.on')?.dataset.id === 'nervous');
@@ -321,18 +321,18 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.goto(BASE + '#s=cardio');
       await page.waitForSelector('[data-view="diseases"]');
       await page.click('[data-view="diseases"]');
-      await page.waitForFunction(() => location.hash.includes('v=diseases') && document.querySelectorAll('.dz-tile').length === 20);
-      ok(await page.$$eval('.dz-tile .lm-known', (l) => l.length) === 20, 'diseases: 20 tiles, each with a known layer');
+      await page.waitForFunction(() => location.hash.includes('v=diseases') && document.querySelectorAll('.dz-tile').length === 24);
+      ok(await page.$$eval('.dz-tile .lm-known', (l) => l.length) === 24, 'diseases: 24 tiles, each with a known layer');
       await page.waitForTimeout(500);
       await page.screenshot({ path: path.join(SHOTS, `diseases-${tag}.png`) });
       await page.click('[data-f="respiratory"]');
       await page.waitForFunction(() => location.hash.includes('f=respiratory') && document.querySelectorAll('.dz-tile').length === 5 && document.querySelector('.sysmark.on')?.dataset.id === 'respiratory');
       ok(true, 'diseases filter: respiratory shows 5, and the figure marks the system');
       await page.click('[data-f="respiratory"]');
-      await page.waitForFunction(() => !location.hash.includes('f=') && document.querySelectorAll('.dz-tile').length === 20);
+      await page.waitForFunction(() => !location.hash.includes('f=') && document.querySelectorAll('.dz-tile').length === 24);
       ok(true, 'diseases filter: clicking the only choice returns to all');
       await page.click('.sysmark[data-id="digestive"] text');
-      await page.waitForFunction(() => location.hash.includes('v=diseases') && location.hash.includes('f=digestive') && document.querySelectorAll('.dz-tile').length === 4);
+      await page.waitForFunction(() => location.hash.includes('v=diseases') && location.hash.includes('f=digestive') && document.querySelectorAll('.dz-tile').length === 5);
       ok(true, 'diseases: the body figure works as a filter');
       const dzList = await page.evaluate(async () => (await import('./js/data.js')).DISEASES.map((d) => [d.id, d.system, d.action.urgency]));
       let allOk = true; const bad = [];
@@ -349,7 +349,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
         const good = r.src && r.q && r.on === sys && (urg !== 'emergency' || (r.urgent && r.go.includes('101')));
         if (!good) { allOk = false; bad.push(id); }
       }
-      ok(allOk, `all 20 disease cards: sourced, a question, the right system on the figure, emergencies to 101 ${bad.join(',')}`);
+      ok(allOk, `all ${dzList.length} disease cards: sourced, a question, the right system on the figure, emergencies to 101 ${bad.join(',')}`);
       await page.goto(BASE + '#s=nervous&v=disease&d=depression');
       await page.waitForSelector('#panel .alert .go');
       ok((await page.textContent('#panel .alert .go')).includes('1201'), 'depression card points to ERAN 1201');
@@ -375,6 +375,28 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.click('[data-deep-dz]');
       await page.waitForFunction(() => location.hash.includes('v=deep') && location.hash.includes('d=hypertension'));
       ok(true, 'a cardio disease card opens its place in the circulation view');
+
+      // ---------- Stage 4b: cancer group, breast and reproductive system, obesity ----------
+      await page.goto(BASE + '#s=cardio&v=diseases');
+      await page.waitForSelector('[data-f="cancer"]');
+      await page.click('[data-f="cancer"]');
+      await page.waitForFunction(() => location.hash.includes('f=cancer') && document.querySelectorAll('.dz-tile').length === 5 && document.querySelector('.group-intro'));
+      const gi = await page.evaluate(() => ({ src: [...document.querySelectorAll('.group-intro .item.l-known')].every((x) => x.querySelector('.src')), n: document.querySelectorAll('.group-intro .item').length }));
+      ok(gi.src && gi.n === 3, 'cancer filter: an overview with 3 sourced facts, then 5 types');
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: path.join(SHOTS, `cancer-${tag}.png`) });
+      await page.click('[data-open-dz="breast-cancer"]');
+      await page.waitForFunction(() => location.hash.includes('d=breast-cancer') && document.querySelector('.sysmark.on')?.dataset.id === 'reproductive');
+      ok((await page.textContent('#panel')).includes('80%'), 'breast cancer card: on the reproductive system, with the 80% fact');
+      await page.click('[data-group-go="cancer"]');
+      await page.waitForFunction(() => location.hash.includes('f=cancer') && location.hash.includes('v=diseases'));
+      ok(true, 'a cancer card links back to the cancer overview');
+      await page.goto(BASE + '#s=digestive&v=disease&d=obesity');
+      await page.waitForSelector('#panel .alert .go');
+      const ob = await page.evaluate(() => ({ t: document.querySelector('#panel').textContent, go: document.querySelector('#panel .alert .go').textContent }));
+      ok(ob.go.includes('1201') && !/משקל|BMI|קלוריות/.test(ob.t), 'obesity card: help line 1201, and no weight, BMI or calories on screen');
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: path.join(SHOTS, `obesity-${tag}.png`) });
     }
 
     if (w === 390) {
@@ -394,9 +416,9 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.goto(BASE + '#s=cardio');
       await page.waitForSelector('[data-view="diseases"]');
       await page.click('[data-view="diseases"]');
-      await page.waitForFunction(() => document.querySelectorAll('.dz-tile').length === 20);
+      await page.waitForFunction(() => document.querySelectorAll('.dz-tile').length === 24);
       await page.waitForTimeout(600);
-      ok(await page.evaluate(() => document.querySelector('.panel').getBoundingClientRect().top < innerHeight && document.documentElement.scrollWidth <= innerWidth), 'mobile diseases: list in view, six nav items without horizontal scroll');
+      ok(await page.evaluate(() => document.querySelector('.panel').getBoundingClientRect().top < innerHeight && document.documentElement.scrollWidth <= innerWidth), 'mobile diseases: list in view, nav without horizontal scroll');
       await page.screenshot({ path: path.join(SHOTS, `diseases-${tag}.png`) });
     }
 

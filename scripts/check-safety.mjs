@@ -1,7 +1,7 @@
 // Safety gate (docs/SAFETY.md, docs/CONTENT_RULES.md). Exit 1 blocks merge.
 // Run: node scripts/check-safety.mjs
 import { readFileSync } from 'node:fs';
-import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES } from '../js/data.js';
+import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS } from '../js/data.js';
 import { detect } from '../js/match.js';
 
 const errors = [];
@@ -103,6 +103,12 @@ for (const dz of DISEASES) {
   walkKeys(dz, w);
 }
 if (DISEASES.length < 20) err(`diseases: ${DISEASES.length} of 20 (ROADMAP stage 4)`);
+for (const [gid, g] of Object.entries(GROUPS)) {
+  g.ids.forEach((id) => { if (!dzIds.has(id)) err(`group ${gid}: unknown disease ${id}`); });
+  g.items.forEach((it, i) => checkItem(it, `group.${gid}.items[${i}]`));
+}
+const ob = DISEASES.find((x) => x.id === 'obesity');
+if (ob && !ob.action.go_he.includes('1201')) err('disease obesity: must offer ERAN 1201 for distress about food and body');
 const dep = DISEASES.find((x) => x.id === 'depression');
 if (!dep || !dep.action.go_he.includes('1201')) err('disease depression: must point to ERAN 1201');
 
