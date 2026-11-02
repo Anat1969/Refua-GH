@@ -1,4 +1,4 @@
-import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS } from './data.js';
+import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, NUTRITION_APP, nutritionHref } from './data.js';
 import { historySVG, setEvent } from './history.js';
 import { detect, textMatches, normalize } from './match.js';
 import { bodySVG } from './body.js';
@@ -22,6 +22,11 @@ const srcLine = (id) => {
   const s = SOURCES[id];
   if (!s) return '';
   return `<a class="src" href="${s.url}" target="_blank" rel="noopener" dir="ltr">${esc(s.title)}, ${s.year}</a>`;
+};
+
+const bridgeGo = (b) => {
+  const href = b && nutritionHref(b.link);
+  return href ? `<a class="bridge-go press" href="${href}" target="_blank" rel="noopener"><span class="label">באפליקציית ${NUTRITION_APP.name_he}</span><b>${esc(b.next_he || '')}</b></a>` : '';
 };
 
 function item(it) {
@@ -123,6 +128,7 @@ function systemView(s) {
   <section class="block bridge rise" aria-labelledby="h-bridge">
     <h3 id="h-bridge"><span class="label">${bridgeLabel}</span>${rich(b.next_he)}</h3>
     ${item(b)}
+    ${bridgeGo(b)}
   </section>`;
 }
 
@@ -223,6 +229,7 @@ function redlistView(anchor) {
         <h3>${r.name_he}<span class="latin" dir="ltr">${esc(r.name_la)}</span></h3>
         <p class="itext">${rich(r.risk_he)}</p>
         <p class="ctx">${rich(r.context_he)}</p>
+        ${r.bridge ? bridgeGo({ link: r.bridge, next_he: 'כורכום במזון' }) : ''}
         <p class="imeta"><span class="ev">נבדק <span class="num">${r.last_reviewed.split('-').reverse().join('.')}</span></span>${r.sources.map(srcLine).join('')}</p>
       </li>`).join('')}
   </ol>
@@ -371,8 +378,79 @@ function diseaseView(id, f) {
     </div>
     <p class="question"><span class="label">שאלה לרופא</span>${rich(d.action.question_he)}</p>
   </section>
-  ${d.bridge ? `<section class="block bridge rise"><h3><span class="label">${d.bridge.kind === 'nutrition' ? 'חיבור לתזונה' : 'חיבור לעיר'}</span>${rich(d.bridge.next_he)}</h3>${item(d.bridge)}</section>` : ''}
+  ${d.bridge ? `<section class="block bridge rise"><h3><span class="label">${d.bridge.kind === 'nutrition' ? 'חיבור לתזונה' : 'חיבור לעיר'}</span>${rich(d.bridge.next_he)}</h3>${item(d.bridge)}${bridgeGo(d.bridge)}</section>` : ''}
   ${inDeep ? `<button class="deep-cta press rise" data-deep-dz="${d.id}"><span class="label">לעומק</span><b>${DEEP[d.system].title_he}</b><span>המחלה בתוך התרשים, עם האיברים והתהליך</span></button>` : ''}`;
+}
+
+// ---------- Home: the whole teaching on one foot ----------
+const QUIZ_KEY = 'refua.quiz.v1';
+function quizItems() {
+  // Three sentences from the app itself, one per layer. The answer is the layer it already carries.
+  const sys = (id) => SYSTEMS.find((x) => x.id === id);
+  return [
+    { ...sys('skeletal').failure.find((f) => f.layer === 'believed') },
+    { ...sys('cardio').role },
+    { ...sys('nervous').failure.find((f) => f.layer === 'said') },
+  ];
+}
+function loadQuiz() { try { return JSON.parse(localStorage.getItem(QUIZ_KEY)) || {}; } catch { return {}; } }
+function saveQuiz(q) { try { localStorage.setItem(QUIZ_KEY, JSON.stringify(q)); } catch { /* private mode: answers stay on screen only */ } }
+let quizState = { answers: {} };
+
+function homeLead() {
+  const n = (x) => `<span class="num">${x}</span>`;
+  return `
+    <p class="label">על רגל אחת</p>
+    <blockquote class="hillel">
+      <p class="h-ar">„${HOME.hillel_he}”</p>
+      <p class="h-tr"><span class="q-tag">תרגום</span> ${HOME.hillel_tr}</p>
+      <p class="imeta">${srcLine(HOME.hillel_source)}</p>
+    </blockquote>
+    <h1 class="headline">${rich(HOME.one_foot)}</h1>
+    <p class="lede">${HOME.one_foot_more.split('\n').map(rich).join('<br>')}</p>
+    <ul class="home-nums" aria-label="במספרים">
+      <li><button class="numcell press-soft" data-view-go="system">${n(SYSTEMS.length)}<span>מערכות</span></button></li>
+      <li><button class="numcell press-soft" data-view-go="diseases">${n(DISEASES.length)}<span>מחלות</span></button></li>
+      <li><button class="numcell press-soft" data-view-go="history">${n(TIMELINE.length)}<span>רגעים</span></button></li>
+      <li><button class="numcell press-soft" data-view-go="sources">${n(Object.keys(SOURCES).length)}<span>מקורות</span></button></li>
+    </ul>
+    <div id="quiz-box"></div>
+    <p class="inspo">בהשראת <b>הלל הזקן</b>, ו<b>וסאליוס</b> <span class="latin" dir="ltr">Andreas Vesalius, 1543</span>: הכול במבט אחד, והפירוט בשקפים.</p>`;
+}
+
+function quizHTML() {
+  const items = quizItems();
+  const best = loadQuiz().best;
+  const answered = Object.keys(quizState.answers).length;
+  const right = items.filter((it, i) => quizState.answers[i] === it.layer).length;
+  return `
+  <section class="quiz block" aria-labelledby="h-quiz">
+    <h3 id="h-quiz"><span class="label">בדיקה של דקה</span>ידוע, נאמר, או מאמינים?</h3>
+    ${items.map((it, i) => {
+      const a = quizState.answers[i];
+      return `<div class="q-row${a ? (a === it.layer ? ' ok' : ' miss') : ''}">
+        <p class="q-text">${rich(it.text_he)}</p>
+        <div class="q-opts" role="group" aria-label="השכבה של המשפט">${['known', 'said', 'believed'].map((l) => `<button class="q-opt l-${l}${a === l ? ' picked' : ''}" data-q="${i}" data-a="${l}" aria-pressed="${a === l}" ${a ? 'disabled' : ''}>${LAYERS[l].he}</button>`).join('')}</div>
+        ${a ? `<p class="q-fb">${a === it.layer ? 'נכון.' : `לא בדיוק: זה **${LAYERS[it.layer].he}**.`.replace(/\*\*(.+?)\*\*/, '<b>$1</b>')} ${LAYERS[it.layer].def}</p>` : ''}
+      </div>`;
+    }).join('')}
+    <p class="q-score">${answered === items.length ? `<b class="num">${right}</b> מתוך <b class="num">${items.length}</b>. ${right === items.length ? 'ההבדל ברור.' : 'שווה לעבור על המקרא שוב.'} <button class="linkish" data-quiz-reset>שוב</button>` : `ענית על <span class="num">${answered}</span> מתוך <span class="num">${items.length}</span>.`}${best !== undefined ? ` <span class="ev">השיא שלך: ${best}</span>` : ''}</p>
+  </section>`;
+}
+
+function homeView() {
+  return `
+  <header class="panel-head">
+    <div><p class="label">ואידך פירושה</p><h2 id="sys-title">שבעה משפטים לדרך</h2></div>
+  </header>
+  <ol class="lines">${HOME.lines.map((l, i) => `
+    <li class="line rise">
+      <span class="ln num">${i + 1}</span>
+      <p class="lt">${rich(l.text_he)}</p>
+      <p class="imeta">${l.source_id ? srcLine(l.source_id) : '<span class="ev">השיטה של האפליקציה</span>'}<button class="linkish" data-line="${i}">${l.go_he}</button></p>
+    </li>`).join('')}</ol>
+
+`;
 }
 
 // ---------- Stage 5: timeline and traditions ----------
@@ -456,7 +534,7 @@ function deepView(s, t, k, d) {
       </div>
       <p class="question"><span class="label">שאלה לרופא</span>${rich(dz.action.question_he)}</p>
     </section>
-    ${dz.bridge ? `<section class="block bridge rise"><h3><span class="label">חיבור לתזונה</span>${rich(dz.bridge.next_he)}</h3>${item(dz.bridge)}</section>` : ''}`;
+    ${dz.bridge ? `<section class="block bridge rise"><h3><span class="label">חיבור לתזונה</span>${rich(dz.bridge.next_he)}</h3>${item(dz.bridge)}${bridgeGo(dz.bridge)}</section>` : ''}`;
   }
   return `
   <header class="panel-head">
@@ -473,7 +551,7 @@ function readState() {
   const p = new URLSearchParams(location.hash.slice(1));
   const s = SYSTEMS.find((x) => x.id === p.get('s')) || SYSTEMS.find((x) => x.id === 'cardio');
   const q = p.get('q') || '';
-  let v = VIEWS.includes(p.get('v')) ? p.get('v') : 'system';
+  let v = VIEWS.includes(p.get('v')) ? p.get('v') : p.get('s') ? 'system' : 'home';
   if (v === 'search' && !normalize(q)) v = 'system';
   if (v === 'deep' && !DEEP[s.id]) v = 'system';
   const D = DEEP[s.id];
@@ -485,9 +563,9 @@ function readState() {
   const h = p.get('h') === 'traditions' ? 'traditions' : 'timeline';
   return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m, f, e, h };
 }
-const VIEWS = ['emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease', 'history'];
+const VIEWS = ['home', 'emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease', 'history'];
 function go(s, v = 'system', extra = {}, replace = false) {
-  const prm = new URLSearchParams({ s: s.id });
+  const prm = v === 'home' ? new URLSearchParams() : new URLSearchParams({ s: s.id });
   if (v !== 'system') prm.set('v', v);
   const mode = extra.m || readState().m;
   if (mode === '3d' && v !== 'deep' && v !== 'history') prm.set('m', '3d');
@@ -601,6 +679,14 @@ function renderStage(s, v, k) {
   const dzMode = v === 'diseases' || v === 'disease';
   if (!atlasFailed || deep) $('#figure-note').textContent = dzMode && !deep ? 'לחיצה על מערכת בדמות מסננת את המחלות שלה.' : deep ? 'לחיצה על מספר או על קטע בדרך מציגה את השלב.' : m3 ? 'שמונה שקפים בחלל: הדמות מאחור, והעצבים מקדימה.' : 'כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.';
   const museum = $('#museum');
+  if (!deep && v === 'home') {
+    if (museum.dataset.mode !== 'front') {
+      museum.innerHTML = `${homeMuseumOf().replace(/<figure class="haiku">[\s\S]*<\/figure>/, '')}<figure class="haiku"><p>${HOME.haiku.join('<br>')}</p><figcaption>${HOME.haiku_note}</figcaption></figure>`;
+      museum.dataset.mode = 'front';
+    }
+    stopPlay();
+    return;
+  }
   if (!deep) {
     if (museum.dataset.mode !== 'home') { museum.innerHTML = homeMuseumOf(); museum.dataset.mode = 'home'; }
     stopPlay();
@@ -644,7 +730,7 @@ function render() {
   const { s, v, q, a } = readState();
   const panel = $('#panel');
   const { t, k, d, f, e, h } = readState();
-  const views = { history: () => historyView(e, h), diseases: () => diseasesView(f), disease: () => diseaseView(d, f), emergency: emergencyView, sources: sourcesView, redlist: () => redlistView(a), profile: profileView, about: aboutView, search: () => searchView(q), deep: () => deepView(s, t, k, d) };
+  const views = { home: homeView, history: () => historyView(e, h), diseases: () => diseasesView(f), disease: () => diseaseView(d, f), emergency: emergencyView, sources: sourcesView, redlist: () => redlistView(a), profile: profileView, about: aboutView, search: () => searchView(q), deep: () => deepView(s, t, k, d) };
   panel.innerHTML = (views[v] || (() => systemView(s)))();
   renderStage(s, v, k);
   const box = $('#search');
@@ -654,14 +740,19 @@ function render() {
   if (a) { const el = document.getElementById(`red-${a}`); if (el) el.scrollIntoView({ block: 'nearest' }); }
   panel.setAttribute('aria-labelledby', ['system', 'deep', 'disease', 'history'].includes(v) ? 'sys-title' : '');
   panel.scrollTop = 0;
-  $$('.sys').forEach((g) => g.classList.toggle('on', g.dataset.id === s.id));
+  const isHome = v === 'home';
+  document.body.classList.toggle('is-home', isHome);
+  $('#home-lead').hidden = !isHome;
+  if (isHome && !$('#home-lead').dataset.ready) { $('#home-lead').innerHTML = homeLead(); $('#home-lead').dataset.ready = '1'; }
+  if (isHome) $('#quiz-box').innerHTML = quizHTML();
+  $$('.sys').forEach((g) => g.classList.toggle('on', !isHome && g.dataset.id === s.id));
   $$('.sysmark').forEach((g) => {
-    const on = g.dataset.id === s.id;
+    const on = !isHome && g.dataset.id === s.id;
     g.classList.toggle('on', on);
     g.setAttribute('aria-pressed', String(on));
   });
-  $$('[data-view]').forEach((b) => b.setAttribute('aria-current', String(b.dataset.view === v || (b.dataset.view === 'system' && v === 'deep') || (b.dataset.view === 'diseases' && v === 'disease'))));
-  document.title = v === 'system' ? `${s.name_he} | רפואה` : v === 'deep' ? `${DEEP[s.id].title_he} | רפואה` : v === 'disease' ? `${(DISEASES.find((x) => x.id === d) || DISEASES[0]).name_he} | רפואה` : v === 'history' ? 'ציר זמן | רפואה' : 'רפואה: גוף, מחלה, בריאות';
+  $$('[data-view]').forEach((b) => b.setAttribute('aria-current', String((b.dataset.view === v && v !== 'home') || (b.dataset.view === 'system' && v === 'deep') || (b.dataset.view === 'diseases' && v === 'disease'))));
+  document.title = isHome ? 'רפואה: גוף, מחלה, בריאות' : v === 'system' ? `${s.name_he} | רפואה` : v === 'deep' ? `${DEEP[s.id].title_he} | רפואה` : v === 'disease' ? `${(DISEASES.find((x) => x.id === d) || DISEASES[0]).name_he} | רפואה` : v === 'history' ? 'ציר זמן | רפואה' : 'רפואה: גוף, מחלה, בריאות';
   document.body.classList.toggle('has-alert', !!panel.querySelector('.alert-card'));
   // On narrow screens the panel sits below the figure: bring the change into view.
   // Except where the stage itself is the content (map, circulation): there the stage stays first.
@@ -744,6 +835,21 @@ function boot() {
     b.setAttribute('aria-pressed', 'true'); b.title = 'עצירה'; b.setAttribute('aria-label', 'עצירה');
     historyTimer = setInterval(() => eventTo(readState().e + 1, true), 2600);
   });
+  $('#home-lead').addEventListener('click', (e) => {
+    const vg = e.target.closest('[data-view-go]');
+    if (vg) go(SYSTEMS.find((x) => x.id === 'cardio'), vg.dataset.viewGo);
+    const qa = e.target.closest('[data-q]');
+    if (qa) {
+      quizState.answers[Number(qa.dataset.q)] = qa.dataset.a;
+      const items = quizItems();
+      if (Object.keys(quizState.answers).length === items.length) {
+        const right = items.filter((it, i) => quizState.answers[i] === it.layer).length;
+        const q = loadQuiz(); saveQuiz({ best: Math.max(q.best || 0, right), last: right });
+      }
+      $('#quiz-box').innerHTML = quizHTML();
+    }
+    if (e.target.closest('[data-quiz-reset]')) { quizState = { answers: {} }; $('#quiz-box').innerHTML = quizHTML(); }
+  });
   homeMuseum = $('#museum').innerHTML;
   $('#museum').dataset.mode = 'home';
   $('#deep-figure').addEventListener('click', (e) => {
@@ -794,6 +900,8 @@ function boot() {
     const ch = e.target.closest('.chain-row');
     if (ch && ch.dataset.ev !== undefined) { stopHistoryPlay(); eventTo(Number(ch.dataset.ev)); }
     else if (ch) { stopPlay(); stepTo(Number(ch.dataset.step)); }
+    const ln = e.target.closest('[data-line]');
+    if (ln) { const g = HOME.lines[Number(ln.dataset.line)].go; const x = g.d && DISEASES.find((y) => y.id === g.d); go(x ? SYSTEMS.find((y) => y.id === x.system) : readState().s, g.v, g); }
     const ht = e.target.closest('[data-htab]');
     if (ht) go(readState().s, 'history', { h: ht.dataset.htab, e: readState().e });
     const dsys = e.target.closest('[data-deep-sys]');

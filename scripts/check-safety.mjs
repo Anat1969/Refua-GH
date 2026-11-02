@@ -1,7 +1,7 @@
 // Safety gate (docs/SAFETY.md, docs/CONTENT_RULES.md). Exit 1 blocks merge.
 // Run: node scripts/check-safety.mjs
 import { readFileSync } from 'node:fs';
-import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS } from '../js/data.js';
+import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, nutritionHref } from '../js/data.js';
 import { detect } from '../js/match.js';
 
 const errors = [];
@@ -126,6 +126,21 @@ for (const t of TRADITIONS) {
   if (!LAYERS[t.layer]) err(`tradition ${t.id}: layer`);
   if (!t.disease_he || !t.look_he || !t.act_he) err(`tradition ${t.id}: the three fields`);
   if (t.warn_source && !SOURCES[t.warn_source]) err(`tradition ${t.id}: warning source missing`);
+}
+
+// Home (on one foot): seven lines, each with a real destination; sources exist
+if (HOME.lines.length !== 7) err(`home: ${HOME.lines.length} lines, expected 7`);
+HOME.lines.forEach((l, i) => {
+  if (l.source_id && !SOURCES[l.source_id]) err(`home.lines[${i}]: source missing`);
+  if (l.go.d && !DISEASES.find((x) => x.id === l.go.d)) err(`home.lines[${i}]: unknown disease`);
+  if (/כללי אצבע|כלל אצבע/.test(l.text_he)) err(`home.lines[${i}]: the lines act, they do not announce themselves`);
+});
+if (!SOURCES[HOME.hillel_source]) err('home: Hillel quote without source');
+
+// Bridge to the nutrition app: every nutrition link resolves to a live address
+const bridges = [...SYSTEMS.map((x) => x.bridge), ...DISEASES.map((x) => x.bridge), ...REDLIST.map((r) => r.bridge && { link: r.bridge })].filter(Boolean);
+for (const b of bridges) {
+  if (b.link?.app === 'nutrition' && !nutritionHref(b.link)) err(`bridge ${JSON.stringify(b.link)}: no address in the nutrition app`);
 }
 
 // Red list (SAFETY.md section 4): scientific name, risk, source, review date

@@ -74,6 +74,7 @@ export const SOURCES = {
   'nhs-breast': { title: 'NHS, Symptoms of breast cancer in women', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/breast-cancer-in-women/symptoms-of-breast-cancer-in-women/' },
   'nhs-cervical': { title: 'NHS, Cervical cancer: symptoms', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/cervical-cancer/symptoms/' },
   'who-smallpox': { title: 'WHO, Smallpox', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.who.int/health-topics/smallpox' },
+  'bavli-shabbat-31a': { title: 'תלמוד בבלי, מסכת שבת לא, ע"א', type: 'מסורת', year: 500, note: 'הלל הזקן', url: 'https://www.sefaria.org.il/Shabbat.31a' },
   'rambam-deot': { title: 'רמב"ם, משנה תורה, הלכות דעות ד', type: 'מסורת', year: 1180, note: 'הלכה ב', url: 'https://www.sefaria.org.il/Mishneh_Torah,_Human_Dispositions.4' },
 };
 
@@ -617,3 +618,40 @@ export const TRADITIONS = [
     look_he: 'בדיקות, הדמיה, ו**ניסויים מבוקרים** שבודקים מה עובד.',
     act_he: 'מניעה, חיסון, תרופה או ניתוח, לפי ראיות. ובריאות כרווחה, לפי WHO.' },
 ];
+
+// ---------- Stage 6: the live bridge to the nutrition app (Tzuna-GH) ----------
+// Food ids map to Tzuna's own ids; topics open its search. Routing there: #/foods?id= or #/foods?q=
+export const NUTRITION_APP = {
+  name_he: 'מזון, גוף ונפש',
+  url: 'https://tzuna-gh.vercel.app/',
+  foods: { 'olive-oil': 'olive', turmeric: 'turmeric' },
+  topics: { fiber: 'סיבים', calcium: 'סידן', sodium: 'מלח', alcohol: 'אלכוהול', 'mediterranean-diet': 'ים תיכונית' },
+};
+export function nutritionHref(link) {
+  if (!link || link.app !== 'nutrition') return null;
+  const N = NUTRITION_APP;
+  if (link.food_id && N.foods[link.food_id]) return `${N.url}#/foods?id=${encodeURIComponent(N.foods[link.food_id])}`;
+  if (link.topic && N.topics[link.topic]) return `${N.url}#/foods?q=${encodeURIComponent(N.topics[link.topic])}`;
+  return null;
+}
+
+// ---------- Home: the whole teaching on one foot ----------
+export const HOME = {
+  hillel_he: 'דעלך סני לחברך לא תעביד, זו היא כל התורה כולה, ואידך פירושה הוא, זיל גמור.',
+  hillel_tr: 'מה ששנוא עליך, אל תעשה לחברך. זו כל התורה כולה, והשאר פירוש. לך ולמד.',
+  hillel_source: 'bavli-shabbat-31a',
+  one_foot: '==גוף אחד, שבע רשתות, ושאלה טובה לרופא.==',
+  one_foot_more: 'לכל מערכת: תפקיד, כשל, וסימן לפנייה.\nלכל משפט: ידוע, נאמר, או רק מאמינים.\nכל השאר פירוש.',
+  // Seven sentences to act by. Each one is born in a screen of the app, and leads back to it.
+  lines: [
+    { text_he: '**סימן חירום? מתקשרים קודם,** וקוראים אחר כך.', source_id: 'nhs-stroke', go: { v: 'emergency' }, go_he: 'סימני חירום' },
+    { text_he: '**שואלים מה המקור:** ידוע, נאמר, או רק מאמינים.', go: { v: 'sources' }, go_he: 'מקורות' },
+    { text_he: '**מה שלא מרגישים, מודדים:** לחץ דם מגלים במדידה.', source_id: 'who-hypertension', go: { v: 'disease', d: 'hypertension' }, go_he: 'יתר לחץ דם' },
+    { text_he: '**בדיקת סקר מקדימה את הגוף:** היא מגלה מה שעוד לא כואב.', source_id: 'who-crc', go: { v: 'diseases', f: 'cancer' }, go_he: 'סרטן' },
+    { text_he: '**טבעי אינו בהכרח בטוח:** לפני צמח או תוסף, שואלים רוקח.', source_id: 'livertox-germander', go: { v: 'redlist' }, go_he: 'רשימה אדומה' },
+    { text_he: '**גורם סיכון אינו אשמה:** לרוב מקרי סרטן השד אין גורם מיוחד, מלבד מין וגיל.', source_id: 'who-breast', go: { v: 'disease', d: 'breast-cancer' }, go_he: 'סרטן השד' },
+    { text_he: '**העיר היא חלק מהגוף:** אוויר, מים ורחוב שמזמין הליכה.', source_id: 'who-obesity', go: { v: 'history', e: 8 }, go_he: 'ג׳ון סנואו, 1854' },
+  ],
+  haiku: ['על רגל אחת', 'שבע רשתות בעיר', 'שאלה ביד'],
+  haiku_note: 'הגוף כעיר, והידע כשאלה שמביאים לרופא.',
+};

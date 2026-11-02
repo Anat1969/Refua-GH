@@ -154,3 +154,11 @@
 - `GROUPS.cancer`: `name_he`, `ids` (מזהי מחלות), `insight`, `items` (כרטיס פתיחה). בגלריה זה מסנן ליד המערכות: `f=cancer`.
 - מערכת `reproductive` ("מערכת הרבייה והשד"), עם `short_he` לתווית בדמות. שקף משלה בדמות ובאטלס התלת־ממדי.
 - מחלה יכולה להשתייך למערכת אחת ולקבוצה אחת או יותר.
+
+## הגשר בפועל (שלב 6)
+- `NUTRITION_APP` ב-`js/data.js`: כתובת, מיפוי `foods` (המזהה שלנו למזהה של Tzuna) ו-`topics` (נושא למילת חיפוש).
+- `nutritionHref(link)` מחזיר `https://tzuna-gh.vercel.app/#/foods?id=<id>` או `#/foods?q=<מילה>`. בלי כתובת, אין קישור. שער הבטיחות חוסם גשר תזונה בלי כתובת.
+
+## דף הבית (HOME)
+- `hillel_he`, `hillel_tr`, `hillel_source`, `one_foot`, `one_foot_more`, `lines` (שבעה: `text_he`, `source_id`, `go`), `haiku`.
+- "בדיקה של דקה" לוקחת שלושה משפטים מ-`SYSTEMS`, אחד לכל שכבה. השכבה שכבר רשומה בדאטה היא התשובה. התוצאה ב-`localStorage`, במפתח `refua.quiz.v1`.
