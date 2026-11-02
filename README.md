@@ -1,6 +1,8 @@
 # רפואה: גוף, מחלה, בריאות
 
-**[לאפליקציה החיה](https://raw.githack.com/Anat1969/Refua-GH/main/index.html)**
+**[לאפליקציה החיה: refua-gh.vercel.app](https://refua-gh.vercel.app/)**
+
+המיזוג האחרון, בלי Vercel: https://raw.githack.com/Anat1969/Refua-GH/main/index.html
 
 כל מערכת בגוף: תפקיד, כשל, וסימן לפנייה.
 כל פריט מסומן בשכבה אחת: ידוע, נאמר, מאמינים.
