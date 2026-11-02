@@ -55,7 +55,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       ok(ids.length === 6, 'six system labels');
       for (const id of ids) {
         await page.click(`.sysmark[data-id="${id}"] text`);
-        await page.waitForFunction((i) => location.hash.includes(`s=${i}`), id);
+        await page.waitForFunction((i) => location.hash.includes(`s=${i}`) && document.querySelector(`.sys[data-id="${i}"]`).classList.contains('on') && document.querySelectorAll('.panel .block').length === 4, id);
         const st = await page.evaluate((i) => ({
           on: document.querySelector(`.sys[data-id="${i}"]`).classList.contains('on'),
           pressed: document.querySelector(`.sysmark[data-id="${i}"]`).getAttribute('aria-pressed'),
@@ -87,14 +87,14 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.screenshot({ path: path.join(SHOTS, `immune-${tag}.png`) });
       // Views
       await page.click('[data-view="emergency"]');
-      await page.waitForFunction(() => location.hash.includes('v=emergency'));
+      await page.waitForFunction(() => location.hash.includes('v=emergency') && document.querySelectorAll('.signs li').length > 0);
       ok((await page.$$('.signs li')).length === 6, 'emergency view lists 6 signs');
       await page.screenshot({ path: path.join(SHOTS, `emergency-${tag}.png`) });
       await page.click('.sign-row[data-pick="cardio"]');
       await page.waitForFunction(() => location.hash === '#s=cardio');
       ok(true, 'sign row opens its system');
       await page.click('[data-view="sources"]');
-      await page.waitForFunction(() => location.hash.includes('v=sources'));
+      await page.waitForFunction(() => location.hash.includes('v=sources') && document.querySelectorAll('.sources li').length > 0);
       const n = await page.$$eval('.sources li', (l) => l.length);
       ok(n >= 20, `sources view lists ${n} sources`);
       await page.screenshot({ path: path.join(SHOTS, `sources-${tag}.png`) });
