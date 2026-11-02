@@ -46,7 +46,9 @@
 - מבט בעין על צילומי המסך.
 
 ## קישורים
+- האפליקציה החיה (Vercel): https://refua-gh.vercel.app/
 - GitHub: https://github.com/Anat1969/Refua-GH
+- באפליקציית האפליקציות: `aoa_apps`, מזהה `app-1793620800000`.
 - המיזוג האחרון, בלי Vercel: https://raw.githack.com/Anat1969/Refua-GH/main/index.html
 
 ## ריכוזי ידע שנעשו
