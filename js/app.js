@@ -1,4 +1,5 @@
-import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS } from './data.js';
+import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS } from './data.js';
+import { historySVG, setEvent } from './history.js';
 import { detect, textMatches, normalize } from './match.js';
 import { bodySVG } from './body.js';
 import { circulationSVG } from './circulation.js';
@@ -374,6 +375,53 @@ function diseaseView(id, f) {
   ${inDeep ? `<button class="deep-cta press rise" data-deep-dz="${d.id}"><span class="label">לעומק</span><b>${DEEP[d.system].title_he}</b><span>המחלה בתוך התרשים, עם האיברים והתהליך</span></button>` : ''}`;
 }
 
+// ---------- Stage 5: timeline and traditions ----------
+const HTABS = [['timeline', 'ציר זמן'], ['traditions', 'מסורות']];
+function historyView(ei, h) {
+  const tabs = `<div class="tabs" role="tablist" aria-label="היסטוריה">${HTABS.map(([id, he]) => `<button class="chip" role="tab" aria-selected="${h === id}" data-htab="${id}">${he}</button>`).join('')}</div>`;
+  let body;
+  if (h === 'traditions') {
+    body = `<p class="note-line">${rich('אותן שלוש שאלות לכל מסורת, כדי לראות מה משותף ומה ייחודי.')}</p>
+    <div class="trad-list">${TRADITIONS.map((t) => `
+      <section class="trad l-${t.layer} rise" aria-labelledby="tr-${t.id}">
+        <header><h3 id="tr-${t.id}">${t.name_he}</h3><span class="ltag">${LAYERS[t.layer].he}</span><span class="ev">${esc(t.era_he)}</span></header>
+        <dl>
+          <dt>מהי מחלה</dt><dd>${rich(t.disease_he)}</dd>
+          <dt>איך בודקים</dt><dd>${rich(t.look_he)}</dd>
+          <dt>מה עושים</dt><dd>${rich(t.act_he)}</dd>
+        </dl>
+        ${t.warn_he ? `<p class="trad-warn">${rich(t.warn_he)} ${srcLine(t.warn_source)} <button class="linkish" data-view-go="redlist">לרשימה האדומה</button></p>` : ''}
+        <p class="imeta">${t.layer === 'known' ? `<span class="ev">ראיה ${t.evidence}</span>` : `<span class="ev">${esc(t.tradition)}</span>`}${srcLine(t.source_id)}</p>
+      </section>`).join('')}</div>`;
+  } else {
+    const e = TIMELINE[ei];
+    const rel = e.disease ? DISEASES.find((d) => d.id === e.disease) : null;
+    const relSys = e.system ? SYSTEMS.find((x) => x.id === e.system) : null;
+    body = `
+    <section class="event rise" aria-labelledby="ev-title">
+      <p class="ev-year"><span class="num">${e.year < 0 ? -e.year : e.year}</span>${e.year < 0 ? ' לפנה״ס' : ''}</p>
+      <h3 id="ev-title">${e.person_he}<span class="latin" dir="ltr">${esc(e.person_en)}</span></h3>
+      <p class="ev-place"><b>${e.place_he}</b><span class="latin" dir="ltr">${esc(e.place_en)}</span></p>
+      ${item(e)}
+      <div class="ev-links">
+        ${relSys ? `<button class="linkish" data-pick="${relSys.id}">למערכת: ${relSys.name_he}</button>` : ''}
+        ${rel ? `<button class="linkish" data-open-dz="${rel.id}">למחלה: ${rel.name_he}</button>` : ''}
+        ${e.deep ? `<button class="linkish" data-deep-sys="${e.system}">לתרשים מחזור הדם</button>` : ''}
+      </div>
+    </section>
+    <ol class="chain ev-chain">${TIMELINE.map((x, i) => `<li><button class="chain-row press-soft${i === ei ? ' on' : ''}" data-ev="${i}" aria-current="${i === ei}"><span class="num">${i + 1}</span><span class="num yr">${x.year < 0 ? -x.year : x.year}</span>${x.person_he}</button></li>`).join('')}</ol>
+    <p class="note-line">${rich('הקו על המפה עובר בין המקומות לפי סדר השנים. המרווחים בציר לפי סדר, לא לפי מספר השנים.')}</p>`;
+  }
+  return `
+  <header class="panel-head">
+    <div><p class="label">היסטוריה</p><h2 id="sys-title">${h === 'traditions' ? 'ארבע מסורות, שלוש שאלות' : `${TIMELINE.length} רגעים ברפואה`}</h2></div>
+    ${closeBtn}
+  </header>
+  <p class="insight">${rich(h === 'traditions' ? '==המסורות שאלו את אותן שאלות. הראיות שינו את התשובות.==' : '==מאיזון ליחות לחיידק: הידע עבר מעיר לעיר.==')}</p>
+  ${tabs}
+  ${body}`;
+}
+
 const TABS = [['process', 'תהליך'], ['organs', 'איברים'], ['diseases', 'מחלות']];
 function deepView(s, t, k, d) {
   const D = DEEP[s.id];
@@ -433,18 +481,21 @@ function readState() {
   const k = D ? Math.min(Math.max(parseInt(p.get('k'), 10) || 0, 0), D.steps.length - 1) : 0;
   const m = p.get('m') === '3d' && !atlasFailed ? '3d' : '2d';
   const f = SYSTEMS.some((x) => x.id === p.get('f')) || GROUPS[p.get('f')] ? p.get('f') : '';
-  return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m, f };
+  const e = Math.min(Math.max(parseInt(p.get('e'), 10) || 0, 0), TIMELINE.length - 1);
+  const h = p.get('h') === 'traditions' ? 'traditions' : 'timeline';
+  return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m, f, e, h };
 }
-const VIEWS = ['emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease'];
+const VIEWS = ['emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease', 'history'];
 function go(s, v = 'system', extra = {}, replace = false) {
   const prm = new URLSearchParams({ s: s.id });
   if (v !== 'system') prm.set('v', v);
   const mode = extra.m || readState().m;
-  if (mode === '3d' && v !== 'deep') prm.set('m', '3d');
+  if (mode === '3d' && v !== 'deep' && v !== 'history') prm.set('m', '3d');
   if (v === 'search' && extra.q) prm.set('q', extra.q);
   if (extra.a) prm.set('a', extra.a);
   if ((v === 'diseases' || v === 'disease') && extra.f) prm.set('f', extra.f);
   if (v === 'disease' && extra.d) prm.set('d', extra.d);
+  if (v === 'history') { if (extra.e) prm.set('e', String(extra.e)); if (extra.h === 'traditions') prm.set('h', 'traditions'); }
   if (v === 'deep') {
     if (extra.t && extra.t !== 'process') prm.set('t', extra.t);
     if (extra.k) prm.set('k', String(extra.k));
@@ -483,7 +534,58 @@ async function ensureAtlas(sid) {
 
 // The stage shows the body, or the system in depth. Museum text follows.
 let homeMuseum = '';
+let historyMounted = false;
+const homeMuseumOf = () => homeMuseum;
+function renderHistoryStage(on, ei) {
+  $('#map-figure').hidden = !on;
+  $('#time-controls').hidden = !on;
+  if (!on) { stopHistoryPlay(); return; }
+  if (!historyMounted) {
+    $('#map-figure').innerHTML = historySVG(TIMELINE);
+    $('#year-track').innerHTML = TIMELINE.map((x, i) => `<li><button class="yr-btn" data-ev="${i}"><span class="num">${x.year < 0 ? -x.year : x.year}</span>${x.year < 0 ? '<small>לפנה״ס</small>' : ''}</button></li>`).join('');
+    historyMounted = true;
+  }
+  setEvent($('#map-figure svg'), TIMELINE, ei);
+  $$('#year-track .yr-btn').forEach((b) => { const on2 = Number(b.dataset.ev) === ei; b.classList.toggle('on', on2); b.setAttribute('aria-current', String(on2)); });
+  // Scroll the track sideways only: scrollIntoView would also move the page and hide the map.
+  const cur = $('#year-track .yr-btn.on'), tr = $('#year-track');
+  if (cur && tr) {
+    const a = cur.getBoundingClientRect(), b = tr.getBoundingClientRect();
+    tr.scrollBy({ left: a.left + a.width / 2 - (b.left + b.width / 2), behavior: 'auto' });
+  }
+}
+let historyTimer = null;
+function stopHistoryPlay() {
+  clearInterval(historyTimer); historyTimer = null;
+  const b = $('#ev-play');
+  if (b) { b.setAttribute('aria-pressed', 'false'); b.title = 'הפעלה'; b.setAttribute('aria-label', 'הפעלה'); }
+}
+function eventTo(i, replace = false) {
+  const n = TIMELINE.length;
+  go(readState().s, 'history', { e: (i + n) % n }, replace);
+}
+
 function renderStage(s, v, k) {
+  const hist = v === 'history';
+  renderHistoryStage(hist, readState().e);
+  if (hist) {
+    document.body.classList.remove('is-deep');
+    document.body.classList.add('is-history');
+    ['#figure', '#atlas', '#deep-figure', '#deep-controls', '#stage-bar', '#atlas-ops'].forEach((sel) => { $(sel).hidden = true; });
+    stopPlay();
+    $('#figure-note').textContent = 'לחיצה על מספר במפה או על שנה בציר מציגה את הרגע.';
+    const museum = $('#museum');
+    if (museum.dataset.mode !== 'history') {
+      museum.innerHTML = `
+        <figure class="quote"><blockquote>
+          <p class="q-he">„הואיל והיות הגוף בריא ושלם מדרכי השם הוא.”</p>
+        </blockquote><figcaption><a class="src" href="${SOURCES['rambam-deot'].url}" target="_blank" rel="noopener">הרמב״ם, משנה תורה, הלכות דעות ד, א</a></figcaption></figure>
+        <figure class="haiku"><p>משאבת לונדון<br>ידית יורדת לאט<br>העיר נושמת</p><figcaption>מפה אחת וידית אחת: כך נולדה האפידמיולוגיה.</figcaption></figure>`;
+      museum.dataset.mode = 'history';
+    }
+    return;
+  }
+  document.body.classList.remove('is-history');
   const deep = v === 'deep';
   const D = DEEP[s.id];
   const m3 = !deep && readState().m === '3d';
@@ -500,7 +602,7 @@ function renderStage(s, v, k) {
   if (!atlasFailed || deep) $('#figure-note').textContent = dzMode && !deep ? 'לחיצה על מערכת בדמות מסננת את המחלות שלה.' : deep ? 'לחיצה על מספר או על קטע בדרך מציגה את השלב.' : m3 ? 'שמונה שקפים בחלל: הדמות מאחור, והעצבים מקדימה.' : 'כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.';
   const museum = $('#museum');
   if (!deep) {
-    if (museum.dataset.mode !== 'home') { museum.innerHTML = homeMuseum; museum.dataset.mode = 'home'; }
+    if (museum.dataset.mode !== 'home') { museum.innerHTML = homeMuseumOf(); museum.dataset.mode = 'home'; }
     stopPlay();
     return;
   }
@@ -541,8 +643,8 @@ function stepTo(k, replace = false) {
 function render() {
   const { s, v, q, a } = readState();
   const panel = $('#panel');
-  const { t, k, d, f } = readState();
-  const views = { diseases: () => diseasesView(f), disease: () => diseaseView(d, f), emergency: emergencyView, sources: sourcesView, redlist: () => redlistView(a), profile: profileView, about: aboutView, search: () => searchView(q), deep: () => deepView(s, t, k, d) };
+  const { t, k, d, f, e, h } = readState();
+  const views = { history: () => historyView(e, h), diseases: () => diseasesView(f), disease: () => diseaseView(d, f), emergency: emergencyView, sources: sourcesView, redlist: () => redlistView(a), profile: profileView, about: aboutView, search: () => searchView(q), deep: () => deepView(s, t, k, d) };
   panel.innerHTML = (views[v] || (() => systemView(s)))();
   renderStage(s, v, k);
   const box = $('#search');
@@ -550,7 +652,7 @@ function render() {
   if (v !== 'search' && document.activeElement !== box) box.value = '';
   $('#search-clear').hidden = !box.value;
   if (a) { const el = document.getElementById(`red-${a}`); if (el) el.scrollIntoView({ block: 'nearest' }); }
-  panel.setAttribute('aria-labelledby', ['system', 'deep', 'disease'].includes(v) ? 'sys-title' : '');
+  panel.setAttribute('aria-labelledby', ['system', 'deep', 'disease', 'history'].includes(v) ? 'sys-title' : '');
   panel.scrollTop = 0;
   $$('.sys').forEach((g) => g.classList.toggle('on', g.dataset.id === s.id));
   $$('.sysmark').forEach((g) => {
@@ -559,13 +661,17 @@ function render() {
     g.setAttribute('aria-pressed', String(on));
   });
   $$('[data-view]').forEach((b) => b.setAttribute('aria-current', String(b.dataset.view === v || (b.dataset.view === 'system' && v === 'deep') || (b.dataset.view === 'diseases' && v === 'disease'))));
-  document.title = v === 'system' ? `${s.name_he} | רפואה` : v === 'deep' ? `${DEEP[s.id].title_he} | רפואה` : v === 'disease' ? `${(DISEASES.find((x) => x.id === d) || DISEASES[0]).name_he} | רפואה` : 'רפואה: גוף, מחלה, בריאות';
+  document.title = v === 'system' ? `${s.name_he} | רפואה` : v === 'deep' ? `${DEEP[s.id].title_he} | רפואה` : v === 'disease' ? `${(DISEASES.find((x) => x.id === d) || DISEASES[0]).name_he} | רפואה` : v === 'history' ? 'ציר זמן | רפואה' : 'רפואה: גוף, מחלה, בריאות';
   document.body.classList.toggle('has-alert', !!panel.querySelector('.alert-card'));
   // On narrow screens the panel sits below the figure: bring the change into view.
-  if (render.ready && matchMedia('(max-width: 999px)').matches) {
+  // Except where the stage itself is the content (map, circulation): there the stage stays first.
+  if (render.ready && v !== 'history' && v !== 'deep' && matchMedia('(max-width: 999px)').matches) {
     const r = panel.getBoundingClientRect();
     if (r.top > innerHeight * 0.8) panel.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   }
+  // Entering a stage-first view (map, circulation) on a phone: start from the top, so the stage shows.
+  if (render.ready && (v === 'history' || v === 'deep') && render.lastView !== v && matchMedia('(max-width: 999px)').matches) $('.work').scrollTop = 0;
+  render.lastView = v;
   render.ready = true;
 }
 
@@ -618,6 +724,26 @@ function boot() {
   }));
   $('#atlas-reset').addEventListener('click', () => atlas?.reset());
   $('#atlas-front').addEventListener('click', () => atlas?.front());
+  $('#map-figure').addEventListener('click', (e) => {
+    const g = e.target.closest('.evp');
+    if (g) { stopHistoryPlay(); eventTo(Number(g.dataset.ev)); }
+  });
+  $('#map-figure').addEventListener('keydown', (e) => {
+    const g = e.target.closest('.evp');
+    if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); stopHistoryPlay(); eventTo(Number(g.dataset.ev)); }
+  });
+  $('#year-track').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-ev]');
+    if (b) { stopHistoryPlay(); eventTo(Number(b.dataset.ev)); }
+  });
+  $('#ev-prev').addEventListener('click', () => { stopHistoryPlay(); eventTo(readState().e - 1); });
+  $('#ev-next').addEventListener('click', () => { stopHistoryPlay(); eventTo(readState().e + 1); });
+  $('#ev-play').addEventListener('click', () => {
+    if (historyTimer) return stopHistoryPlay();
+    const b = $('#ev-play');
+    b.setAttribute('aria-pressed', 'true'); b.title = 'עצירה'; b.setAttribute('aria-label', 'עצירה');
+    historyTimer = setInterval(() => eventTo(readState().e + 1, true), 2600);
+  });
   homeMuseum = $('#museum').innerHTML;
   $('#museum').dataset.mode = 'home';
   $('#deep-figure').addEventListener('click', (e) => {
@@ -666,7 +792,12 @@ function boot() {
     const dd = e.target.closest('[data-deep-dz]');
     if (dd) { const x = DISEASES.find((y) => y.id === dd.dataset.deepDz); go(SYSTEMS.find((y) => y.id === x.system), 'deep', { t: 'diseases', d: x.id }); }
     const ch = e.target.closest('.chain-row');
-    if (ch) { stopPlay(); stepTo(Number(ch.dataset.step)); }
+    if (ch && ch.dataset.ev !== undefined) { stopHistoryPlay(); eventTo(Number(ch.dataset.ev)); }
+    else if (ch) { stopPlay(); stepTo(Number(ch.dataset.step)); }
+    const ht = e.target.closest('[data-htab]');
+    if (ht) go(readState().s, 'history', { h: ht.dataset.htab, e: readState().e });
+    const dsys = e.target.closest('[data-deep-sys]');
+    if (dsys) go(SYSTEMS.find((x) => x.id === dsys.dataset.deepSys), 'deep');
     if (e.target.closest('[data-clear-profile]')) { saveProfile({}); render(); }
   });
   $('#panel').addEventListener('change', (e) => {
@@ -717,6 +848,11 @@ function boot() {
     if (e.target.closest('input, textarea')) return;
     const { s, v } = readState();
     if (e.key === 'Escape' && v !== 'system') return go(s);
+    if (v === 'history') {
+      const dh = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0;
+      if (dh && !e.target.closest('.tabs')) { stopHistoryPlay(); eventTo(readState().e + dh); }
+      return;
+    }
     if (v === 'disease') {
       const dd = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0;
       if (dd) stepDisease(dd);

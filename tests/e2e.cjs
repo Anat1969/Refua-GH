@@ -397,6 +397,51 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       ok(ob.go.includes('1201') && !/משקל|BMI|קלוריות/.test(ob.t), 'obesity card: help line 1201, and no weight, BMI or calories on screen');
       await page.waitForTimeout(500);
       await page.screenshot({ path: path.join(SHOTS, `obesity-${tag}.png`) });
+
+      // ---------- Stage 5: timeline map and traditions ----------
+      await page.goto(BASE + '#s=cardio');
+      await page.waitForSelector('[data-view="history"]');
+      await page.click('[data-view="history"]');
+      await page.waitForFunction(() => location.hash.includes('v=history') && document.querySelectorAll('#map-figure .evp').length === 15);
+      ok(await page.isVisible('#map-figure') && await page.isHidden('#figure'), 'timeline: the map replaces the body figure');
+      const seq = await page.evaluate(async () => (await import('./js/data.js')).TIMELINE.every((e, i, a) => !i || a[i - 1].year <= e.year));
+      ok(seq, 'timeline: moments in time order');
+      await page.click('#map-figure .evp[data-ev="8"] .ev-badge', { force: true });
+      await page.waitForFunction(() => location.hash.includes('e=8') && document.querySelector('.map-svg .big-year').textContent === '1854' && document.querySelector('.map-svg .pl-he').textContent === 'לונדון');
+      ok(true, 'timeline: a numbered point shows its year large and its place in Hebrew');
+      ok(await page.evaluate(() => document.querySelectorAll('.leg.past').length === 8), 'timeline: the chain is drawn in ink up to the current moment');
+      await page.click('#ev-next');
+      await page.waitForFunction(() => location.hash.includes('e=9'));
+      await page.click('#ev-prev');
+      await page.waitForFunction(() => location.hash.includes('e=8'));
+      await page.keyboard.press('ArrowLeft');
+      await page.waitForFunction(() => location.hash.includes('e=9'));
+      await page.click('#year-track [data-ev="0"]');
+      await page.waitForFunction(() => !location.hash.includes('e=') && document.querySelector('.map-svg .big-era').textContent.length > 0);
+      ok(true, 'timeline: next, previous, arrows and the year track; BCE shown apart from the number');
+      await page.click('#ev-play');
+      await page.waitForFunction(() => location.hash.includes('e=1'), null, { timeout: 5000 });
+      await page.click('#ev-play');
+      ok(await page.getAttribute('#ev-play', 'aria-pressed') === 'false', 'timeline: play moves on, and stops');
+      await page.goto(BASE + '#s=cardio&v=history&e=8');
+      await page.waitForSelector('[data-open-dz="diarrhoeal"]');
+      await page.click('[data-open-dz="diarrhoeal"]');
+      await page.waitForFunction(() => location.hash.includes('d=diarrhoeal'));
+      ok(true, 'timeline: a moment opens its related disease');
+      await page.goto(BASE + '#s=cardio&v=history&h=traditions');
+      await page.waitForFunction(() => document.querySelectorAll('.trad').length === 4);
+      const tr = await page.evaluate(() => [...document.querySelectorAll('.trad')].map((t) => ({ dt: t.querySelectorAll('dt').length, src: !!t.querySelector('.src') })));
+      ok(tr.every((t) => t.dt === 3 && t.src), 'traditions: four, the same three questions each, with a source');
+      ok(await page.isVisible('.trad-warn [data-view-go="redlist"]'), 'traditions: the herbal warning links to the red list');
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: path.join(SHOTS, `traditions-${tag}.png`) });
+      await page.goto(BASE + '#s=cardio&v=history&e=8');
+      await page.waitForSelector('.map-svg .big-year');
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: path.join(SHOTS, `timeline-${tag}.png`) });
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => !location.hash.includes('v=history') && !document.querySelector('#figure').hidden && document.querySelector('#map-figure').hidden);
+      ok(true, 'leaving the timeline restores the body figure');
     }
 
     if (w === 390) {
@@ -420,6 +465,11 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.waitForTimeout(600);
       ok(await page.evaluate(() => document.querySelector('.panel').getBoundingClientRect().top < innerHeight && document.documentElement.scrollWidth <= innerWidth), 'mobile diseases: list in view, nav without horizontal scroll');
       await page.screenshot({ path: path.join(SHOTS, `diseases-${tag}.png`) });
+      await page.goto(BASE + '#s=cardio&v=history&e=8');
+      await page.waitForSelector('.map-svg .big-year');
+      await page.waitForTimeout(500);
+      ok(await page.evaluate(() => { const r = document.querySelector('#map-figure').getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight * 0.45 && document.documentElement.scrollWidth <= innerWidth; }), 'mobile timeline: the map comes first and stays on screen, no horizontal scroll');
+      await page.screenshot({ path: path.join(SHOTS, `timeline-${tag}.png`) });
     }
 
     ok(errors.length === 0, `${tag} no JS errors ${errors.join(' | ')}`);

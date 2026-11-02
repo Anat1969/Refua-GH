@@ -27,6 +27,7 @@
     <nav class="nav" aria-label="ניווט">
       <button class="chip" data-view="system"><span class="xl">מפת </span>הגוף</button>
       <button class="chip" data-view="diseases">מחלות</button>
+      <button class="chip" data-view="history"><span class="xl">ציר </span>זמן</button>
       <button class="chip chip-urgent" data-view="emergency"><span class="xl">סימני </span>חירום</button>
       <button class="chip chip-urgent" data-view="redlist"><span class="xl">רשימה </span>אדומה</button>
       <button class="chip" data-view="profile"><span class="xl">ה</span>בטיחות<span class="xl"> שלי</span></button>
@@ -81,6 +82,15 @@
       <div class="figure" id="figure"></div>
       <div class="figure atlas" id="atlas" hidden></div>
       <div class="figure deep-figure" id="deep-figure" hidden></div>
+      <div class="figure map-figure" id="map-figure" hidden></div>
+      <div class="time-controls" id="time-controls" hidden>
+        <div class="ctl-ops" role="group" aria-label="מעבר בציר הזמן">
+          <button class="icon press" id="ev-prev" title="האירוע הקודם" aria-label="האירוע הקודם"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+          <button class="icon press" id="ev-play" title="הפעלה" aria-label="הפעלה" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-play" d="M16 6v12L7 12z"/><path class="i-pause" d="M9 6v12M15 6v12"/></svg></button>
+          <button class="icon press" id="ev-next" title="האירוע הבא" aria-label="האירוע הבא"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+        </div>
+        <ol class="year-track" id="year-track" aria-label="ציר השנים"></ol>
+      </div>
       <div class="deep-controls" id="deep-controls" hidden>
         <div class="ctl-ops" role="group" aria-label="שלבי מחזור הדם">
           <button class="icon press" id="step-prev" title="השלב הקודם" aria-label="השלב הקודם"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
