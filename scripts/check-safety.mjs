@@ -1,7 +1,7 @@
 // Safety gate (docs/SAFETY.md, docs/CONTENT_RULES.md). Exit 1 blocks merge.
 // Run: node scripts/check-safety.mjs
 import { readFileSync } from 'node:fs';
-import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS } from '../js/data.js';
+import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS } from '../js/data.js';
 import { detect } from '../js/match.js';
 
 const errors = [];
@@ -112,6 +112,22 @@ if (ob && !ob.action.go_he.includes('1201')) err('disease obesity: must offer ER
 const dep = DISEASES.find((x) => x.id === 'depression');
 if (!dep || !dep.action.go_he.includes('1201')) err('disease depression: must point to ERAN 1201');
 
+// Timeline and traditions (stage 5): every moment carries a layer and a source, in time order
+TIMELINE.forEach((e, i) => {
+  checkItem(e, `timeline.${e.id}`);
+  if (!e.place_he || !e.place_en || !e.person_he || !e.person_en) err(`timeline.${e.id}: Hebrew and Latin names for person and place`);
+  if (typeof e.lat !== 'number' || typeof e.lon !== 'number') err(`timeline.${e.id}: coordinates`);
+  if (i && TIMELINE[i - 1].year > e.year) err(`timeline.${e.id}: out of time order`);
+  if (e.system && !SYSTEMS.find((x) => x.id === e.system)) err(`timeline.${e.id}: unknown system`);
+  if (e.disease && !DISEASES.find((x) => x.id === e.disease)) err(`timeline.${e.id}: unknown disease`);
+});
+for (const t of TRADITIONS) {
+  if (!SOURCES[t.source_id]) err(`tradition ${t.id}: source missing`);
+  if (!LAYERS[t.layer]) err(`tradition ${t.id}: layer`);
+  if (!t.disease_he || !t.look_he || !t.act_he) err(`tradition ${t.id}: the three fields`);
+  if (t.warn_source && !SOURCES[t.warn_source]) err(`tradition ${t.id}: warning source missing`);
+}
+
 // Red list (SAFETY.md section 4): scientific name, risk, source, review date
 for (const r of REDLIST) {
   if (!r.name_he || !r.name_la || !r.risk_he) err(`redlist ${r.id}: needs name_he, name_la and risk_he`);
@@ -145,7 +161,7 @@ if (detect('תאוריה של אור', KEYWORDS).length || detect('הלב שלי
 for (const i of PROFILE_ITEMS) if (BANNED_KEYS.test(i.id)) err(`profile item ${i.id}: banned field`);
 
 // Forbidden words in all user-facing text
-const files = ['js/data.js', 'index.html', 'js/app.js', 'js/match.js', 'js/circulation.js', 'js/atlas3d.js'];
+const files = ['js/data.js', 'index.html', 'js/app.js', 'js/match.js', 'js/circulation.js', 'js/atlas3d.js', 'js/history.js'];
 for (const f of files) {
   let text = readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
   for (const p of ALLOWED_PHRASES) text = text.split(p).join('');
