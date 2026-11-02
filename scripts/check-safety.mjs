@@ -1,7 +1,7 @@
 // Safety gate (docs/SAFETY.md, docs/CONTENT_RULES.md). Exit 1 blocks merge.
 // Run: node scripts/check-safety.mjs
 import { readFileSync } from 'node:fs';
-import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP } from '../js/data.js';
+import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES } from '../js/data.js';
 import { detect } from '../js/match.js';
 
 const errors = [];
@@ -12,9 +12,11 @@ const FORBIDDEN = [
   'עוצמתי', 'מטפל', 'מבריא', 'מבטיח',
   // medicine additions
   'מינון', 'מ"ג', 'תרופה ל', 'מאבחן', 'ריפוי מלא', 'טבעי ובטוח', 'ללא תופעות לוואי',
+  // eating disorders (SAFETY.md section 1): no body weight, anywhere
+  'משקל', 'קלוריות', 'BMI',
 ];
 // The declaration is the one place these words appear, negated, by design.
-const ALLOWED_PHRASES = ['לא מאבחנת ולא מטפלת', 'לא מאבחן ולא מטפל'];
+const ALLOWED_PHRASES = ['לא מאבחנת ולא מטפלת', 'לא מאבחן ולא מטפל', 'אין משקל, קלוריות או ציון בריאות'];
 const BANNED_KEYS = /dose|dosage|mg|calorie|kcal|bmi|weight|score|effect_size/i;
 const EVIDENCE = ['גבוהה', 'בינונית', 'ראשונית', 'אין'];
 const STATUS = ['לא נבדק', 'לא אוששה'];
@@ -82,6 +84,28 @@ for (const [sid, D] of Object.entries(DEEP)) {
   walkKeys(D, `deep.${sid}`);
 }
 
+// Diseases (stage 4): one list, every disease complete and in a known system
+const dzIds = new Set();
+for (const dz of DISEASES) {
+  const w = `disease.${dz.id}`;
+  if (dzIds.has(dz.id)) err(`${w}: duplicate id`);
+  dzIds.add(dz.id);
+  if (!SYSTEMS.find((x) => x.id === dz.system)) err(`${w}: unknown system ${dz.system}`);
+  if (!dz.name_he || !dz.name_en || !dz.insight) err(`${w}: needs name_he, name_en and insight`);
+  dz.items.forEach((it, i) => checkItem(it, `${w}.items[${i}]`));
+  if (!dz.items.some((it) => it.layer === 'known')) err(`${w}: needs a known item`);
+  const a = dz.action;
+  if (!SOURCES[a.source_id]) err(`${w}.action: missing source`);
+  if (!['emergency', 'doctor'].includes(a.urgency)) err(`${w}.action: urgency`);
+  if (a.urgency === 'emergency' && !a.go_he.includes('101')) err(`${w}.action: emergency must point to 101`);
+  if (!a.question_he.endsWith('?')) err(`${w}.action: question must end with ?`);
+  if (dz.bridge) checkItem(dz.bridge, `${w}.bridge`);
+  walkKeys(dz, w);
+}
+if (DISEASES.length < 20) err(`diseases: ${DISEASES.length} of 20 (ROADMAP stage 4)`);
+const dep = DISEASES.find((x) => x.id === 'depression');
+if (!dep || !dep.action.go_he.includes('1201')) err('disease depression: must point to ERAN 1201');
+
 // Red list (SAFETY.md section 4): scientific name, risk, source, review date
 for (const r of REDLIST) {
   if (!r.name_he || !r.name_la || !r.risk_he) err(`redlist ${r.id}: needs name_he, name_la and risk_he`);
@@ -133,4 +157,4 @@ if (errors.length) {
   process.exit(1);
 }
 const counts = SYSTEMS.reduce((n, s) => n + 1 + s.failure.length + 1, 0);
-console.log(`SAFETY GREEN  ${SYSTEMS.length} systems, ${counts} items, ${REDLIST.length} red list, ${KEYWORDS.length} keyword groups, ${Object.keys(SOURCES).length} sources, 0 forbidden words`);
+console.log(`SAFETY GREEN  ${SYSTEMS.length} systems, ${DISEASES.length} diseases, ${counts} items, ${REDLIST.length} red list, ${KEYWORDS.length} keyword groups, ${Object.keys(SOURCES).length} sources, 0 forbidden words`);
