@@ -25,10 +25,19 @@
       <span class="brand-sub">גוף, מחלה, בריאות</span>
     </a>
     <nav class="nav" aria-label="ניווט">
-      <button class="chip" data-view="system">מפת הגוף</button>
-      <button class="chip chip-urgent" data-view="emergency">סימני חירום</button>
+      <button class="chip" data-view="system"><span class="xl">מפת </span>הגוף</button>
+      <button class="chip chip-urgent" data-view="emergency"><span class="xl">סימני </span>חירום</button>
+      <button class="chip chip-urgent" data-view="redlist">רשימה אדומה</button>
+      <button class="chip" data-view="profile"><span class="xl">ה</span>בטיחות<span class="xl"> שלי</span></button>
       <button class="chip" data-view="sources">מקורות</button>
     </nav>
+    <div class="search" role="search">
+      <label for="search" class="sr-only">חיפוש: איבר, מחלה, צמח או תסמין</label>
+      <input id="search" type="search" class="field" placeholder="חיפוש: איבר, מחלה, צמח" autocomplete="off" enterkeyhint="search" dir="rtl">
+      <button id="search-clear" class="search-x" type="button" aria-label="ניקוי החיפוש" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
+      </button>
+    </div>
     <ai-menu chat="https://claude.ai/code/session_018qeN1Aq3ktfkuybhgGGGf2"></ai-menu>
   </header>
 
@@ -80,7 +89,7 @@
   </main>
 
   <footer class="foot" dir="rtl">
-    <p class="disclaimer"><b>האפליקציה לא מאבחנת ולא מטפלת.</b> היא מלמדת לקרוא מידע רפואי.</p>
+    <p class="disclaimer"><b>האפליקציה לא מאבחנת ולא מטפלת.</b> היא מלמדת לקרוא מידע רפואי. <a href="#v=about" id="about-link">מה זה, ומה לא</a></p>
     <p class="sos">במצב חירום:
       <a href="tel:101">מד"א <b class="num" dir="ltr">101</b></a>
       <a href="tel:1201">ער"ן <b class="num" dir="ltr">1201</b></a>

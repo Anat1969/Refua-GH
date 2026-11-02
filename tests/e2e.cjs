@@ -125,6 +125,78 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
         return false;
       });
       ok(!overlap, 'labels do not overlap');
+
+      // ---------- Stage 1: safety layer ----------
+      const PHRASES = [
+        ['קוצר נשימה', 'breath', '101'], ['יש לי כאב חזק בחזה', 'chest', '101'], ['התנפחות', 'swelling', '101'],
+        ['הרעלה', 'poison', '04-7771900'], ['בליעה אצל ילד', 'child-swallow', '101'], ['מחשבות אובדניות', 'suicide', '1201'],
+        ['הפסקתי לקחת אינסולין', 'med-stop', '101'],
+      ];
+      for (const [phrase, id, num] of PHRASES) {
+        await page.fill('#search', '');
+        await page.type('#search', phrase, { delay: 5 });
+        await page.waitForSelector(`.alert-card[data-alert="${id}"]`, { timeout: 3000 });
+        const r = await page.evaluate(() => ({
+          first: document.querySelector('.alert-card').dataset.alert,
+          nums: [...document.querySelectorAll('.alert-card .numcard b')].map((b) => b.textContent),
+          red: document.querySelectorAll('.results .is-red').length,
+          top: document.querySelector('.alert-card').getBoundingClientRect().top < innerHeight,
+        }));
+        ok(r.first === id && r.nums.includes(num) && r.top, `keyword "${phrase}" shows ${id} first with ${num}, in view`);
+        if (id === 'med-stop') ok(r.red === 0 && !(await page.$('.counts')), 'stopped medication: no plant content on screen');
+        if (id === 'suicide') { await page.waitForTimeout(400); ok(!(await page.$('.empty')), 'suicide alert: no "no results" text under it'); }
+        if (id === 'suicide') await page.screenshot({ path: path.join(SHOTS, `alert-suicide-${tag}.png`) });
+      }
+      await page.fill('#search', '');
+      await page.type('#search', 'כבד', { delay: 5 });
+      await page.waitForFunction(() => location.hash.includes('v=search') && document.querySelector('.counts'));
+      const liver = await page.$$eval('.results .is-red', (l) => l.length);
+      ok(liver === 2 && !(await page.$('.alert-card')), `search "כבד": ${liver} red list results, no false alert`);
+      await page.screenshot({ path: path.join(SHOTS, `search-${tag}.png`) });
+      await page.click('.results .is-red >> nth=0');
+      await page.waitForFunction(() => location.hash.includes('v=redlist') && document.querySelector('.red-item.is-anchor'));
+      ok(true, 'search result opens its red list entry');
+      ok(await page.inputValue('#search') === '', 'search field cleared when leaving search');
+      await page.fill('#search', 'משהו');
+      await page.click('#search-clear');
+      await page.waitForFunction(() => !location.hash.includes('v=search'));
+      ok(await page.inputValue('#search') === '', 'grey X clears the search');
+
+      await page.click('[data-view="redlist"]');
+      await page.waitForFunction(() => location.hash.includes('v=redlist') && document.querySelectorAll('.red-item').length > 0);
+      const red = await page.evaluate(() => [...document.querySelectorAll('.red-item')].map((li) => ({
+        la: !!li.querySelector('.latin')?.textContent.trim(), src: li.querySelectorAll('.src').length, rev: /נבדק/.test(li.textContent),
+      })));
+      ok(red.length === 4 && red.every((r) => r.la && r.src >= 1 && r.rev), 'red list: 4 entries, each with scientific name, source and review date');
+      await page.screenshot({ path: path.join(SHOTS, `redlist-${tag}.png`) });
+
+      await page.click('[data-view="profile"]');
+      await page.waitForFunction(() => location.hash.includes('v=profile') && document.querySelector('#profile-form'));
+      await page.click('label.check:has(input[name="pregnancy"])');
+      await page.click('label.check:has(input[name="liver"])');
+      await page.waitForFunction(() => document.querySelectorAll('.profile ~ .block .alert').length >= 2);
+      ok((await page.textContent('#saved')).includes('נשמר במכשיר'), 'profile: saved indicator');
+      await page.screenshot({ path: path.join(SHOTS, `profile-${tag}.png`) });
+      await page.reload();
+      await page.waitForSelector('#profile-form');
+      ok(await page.isChecked('input[name="pregnancy"]') && await page.isChecked('input[name="liver"]'), 'profile survives reload (device only)');
+      await page.click('[data-view="redlist"]');
+      await page.waitForSelector('.profile-flag');
+      ok(true, 'red list shows the profile flag');
+      await page.click('[data-view="profile"]');
+      await page.waitForSelector('[data-clear-profile]');
+      await page.click('[data-clear-profile]');
+      await page.waitForFunction(() => !localStorage.getItem('refua.profile.v1') && !document.querySelector('input[name="pregnancy"]').checked);
+      ok(true, 'clear button deletes the profile from the device');
+
+      await page.click('#about-link');
+      await page.waitForFunction(() => location.hash.includes('v=about') && document.querySelector('.box-yes'));
+      ok(true, 'declaration screen opens from the footer');
+      await page.screenshot({ path: path.join(SHOTS, `about-${tag}.png`) });
+      await page.click('[data-view="sources"]');
+      await page.waitForFunction(() => document.querySelectorAll('.sources li').length > 0);
+      const nSrc = await page.$$eval('.sources li', (l) => l.length);
+      ok(nSrc >= 30, `sources view includes red list sources (${nSrc})`);
     }
 
     if (w === 390) {
@@ -132,6 +204,11 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.waitForTimeout(700);
       await page.screenshot({ path: path.join(SHOTS, `nervous-${tag}.png`) });
       ok(await page.evaluate(() => document.querySelector('.panel').getBoundingClientRect().top < innerHeight), 'mobile: panel scrolled into view after selection');
+      await page.fill('#search', 'כאב בחזה');
+      await page.waitForSelector('.alert-card[data-alert="chest"]');
+      await page.waitForTimeout(500);
+      ok(await page.evaluate(() => { const r = document.querySelector('.alert-card').getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight; }), 'mobile: emergency card in view');
+      await page.screenshot({ path: path.join(SHOTS, `alert-chest-${tag}.png`) });
     }
 
     ok(errors.length === 0, `${tag} no JS errors ${errors.join(' | ')}`);

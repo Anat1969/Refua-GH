@@ -33,6 +33,12 @@ export const SOURCES = {
   'porter-1997': { title: 'Roy Porter, The Greatest Benefit to Mankind', type: 'היסטוריה של הרפואה', year: 1997, note: '', url: 'https://wwnorton.com/books/the-greatest-benefit-to-mankind/' },
   'vesalius-1543': { title: 'Andreas Vesalius, De humani corporis fabrica', type: 'מקור היסטורי', year: 1543, note: '', url: 'https://www.nlm.nih.gov/exhibition/historicalanatomies/vesalius_home.html' },
   'snow-1855': { title: 'John Snow, On the Mode of Communication of Cholera', type: 'מקור היסטורי', year: 1855, note: '', url: 'https://archive.org/details/b28985266' },
+  'livertox-germander': { title: 'LiverTox, Germander (Teucrium)', type: 'מאגר רשמי, NIH', year: 2024, note: '', url: 'https://www.ncbi.nlm.nih.gov/books/NBK548282/' },
+  'livertox-turmeric': { title: 'LiverTox, Turmeric', type: 'מאגר רשמי, NIH', year: 2021, note: '', url: 'https://www.ncbi.nlm.nih.gov/books/NBK548561/' },
+  'ghassa-2024': { title: 'Ghassa et al., Annals of Medicine & Surgery', type: 'תיאור מקרה', year: 2024, note: 'מקרה יחיד', url: 'https://doi.org/10.1097/MS9.0000000000001760' },
+  'iarc-82': { title: 'IARC Monographs, vol. 82', type: 'סיווג רשמי', year: 2002, note: 'תכשירים צמחיים עם אריסטולוכיה', url: 'https://publications.iarc.who.int/' },
+  'debelle-2008': { title: 'Debelle, Vanherweghem & Nortier, Kidney International', type: 'סקירה', year: 2008, note: 'כרך 74, עמ׳ 158-169', url: 'https://pubmed.ncbi.nlm.nih.gov/?term=Aristolochic+acid+nephropathy+a+worldwide+problem' },
+  'saper-2008': { title: 'Saper et al., JAMA', type: 'מחקר', year: 2008, note: '193 תכשירים שנבדקו', url: 'https://pubmed.ncbi.nlm.nih.gov/18728265/' },
   'rambam-deot': { title: 'רמב"ם, משנה תורה, הלכות דעות ד', type: 'מסורת', year: 1180, note: 'הלכה ב', url: 'https://www.sefaria.org.il/Mishneh_Torah,_Human_Dispositions.4' },
 };
 
@@ -139,4 +145,115 @@ export const EMERGENCY = [
   { he: 'מד"א', en: 'Magen David Adom', num: '101' },
   { he: 'ער"ן, עזרה נפשית ראשונה', en: 'ERAN', num: '1201' },
   { he: 'המרכז הארצי למידע בהרעלות', en: 'Israel Poison Information Center', num: '04-7771900' },
+];
+
+// ---------- Stage 1: safety layer ----------
+
+// Red list (docs/SAFETY.md, section 4). Never shown in a regular gallery.
+// organs: used only to connect the local safety profile to entries.
+export const REDLIST = [
+  {
+    id: 'teucrium-polium',
+    name_he: 'ג׳עדה',
+    name_la: 'Teucrium polium',
+    risk_he: '**פגיעה בכבד**, מתועדת בצמחי הסוג. דווח מקרה של **חמצת קטוטית סוכרתית** אצל מטופלת שהפסיקה אינסולין ושתתה את הצמח במקומו.',
+    context_he: 'נפוצה ברפואה העממית בישראל ובמזרח התיכון, בעיקר כתה.',
+    organs: ['liver'],
+    sources: ['livertox-germander', 'ghassa-2024'],
+    last_reviewed: '2026-11-02',
+  },
+  {
+    id: 'aristolochia',
+    name_he: 'צמחים מהסוג ספלול',
+    name_la: 'Aristolochia',
+    risk_he: '**נזק לכליות** (נפרופתיה) ו**סרטן בדרכי השתן**. תכשירים צמחיים שמכילים אריסטולוכיה מסווגים כמסרטנים לאדם.',
+    context_he: 'הופיעו בתכשירים צמחיים ובתערובות לירידה במשקל, לעיתים בזיהוי שגוי של צמח אחר.',
+    organs: ['kidney'],
+    sources: ['iarc-82', 'debelle-2008'],
+    last_reviewed: '2026-11-02',
+  },
+  {
+    id: 'rasa-shastra',
+    name_he: 'תכשירים איורוודיים עם מתכות',
+    name_la: 'Rasa shastra',
+    risk_he: '**עופרת, כספית או ארסן.** ב-**20.7%** מהתכשירים שנבדקו ברכישה ברשת נמצאו מתכות.',
+    context_he: 'בתכשירי rasa shastra מוסיפים מתכות בכוונה, כחלק מהמסורת.',
+    organs: [],
+    sources: ['saper-2008'],
+    last_reviewed: '2026-11-02',
+  },
+  {
+    id: 'turmeric-supplements',
+    name_he: 'תוספי כורכום מרוכזים',
+    name_la: 'Curcuma longa, curcumin',
+    risk_he: '**פגיעה בכבד.** רוב המקרים המתועדים בתוספים מרוכזים, שנבנו לספיגה גבוהה.',
+    context_he: 'כורכום כתבלין במזון אינו ברשימה. ההבדל הוא הריכוז.',
+    organs: ['liver'],
+    sources: ['livertox-turmeric'],
+    last_reviewed: '2026-11-02',
+    bridge: { app: 'nutrition', food_id: 'turmeric' },
+  },
+];
+
+export const REDLIST_ACTION = {
+  sign_he: 'צהבת, שתן כהה, כאב בבטן העליונה או ירידה בכמות השתן, אחרי שימוש בצמח או בתוסף',
+  go_he: 'פנייה לרופא, עם התכשיר ביד',
+  rule_he: 'לפני כל צמח או תוסף: בדיקת אינטראקציה עם תרופות אצל **רוקח**. אין להפסיק תרופה בלי רופא.',
+  source_id: 'livertox-germander',
+};
+
+// Emergency keywords (docs/SAFETY.md, sections 2 and 3). Order = priority.
+// calls: ids from EMERGENCY_NUMBERS. plants:false = stop any plant talk on this screen.
+export const EMERGENCY_NUMBERS = {
+  mda: { he: 'מד"א', num: '101' },
+  eran: { he: 'ער"ן, עזרה נפשית ראשונה', num: '1201' },
+  poison: { he: 'המרכז הארצי למידע בהרעלות', num: '04-7771900' },
+};
+
+export const KEYWORDS = [
+  {
+    id: 'suicide',
+    terms: ['מחשבות אובדניות', 'אובדנות', 'להתאבד', 'התאבדות', 'לא רוצה לחיות', 'רוצה למות', 'לשים קץ', 'לפגוע בעצמי'],
+    title_he: 'לא צריך לעבור את זה לבד',
+    do_he: ['ער"ן: שיחה עכשיו, בלי לחכות, **1201**.', 'בסכנה מיידית: מד"א **101**.'],
+    calls: ['eran', 'mda'],
+  },
+  {
+    id: 'child-swallow',
+    terms: ['בליעה אצל ילד', 'ילד בלע', 'ילדה בלעה', 'תינוק בלע', 'תינוקת בלעה', 'בלע סוללה', 'בלעה סוללה', 'בלע תרופה', 'בלעה תרופה', 'בלע כדור'],
+    title_he: 'בליעה אצל ילד',
+    do_he: ['מתקשרים עכשיו: מד"א **101**, או המרכז הארצי למידע בהרעלות.', 'לא משרים להקיא.', 'שומרים את האריזה של מה שנבלע.'],
+    calls: ['mda', 'poison'],
+  },
+  {
+    id: 'poison',
+    terms: ['הרעלה', 'הורעל', 'הורעלה', 'חשד להרעלה', 'רעל', 'הרעלת'],
+    title_he: 'חשד להרעלה',
+    do_he: ['המרכז הארצי למידע בהרעלות, כל שעות היממה.', 'קושי בנשימה, איבוד הכרה או פרכוס: מד"א **101**.', 'לא משרים להקיא.'],
+    calls: ['poison', 'mda'],
+  },
+  {
+    id: 'med-stop',
+    terms: ['הפסקתי תרופה', 'הפסקתי לקחת', 'הפסקתי את התרופה', 'הפסקתי טיפול', 'הפסקתי אינסולין', 'במקום תרופה', 'במקום אינסולין', 'במקום הכדורים'],
+    title_he: 'הפסקת תרופה: פונים לרופא',
+    do_he: ['פונים לרופא שרשם את התרופה, או לרופא המשפחה, **עוד היום**.', 'הרגשה רעה, חולשה או בלבול: מד"א **101**.', 'כאן לא ממשיכים בשיחה על צמחים.'],
+    calls: ['mda'],
+    plants: false,
+  },
+  { id: 'chest', terms: ['כאב בחזה', 'כאבים בחזה', 'לחץ בחזה', 'התקף לב'], title_he: 'כאב או לחץ בחזה', do_he: ['מתקשרים למד"א **101** עכשיו.'], calls: ['mda'], system: 'cardio' },
+  { id: 'breath', terms: ['קוצר נשימה', 'קשיי נשימה', 'קושי בנשימה', 'לא מצליח לנשום', 'לא מצליחה לנשום', 'נחנק', 'נחנקת'], title_he: 'קושי בנשימה', do_he: ['מתקשרים למד"א **101** עכשיו.'], calls: ['mda'], system: 'respiratory' },
+  { id: 'swelling', terms: ['התנפחות', 'נפיחות בפנים', 'נפיחות בגרון', 'נפיחות בשפתיים', 'אנפילקסיס', 'תגובה אלרגית'], title_he: 'התנפחות בפנים או בגרון', do_he: ['מתקשרים למד"א **101** עכשיו.'], calls: ['mda'], system: 'immune' },
+  { id: 'stroke', terms: ['שבץ', 'פנים שמוטות', 'חולשה ביד', 'קושי בדיבור'], title_he: 'סימני שבץ', do_he: ['מתקשרים למד"א **101** עכשיו.', 'רושמים את השעה שבה הסימנים התחילו.'], calls: ['mda'], system: 'nervous' },
+];
+
+// Local safety profile (docs/SAFETY.md, section 5). Stored only on the device.
+export const PROFILE_ITEMS = [
+  { id: 'pregnancy', he: 'הריון', special: true },
+  { id: 'nursing', he: 'הנקה', special: true },
+  { id: 'child', he: 'מדובר בילד או בילדה', special: true },
+  { id: 'older', he: 'גיל מבוגר', special: true },
+  { id: 'kidney', he: 'מחלת כליות', special: true, organ: 'kidney' },
+  { id: 'liver', he: 'מחלת כבד', special: true, organ: 'liver' },
+  { id: 'meds', he: 'תרופות קבועות' },
+  { id: 'allergy', he: 'אלרגיה ידועה' },
 ];
