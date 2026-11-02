@@ -1,4 +1,4 @@
-import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP } from './data.js';
+import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES } from './data.js';
 import { detect, textMatches, normalize } from './match.js';
 import { bodySVG } from './body.js';
 import { circulationSVG } from './circulation.js';
@@ -187,7 +187,7 @@ function searchView(q) {
   const hits = detect(q, KEYWORDS);
   const stopPlants = hits.some((k) => k.plants === false);
   const sys = SYSTEMS.filter((s) => textMatches(q, [s.name_he, s.city, s.role.text_he, ...s.failure.map((f) => f.text_he), s.action.sign_he, s.bridge.text_he].join(' ')));
-  const dz = Object.entries(DEEP).flatMap(([sid, D]) => D.diseases.filter((x) => textMatches(q, [x.name_he, x.name_en, ...x.items.map((i) => i.text_he)].join(' '))).map((x) => ({ ...x, sid })));
+  const dz = DISEASES.filter((x) => textMatches(q, [x.name_he, x.name_en, ...x.items.map((i) => i.text_he)].join(' ')));
   const red = stopPlants ? [] : REDLIST.filter((r) => textMatches(q, [r.name_he, r.name_la, r.risk_he, r.context_he].join(' ')));
   const total = sys.length + dz.length + red.length;
   return `
@@ -201,7 +201,7 @@ function searchView(q) {
   ${total ? '' : `<p class="empty">אין תוצאה ל„${esc(q)}”.<br>נסו שם של איבר, מחלה או צמח, למשל: לב, שבץ, כבד.</p>`}
   <ul class="results">
     ${sys.map((s) => `<li><button class="result-row press" data-pick="${s.id}"><span class="label">מערכת</span><b>${s.name_he}</b><span>${rich(s.insight.replace(/==/g, ''))}</span></button></li>`).join('')}
-    ${dz.map((x) => `<li><button class="result-row press" data-dz-open="${x.id}" data-sys="${x.sid}"><span class="label">מחלה</span><b>${x.name_he}</b><span>${rich(x.insight.replace(/==/g, ''))}</span></button></li>`).join('')}
+    ${dz.map((x) => `<li><button class="result-row press" data-open-dz="${x.id}"><span class="label">מחלה</span><b>${x.name_he}</b><span>${rich(x.insight.replace(/==/g, ''))}</span></button></li>`).join('')}
     ${red.map((r) => `<li><button class="result-row is-red press" data-view-go="redlist" data-anchor="${r.id}"><span class="label">רשימה אדומה</span><b>${r.name_he}</b><span>${rich(r.risk_he)}</span></button></li>`).join('')}
   </ul>`}`;
 }
@@ -285,6 +285,78 @@ function aboutView() {
   </section>`;
 }
 
+// ---------- Stage 4: diseases ----------
+const sysName = (id) => SYSTEMS.find((x) => x.id === id).name_he;
+const diseasesIn = (f) => (f ? DISEASES.filter((d) => d.system === f) : DISEASES);
+const layerMarks = (d) => ['known', 'said', 'believed'].map((l) => (d.items.some((i) => i.layer === l) ? `<span class="lm lm-${l}" title="${LAYERS[l].he}"></span>` : '<span class="lm lm-none"></span>')).join('');
+
+function systemFilter(f) {
+  return `<div class="filter" role="group" aria-label="סינון לפי מערכת">
+    <button class="chip" data-f="" aria-pressed="${!f}">הכול <span class="num">${DISEASES.length}</span></button>
+    ${SYSTEMS.map((s) => `<button class="chip" data-f="${s.id}" aria-pressed="${f === s.id}">${s.name_he} <span class="num">${diseasesIn(s.id).length}</span></button>`).join('')}
+  </div>`;
+}
+
+function diseasesView(f) {
+  const groups = SYSTEMS.filter((s) => !f || s.id === f).map((s) => {
+    const list = diseasesIn(s.id);
+    return `<section class="dz-group" aria-labelledby="g-${s.id}">
+      <h3 id="g-${s.id}"><span>${s.name_he}</span><span class="num">${list.length}</span></h3>
+      <ul class="dz-grid">${list.map((d) => `<li><button class="dz-tile press" data-open-dz="${d.id}">
+        <b>${d.name_he}</b><span class="dz-in">${rich(d.insight.replace(/==/g, ''))}</span>
+        <span class="lms" aria-label="שכבות: ${['known', 'said', 'believed'].filter((l) => d.items.some((i) => i.layer === l)).map((l) => LAYERS[l].he).join(', ')}">${layerMarks(d)}</span>
+        ${d.action.urgency === 'emergency' ? '<span class="dz-urgent">סימן חירום</span>' : ''}
+      </button></li>`).join('')}</ul>
+    </section>`;
+  }).join('');
+  return `
+  <header class="panel-head">
+    <div><p class="label">מחלות</p><h2>${DISEASES.length} מחלות, לפי מערכת</h2></div>
+    ${closeBtn}
+  </header>
+  <p class="insight">${rich('==הסיבות המובילות למוות ולנכות, במבט אחד.==')}</p>
+  ${systemFilter(f)}
+  ${groups}
+  <p class="fine">לפי גיליונות העובדות של ארגון הבריאות העולמי (WHO). שלוש הקווים בכל כרטיס: אילו שכבות יש בו.</p>`;
+}
+
+function diseaseView(id, f) {
+  const d = DISEASES.find((x) => x.id === id) || DISEASES[0];
+  const list = diseasesIn(f);
+  const i = Math.max(0, list.indexOf(d));
+  const inDeep = DEEP[d.system]?.diseases?.some((x) => x.id === d.id);
+  return `
+  <header class="panel-head">
+    <div>
+      <button class="label linkish-label" data-pick="${d.system}">${sysName(d.system)}</button>
+      <h2 id="sys-title">${d.name_he}</h2>
+      <p class="latin-line" dir="ltr">${d.name_en}</p>
+    </div>
+    <div class="ops" role="group" aria-label="מעבר בין מחלות">
+      <button class="icon press" data-dz-step="-1" title="המחלה הקודמת" aria-label="המחלה הקודמת">${ico.prev}</button>
+      <span class="pos"><span class="num">${i + 1}/${list.length}</span></span>
+      <button class="icon press" data-dz-step="1" title="המחלה הבאה" aria-label="המחלה הבאה">${ico.next}</button>
+      <button class="icon press" data-view-go="diseases" title="לכל המחלות" aria-label="לכל המחלות">${ico.close}</button>
+    </div>
+  </header>
+  <p class="insight rise">${rich(d.insight)}</p>
+  <section class="block rise" aria-labelledby="h-dz-l">
+    <h3 id="h-dz-l"><span class="label">הבנה</span>מה ידוע, מה נאמר, מה מאמינים</h3>
+    ${d.items.map(item).join('')}
+  </section>
+  <section class="block rise">
+    <h3><span class="label">שימוש</span>מתי פונים, ומה שואלים</h3>
+    <div class="alert ${d.action.urgency === 'emergency' ? 'tone-urgent' : 'tone-doctor'}">
+      <p class="sign">${rich(d.action.sign_he)}</p>
+      <p class="go">${rich(d.action.go_he)}</p>
+      <p class="imeta">${srcLine(d.action.source_id)}</p>
+    </div>
+    <p class="question"><span class="label">שאלה לרופא</span>${rich(d.action.question_he)}</p>
+  </section>
+  ${d.bridge ? `<section class="block bridge rise"><h3><span class="label">${d.bridge.kind === 'nutrition' ? 'חיבור לתזונה' : 'חיבור לעיר'}</span>${rich(d.bridge.next_he)}</h3>${item(d.bridge)}</section>` : ''}
+  ${inDeep ? `<button class="deep-cta press rise" data-deep-dz="${d.id}"><span class="label">לעומק</span><b>${DEEP[d.system].title_he}</b><span>המחלה בתוך התרשים, עם האיברים והתהליך</span></button>` : ''}`;
+}
+
 const TABS = [['process', 'תהליך'], ['organs', 'איברים'], ['diseases', 'מחלות']];
 function deepView(s, t, k, d) {
   const D = DEEP[s.id];
@@ -343,9 +415,10 @@ function readState() {
   const t = TABS.some(([id]) => id === p.get('t')) ? p.get('t') : 'process';
   const k = D ? Math.min(Math.max(parseInt(p.get('k'), 10) || 0, 0), D.steps.length - 1) : 0;
   const m = p.get('m') === '3d' && !atlasFailed ? '3d' : '2d';
-  return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m };
+  const f = SYSTEMS.some((x) => x.id === p.get('f')) ? p.get('f') : '';
+  return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m, f };
 }
-const VIEWS = ['emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep'];
+const VIEWS = ['emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease'];
 function go(s, v = 'system', extra = {}, replace = false) {
   const prm = new URLSearchParams({ s: s.id });
   if (v !== 'system') prm.set('v', v);
@@ -353,6 +426,8 @@ function go(s, v = 'system', extra = {}, replace = false) {
   if (mode === '3d' && v !== 'deep') prm.set('m', '3d');
   if (v === 'search' && extra.q) prm.set('q', extra.q);
   if (extra.a) prm.set('a', extra.a);
+  if ((v === 'diseases' || v === 'disease') && extra.f) prm.set('f', extra.f);
+  if (v === 'disease' && extra.d) prm.set('d', extra.d);
   if (v === 'deep') {
     if (extra.t && extra.t !== 'process') prm.set('t', extra.t);
     if (extra.k) prm.set('k', String(extra.k));
@@ -366,6 +441,7 @@ function go(s, v = 'system', extra = {}, replace = false) {
 
 // ---------- 3D atlas: loaded only on request ----------
 let atlas = null, atlasLoading = null, atlasFailed = false;
+let pickSystem = (id) => go(SYSTEMS.find((x) => x.id === id));
 async function ensureAtlas(sid) {
   if (atlas) return atlas.select(sid);
   if (atlasLoading) return;
@@ -375,7 +451,7 @@ async function ensureAtlas(sid) {
     .then((mod) => mod.mountAtlas(host, SYSTEMS, {
       selected: sid,
       reduced: matchMedia('(prefers-reduced-motion: reduce)').matches,
-      onPick: (id) => go(SYSTEMS.find((x) => x.id === id)),
+      onPick: (id) => pickSystem(id),
     }))
     .then((a) => { atlas = a; atlas.select(readState().s.id); $('#atlas-ops').hidden = readState().m !== '3d' || readState().v === 'deep'; })
     .catch(() => {
@@ -403,7 +479,8 @@ function renderStage(s, v, k) {
   $('#figure').hidden = deep || m3;
   $('#deep-figure').hidden = !deep;
   $('#deep-controls').hidden = !deep;
-  if (!atlasFailed || deep) $('#figure-note').textContent = deep ? 'לחיצה על מספר או על קטע בדרך מציגה את השלב.' : m3 ? 'שבעה שקפים בחלל: הדמות מאחור, והעצבים מקדימה.' : 'כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.';
+  const dzMode = v === 'diseases' || v === 'disease';
+  if (!atlasFailed || deep) $('#figure-note').textContent = dzMode && !deep ? 'לחיצה על מערכת בדמות מסננת את המחלות שלה.' : deep ? 'לחיצה על מספר או על קטע בדרך מציגה את השלב.' : m3 ? 'שבעה שקפים בחלל: הדמות מאחור, והעצבים מקדימה.' : 'כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.';
   const museum = $('#museum');
   if (!deep) {
     if (museum.dataset.mode !== 'home') { museum.innerHTML = homeMuseum; museum.dataset.mode = 'home'; }
@@ -447,8 +524,8 @@ function stepTo(k, replace = false) {
 function render() {
   const { s, v, q, a } = readState();
   const panel = $('#panel');
-  const { t, k, d } = readState();
-  const views = { emergency: emergencyView, sources: sourcesView, redlist: () => redlistView(a), profile: profileView, about: aboutView, search: () => searchView(q), deep: () => deepView(s, t, k, d) };
+  const { t, k, d, f } = readState();
+  const views = { diseases: () => diseasesView(f), disease: () => diseaseView(d, f), emergency: emergencyView, sources: sourcesView, redlist: () => redlistView(a), profile: profileView, about: aboutView, search: () => searchView(q), deep: () => deepView(s, t, k, d) };
   panel.innerHTML = (views[v] || (() => systemView(s)))();
   renderStage(s, v, k);
   const box = $('#search');
@@ -456,7 +533,7 @@ function render() {
   if (v !== 'search' && document.activeElement !== box) box.value = '';
   $('#search-clear').hidden = !box.value;
   if (a) { const el = document.getElementById(`red-${a}`); if (el) el.scrollIntoView({ block: 'nearest' }); }
-  panel.setAttribute('aria-labelledby', v === 'system' || v === 'deep' ? 'sys-title' : '');
+  panel.setAttribute('aria-labelledby', ['system', 'deep', 'disease'].includes(v) ? 'sys-title' : '');
   panel.scrollTop = 0;
   $$('.sys').forEach((g) => g.classList.toggle('on', g.dataset.id === s.id));
   $$('.sysmark').forEach((g) => {
@@ -464,8 +541,8 @@ function render() {
     g.classList.toggle('on', on);
     g.setAttribute('aria-pressed', String(on));
   });
-  $$('[data-view]').forEach((b) => b.setAttribute('aria-current', String(b.dataset.view === v || (b.dataset.view === 'system' && v === 'deep'))));
-  document.title = v === 'system' ? `${s.name_he} | רפואה` : v === 'deep' ? `${DEEP[s.id].title_he} | רפואה` : 'רפואה: גוף, מחלה, בריאות';
+  $$('[data-view]').forEach((b) => b.setAttribute('aria-current', String(b.dataset.view === v || (b.dataset.view === 'system' && v === 'deep') || (b.dataset.view === 'diseases' && v === 'disease'))));
+  document.title = v === 'system' ? `${s.name_he} | רפואה` : v === 'deep' ? `${DEEP[s.id].title_he} | רפואה` : v === 'disease' ? `${(DISEASES.find((x) => x.id === d) || DISEASES[0]).name_he} | רפואה` : 'רפואה: גוף, מחלה, בריאות';
   document.body.classList.toggle('has-alert', !!panel.querySelector('.alert-card'));
   // On narrow screens the panel sits below the figure: bring the change into view.
   if (render.ready && matchMedia('(max-width: 999px)').matches) {
@@ -475,6 +552,18 @@ function render() {
   render.ready = true;
 }
 
+function openDisease(id, f = '') {
+  const x = DISEASES.find((y) => y.id === id);
+  go(SYSTEMS.find((y) => y.id === x.system), 'disease', { d: id, f });
+}
+function stepDisease(dir) {
+  const st = readState();
+  const list = diseasesIn(st.f);
+  const cur = DISEASES.find((x) => x.id === st.d) || list[0];
+  const i = (list.indexOf(cur) + dir + list.length) % list.length;
+  openDisease(list[i].id, st.f);
+}
+
 // ---------- Boot ----------
 function boot() {
   $('#figure').innerHTML = bodySVG(SYSTEMS);
@@ -482,7 +571,14 @@ function boot() {
     .map(([k, L]) => `<li class="l-${k}"><span class="swatch" aria-hidden="true"></span><b>${L.he}</b><span>${L.def}</span></li>`)
     .join('');
 
-  const pickById = (id) => go(SYSTEMS.find((x) => x.id === id));
+  // On the diseases screens the body becomes a filter: a system on the figure shows its diseases.
+  const pickById = (id) => {
+    const sys = SYSTEMS.find((x) => x.id === id);
+    const st = readState();
+    if (st.v === 'diseases' || st.v === 'disease') return go(sys, 'diseases', { f: st.v === 'diseases' && st.f === id ? '' : id });
+    go(sys);
+  };
+  pickSystem = pickById;
   $('#figure').addEventListener('click', (e) => {
     const g = e.target.closest('.sysmark, .sys');
     if (g) pickById(g.dataset.id);
@@ -537,13 +633,19 @@ function boot() {
     const pick = e.target.closest('[data-pick]');
     if (pick) pickById(pick.dataset.pick);
     const vg = e.target.closest('[data-view-go]');
-    if (vg) go(readState().s, vg.dataset.viewGo, { a: vg.dataset.anchor });
+    if (vg) go(readState().s, vg.dataset.viewGo, { a: vg.dataset.anchor, f: vg.dataset.viewGo === 'diseases' ? readState().f : '' });
     const tab = e.target.closest('[data-tab]');
     if (tab) { const st = readState(); go(st.s, 'deep', { t: tab.dataset.tab, k: st.k, d: st.d }); }
     const dzb = e.target.closest('[data-dz]');
     if (dzb) { const st = readState(); go(st.s, 'deep', { t: 'diseases', d: dzb.dataset.dz }); }
-    const dzo = e.target.closest('[data-dz-open]');
-    if (dzo) go(SYSTEMS.find((x) => x.id === dzo.dataset.sys), 'deep', { t: 'diseases', d: dzo.dataset.dzOpen });
+    const od = e.target.closest('[data-open-dz]');
+    if (od) openDisease(od.dataset.openDz, readState().v === 'diseases' ? readState().f : '');
+    const fb = e.target.closest('[data-f]');
+    if (fb) { const st = readState(); const nf = fb.dataset.f === st.f ? '' : fb.dataset.f; go(nf ? SYSTEMS.find((x) => x.id === nf) : st.s, 'diseases', { f: nf }); }
+    const ds = e.target.closest('[data-dz-step]');
+    if (ds) stepDisease(Number(ds.dataset.dzStep));
+    const dd = e.target.closest('[data-deep-dz]');
+    if (dd) { const x = DISEASES.find((y) => y.id === dd.dataset.deepDz); go(SYSTEMS.find((y) => y.id === x.system), 'deep', { t: 'diseases', d: x.id }); }
     const ch = e.target.closest('.chain-row');
     if (ch) { stopPlay(); stepTo(Number(ch.dataset.step)); }
     if (e.target.closest('[data-clear-profile]')) { saveProfile({}); render(); }
@@ -596,6 +698,11 @@ function boot() {
     if (e.target.closest('input, textarea')) return;
     const { s, v } = readState();
     if (e.key === 'Escape' && v !== 'system') return go(s);
+    if (v === 'disease') {
+      const dd = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0;
+      if (dd) stepDisease(dd);
+      return;
+    }
     if (v === 'deep') {
       const dd = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0;
       if (dd && !e.target.closest('.tabs')) { stopPlay(); stepTo(readState().k + dd); }
