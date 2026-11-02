@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מעבדה: הלב בתלת־ממד | רפואה</title>
+<meta name="description" content="פיילוט: לב אנטומי אמיתי בתלת־ממד, מתוך BodyParts3D. חתך, פירוק, בידוד ושמות בעברית.">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #ffffff; --ink: #16202b; --graphite: #4f5965; --hair: #e5e8ec; --mist: #f5f6f8;
+  --known: #1f4e79; --marker: #fff0a0; --plate: #f6f1e7;
+  --sans: 'IBM Plex Sans Hebrew', 'Segoe UI', Arial, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --display: 'Frank Ruhl Libre', 'IBM Plex Sans Hebrew', serif;
+  --stage: radial-gradient(120% 90% at 50% 35%, #2a3542 0%, #141b23 55%, #0b1016 100%);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; }
+body { font-family: var(--sans); color: var(--ink); background: var(--paper); direction: rtl; }
+.lab { display: grid; grid-template-columns: minmax(0, 1fr) 360px; height: 100vh; }
+.stage { position: relative; min-height: 0; background: var(--stage); overflow: hidden; direction: ltr; transition: background .5s; }
+body.ink .stage { background: radial-gradient(120% 90% at 50% 35%, #ffffff 0%, #f7f5f0 70%, #efebe2 100%); }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.stage canvas:active { cursor: grabbing; }
+.tip { position: absolute; pointer-events: none; padding: 4px 9px; font-size: 13px; background: rgba(11,16,22,.82); color: #fff; border-radius: 2px; direction: rtl; white-space: nowrap; transform: translate(-50%, -140%); }
+body.ink .tip { background: var(--ink); }
+.pin { position: absolute; pointer-events: none; direction: rtl; transform: translate(-50%, -100%); text-align: center; }
+.pin b { display: block; font-family: var(--display); font-size: 22px; font-weight: 700; color: #fff; text-shadow: 0 1px 12px rgba(0,0,0,.6); }
+.pin i { display: block; font-style: normal; font-size: 12px; color: rgba(255,255,255,.75); direction: ltr; }
+.pin::after { content: ''; display: block; width: 1px; height: 46px; margin: 4px auto 0; background: linear-gradient(#fff, rgba(255,255,255,.2)); }
+body.ink .pin b { color: var(--ink); text-shadow: none; }
+body.ink .pin i { color: var(--graphite); }
+body.ink .pin::after { background: var(--ink); }
+.hud { position: absolute; inset-inline: 16px; top: 14px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; direction: rtl; }
+.hud > * { pointer-events: auto; }
+.brand { color: #fff; }
+body.ink .brand { color: var(--ink); }
+.brand .k { font-size: 12px; letter-spacing: .06em; opacity: .7; }
+.brand h1 { margin: 2px 0 0; font-family: var(--display); font-weight: 900; font-size: clamp(26px, 2.4vw, 38px); line-height: 1.05; }
+.brand p { margin: 4px 0 0; font-size: 13px; opacity: .75; }
+.views { display: flex; gap: 6px; }
+.btn { font: inherit; font-size: 13px; padding: 6px 12px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.06); color: #fff; cursor: pointer; border-radius: 2px; }
+.btn:hover { background: rgba(255,255,255,.14); }
+.btn[aria-pressed="true"] { background: #fff; color: #0b1016; }
+body.ink .btn { border-color: var(--hair); background: #fff; color: var(--ink); }
+body.ink .btn[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.7); font-size: 14px; direction: rtl; }
+.credit { position: absolute; inset-inline: 16px; bottom: 10px; font-size: 11.5px; color: rgba(255,255,255,.55); direction: rtl; pointer-events: auto; }
+.credit a { color: inherit; }
+body.ink .credit { color: var(--graphite); }
+
+.panel { border-inline-start: 1px solid var(--hair); overflow: auto; padding: 18px 20px 24px; display: flex; flex-direction: column; gap: 18px; }
+.label { font-size: 12px; color: var(--graphite); letter-spacing: .04em; font-weight: 500; margin: 0 0 6px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--hair); }
+.seg button { font: inherit; padding: 10px 8px; border: 0; background: #fff; cursor: pointer; text-align: center; color: var(--graphite); }
+.seg button b { display: block; color: var(--ink); font-size: 15px; }
+.seg button small { font-size: 11.5px; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: rgba(255,255,255,.75); }
+.seg button[aria-pressed="true"] b { color: #fff; }
+.slider { display: grid; gap: 4px; }
+.slider .row { display: flex; justify-content: space-between; font-size: 14px; }
+.slider .row span:last-child { font-family: var(--mono); color: var(--graphite); font-size: 12px; }
+input[type=range] { width: 100%; accent-color: var(--ink); direction: ltr; }
+.layers { list-style: none; margin: 0; padding: 0; }
+.layers .grp { font-size: 12px; color: var(--graphite); margin: 12px 0 2px; }
+.layers li.part { display: grid; grid-template-columns: 22px 14px minmax(0, 1fr); align-items: center; gap: 6px; }
+.layers input { margin: 0; accent-color: var(--ink); }
+.sw { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); }
+.layers button { font: inherit; font-size: 14.5px; text-align: right; background: none; border: 0; padding: 5px 4px; cursor: pointer; color: var(--ink); border-bottom: 1px solid transparent; }
+.layers button:hover { border-bottom-color: var(--hair); }
+.layers li.on button { font-weight: 700; background: var(--marker); }
+.card { border-top: 2px solid var(--ink); padding-top: 12px; }
+.card h2 { margin: 0; font-family: var(--display); font-size: 26px; font-weight: 700; }
+.card .en { font-size: 13px; color: var(--graphite); direction: ltr; text-align: right; margin: 2px 0 10px; }
+.card p.role { margin: 0; font-size: 15.5px; line-height: 1.55; }
+.card .meta { font-size: 12px; color: var(--graphite); margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.card .meta .fma { font-family: var(--mono); direction: ltr; }
+.card .layer { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--known); font-weight: 600; }
+.card .layer::before { content: ''; width: 18px; border-top: 2px solid var(--known); }
+.card .src { color: var(--graphite); }
+.hint { font-size: 13.5px; color: var(--graphite); line-height: 1.55; margin: 0; }
+.chk { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.back { font-size: 13px; color: var(--graphite); }
+@media (max-width: 860px) {
+  .lab { grid-template-columns: minmax(0, 1fr); grid-template-rows: 62vh auto; height: auto; }
+  .panel { border-inline-start: 0; border-top: 1px solid var(--hair); }
+  .brand h1 { font-size: 24px; }
+  .brand p { display: none; }
+}
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.170.0/three.module.min.js",
+  "three/addons/": "./vendor/"
+} }
+</script>
+</head>
+<body>
+<div class="lab">
+  <section class="stage" id="stage" aria-label="הלב בתלת־ממד">
+    <div class="hud">
+      <div class="brand">
+        <div class="k">מעבדה · פיילוט</div>
+        <h1>הלב, מבפנים</h1>
+        <p>גוררים לסובב. גלגלת לקרב. לחיצה על מבנה בוחרת אותו.</p>
+      </div>
+      <div class="views" role="group" aria-label="מבט">
+        <button class="btn" data-view="front">מלפנים</button>
+        <button class="btn" data-view="left">משמאל</button>
+        <button class="btn" data-view="back">מאחור</button>
+        <button class="btn" data-view="body">בגוף</button>
+      </div>
+    </div>
+    <div class="loading" id="loading">טוען את הלב…</div>
+    <div class="tip" id="tip" hidden></div>
+    <div class="pin" id="pin" hidden><b></b><i></i></div>
+    <p class="credit">מודל: <a href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html" target="_blank" rel="noopener">BodyParts3D</a>, © The Database Center for Life Science, ברישיון CC BY 4.0. מפושט ומקובץ למבנים.</p>
+  </section>
+
+  <aside class="panel" aria-label="שליטה">
+    <div>
+      <p class="label">מראה</p>
+      <div class="seg" role="group" aria-label="מראה">
+        <button data-look="tissue" aria-pressed="true"><b>רקמה</b><small>צבע אנטומי, אור רטוב</small></button>
+        <button data-look="ink" aria-pressed="false"><b>דיו</b><small>נייר וקו, כמו האטלס</small></button>
+      </div>
+    </div>
+
+    <div class="slider">
+      <div class="row"><span>חתך מלפנים לאחור</span><span id="cut-v">0%</span></div>
+      <input type="range" id="cut" min="0" max="100" value="0" aria-label="עומק החתך">
+    </div>
+    <div class="slider">
+      <div class="row"><span>פירוק</span><span id="exp-v">0%</span></div>
+      <input type="range" id="exp" min="0" max="100" value="0" aria-label="מידת הפירוק">
+    </div>
+    <label class="chk"><input type="checkbox" id="iso"> לבודד את הנבחר, והשאר שקוף</label>
+
+    <section class="card" id="card" aria-live="polite">
+      <p class="hint">בחרו מבנה בלב או ברשימה. כדי לראות את המסתמים, הזיזו את החתך לאמצע.</p>
+    </section>
+
+    <div>
+      <p class="label">מבנים</p>
+      <ul class="layers" id="layers"></ul>
+    </div>
+
+    <p class="back"><a href="../#s=cardio">חזרה ללב וכלי הדם באפליקציה</a></p>
+  </aside>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/RoomEnvironment.js';
+
+// Every role line is structural anatomy from Gray's Anatomy (42nd ed., 2020): layer "known".
+const PARTS = {
+  lv: { he: 'החדר השמאלי', en: 'Left ventricle', fma: 'FMA7101', grp: 'חדרים ועליות', tissue: '#7d1f1d', role: 'שולח דם עשיר בחמצן לכל הגוף, דרך אבי העורקים. הדופן שלו היא העבה ביותר בלב.' },
+  rv: { he: 'החדר הימני', en: 'Right ventricle', fma: 'FMA7098', grp: 'חדרים ועליות', tissue: '#8c2a25', role: 'שולח דם דל בחמצן אל הריאות, דרך גזע עורק הריאה.' },
+  la: { he: 'העלייה השמאלית', en: 'Left atrium', fma: 'FMA7097', grp: 'חדרים ועליות', tissue: '#9a3a33', role: 'מקבלת דם עשיר בחמצן מהריאות, דרך ורידי הריאה, ומעבירה אותו לחדר השמאלי.' },
+  ra: { he: 'העלייה הימנית', en: 'Right atrium', fma: 'FMA7096', grp: 'חדרים ועליות', tissue: '#7e3b45', role: 'מקבלת דם דל בחמצן מהגוף, דרך הוורידים הנבובים, ומעבירה אותו לחדר הימני.' },
+  mitral: { he: 'המסתם המיטרלי', en: 'Mitral valve, anterior leaflet', fma: 'FMA7242', grp: 'מסתמים', tissue: '#e8d6bb', role: 'בין העלייה השמאלית לחדר השמאלי. במודל מופיע העלה הקדמי שלו.' },
+  tricuspid: { he: 'המסתם התלת־צניפי', en: 'Tricuspid valve', fma: 'FMA7234', grp: 'מסתמים', tissue: '#ead9c0', role: 'בין העלייה הימנית לחדר הימני. שלושה עלים.' },
+  aorticv: { he: 'מסתם אבי העורקים', en: 'Aortic valve', fma: 'FMA7236', grp: 'מסתמים', tissue: '#f0e2c9', role: 'ביציאה מהחדר השמאלי אל אבי העורקים. שלוש כיסות, שנסגרות כשהחדר נרפה.' },
+  pulmv: { he: 'מסתם עורק הריאה', en: 'Pulmonary valve', fma: 'FMA7246', grp: 'מסתמים', tissue: '#eedcc4', role: 'ביציאה מהחדר הימני אל עורק הריאה. שלוש כיסות.' },
+  coronary: { he: 'העורקים הכליליים', en: 'Coronary arteries', fma: 'FMA49893', grp: 'כלי הדם של הלב', tissue: '#d11a22', role: 'מזינים את שריר הלב עצמו. יוצאים מאבי העורקים, ממש מעל המסתם שלו.' },
+  cveins: { he: 'ורידי הלב', en: 'Cardiac veins', fma: 'FMA4706', grp: 'כלי הדם של הלב', tissue: '#2a4795', role: 'מחזירים דם משריר הלב. רובם נאספים לסינוס הכלילי, שנפתח לעלייה הימנית.' },
+  aorta: { he: 'אבי העורקים', en: 'Aorta, ascending and arch', fma: 'FMA3734', grp: 'כלי הדם הגדולים', tissue: '#b5181c', role: 'העורק הגדול בגוף. עולה מהחדר השמאלי, ומתקשת שמאלה ואחורה.' },
+  pulmtrunk: { he: 'גזע עורק הריאה', en: 'Pulmonary trunk', fma: 'FMA8612', grp: 'כלי הדם הגדולים', tissue: '#2f4d9e', role: 'מוביל דם דל בחמצן מהחדר הימני, ומתפצל לשתי הריאות.' },
+  svc: { he: 'הווריד הנבוב העליון', en: 'Superior vena cava', fma: 'FMA4720', grp: 'כלי הדם הגדולים', tissue: '#2a4795', role: 'מחזיר דם מהראש, מהצוואר ומהזרועות אל העלייה הימנית.' },
+  ribs: { he: 'בית החזה', en: 'Rib cage', fma: 'FMA7480', grp: 'הקשר בגוף', tissue: '#e9e1cf', role: 'הכלוב של צלעות ועצם החזה, שסוגר על הלב ועל הריאות.', context: true },
+  skin: { he: 'קו הגוף', en: 'Skin, outline', fma: 'FMA7163', grp: 'הקשר בגוף', tissue: '#f2dccb', role: 'קו המתאר של הגוף, לקנה מידה.', context: true },
+};
+const HEART = Object.keys(PARTS).filter((k) => !PARTS[k].context);
+const INK = '#16202b', NAVY = '#1f4e79', PORCELAIN = '#fbf8f2';
+
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.localClippingEnabled = true;
+stage.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.45;
+const camera = new THREE.PerspectiveCamera(32, 1, 1, 6000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.autoRotate = true; controls.autoRotateSpeed = 0.6;
+controls.addEventListener('start', () => { controls.autoRotate = false; });
+
+const key = new THREE.DirectionalLight('#fff4ea', 2.2); key.position.set(-1, 1.2, 1.4);
+const rim = new THREE.DirectionalLight('#9fc3ff', 1.4); rim.position.set(1.2, 0.4, -1.2);
+scene.add(key, rim, new THREE.HemisphereLight('#ffffff', '#3a2a2a', 0.5));
+
+const cut = new THREE.Plane(new THREE.Vector3(0, 0, -1), 1e5);
+const body = new THREE.Group(); body.rotation.x = -Math.PI / 2; // BodyParts3D is z-up, in millimetres
+scene.add(body);
+
+const meshes = {}; const outlines = {}; const home = {}; const dir = {};
+let look = 'tissue', selected = null, isolate = false, heartBox = new THREE.Box3(), cutRange = [0, 0];
+
+function tissueMat(k) {
+  const p = PARTS[k];
+  const m = new THREE.MeshPhysicalMaterial({ color: p.tissue, roughness: 0.42, metalness: 0, clearcoat: 0.55, clearcoatRoughness: 0.35, sheen: 0.35, sheenColor: new THREE.Color('#ff9f8f'), side: THREE.DoubleSide, clippingPlanes: [cut] });
+  // Inner walls, revealed by the cut, are darker: the cut reads as depth, not as a hole.
+  m.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n  if (!gl_FrontFacing) diffuseColor.rgb *= 0.45;'); };
+  if (k === 'skin') Object.assign(m, { transparent: true, opacity: 0.1, depthWrite: false, clearcoat: 0, sheen: 0 });
+  if (k === 'ribs') Object.assign(m, { roughness: 0.7, clearcoat: 0.1, sheen: 0 });
+  return m;
+}
+function inkMat(k) {
+  const m = new THREE.MeshStandardMaterial({ color: PORCELAIN, roughness: 0.92, metalness: 0, side: THREE.DoubleSide, clippingPlanes: [cut] });
+  if (k === 'skin') Object.assign(m, { transparent: true, opacity: 0.06, depthWrite: false });
+  return m;
+}
+// Ink outline: an inverted hull, pushed out along the normals, drawn in ink.
+function outlineMat(w) {
+  return new THREE.ShaderMaterial({
+    uniforms: { w: { value: w }, ink: { value: new THREE.Color(INK) }, a: { value: 1 } },
+    vertexShader: `uniform float w;
+      #include <clipping_planes_pars_vertex>
+      void main(){ vec3 p = position + normal * w; vec4 mvPosition = modelViewMatrix * vec4(p, 1.0); gl_Position = projectionMatrix * mvPosition;
+      #include <clipping_planes_vertex>
+      }`,
+    fragmentShader: `uniform vec3 ink; uniform float a;
+      #include <clipping_planes_pars_fragment>
+      void main(){
+      #include <clipping_planes_fragment>
+      gl_FragColor = vec4(ink, a); }`,
+    side: THREE.BackSide, clipping: true, clippingPlanes: [cut], transparent: true,
+  });
+}
+
+function applyLook() {
+  document.body.classList.toggle('ink', look === 'ink');
+  document.querySelectorAll('[data-look]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.look === look));
+  renderer.toneMappingExposure = look === 'ink' ? 0.95 : 1.0;
+  scene.environmentIntensity = look === 'ink' ? 0.9 : 0.45;
+  for (const k in meshes) {
+    meshes[k].material = look === 'ink' ? inkMat(k) : tissueMat(k);
+    outlines[k].visible = look === 'ink' && meshes[k].visible && k !== 'skin';
+  }
+  restyle();
+}
+function restyle() {
+  for (const k in meshes) {
+    const m = meshes[k].material, ctx = PARTS[k].context;
+    const faded = isolate && selected && k !== selected;
+    const base = k === 'skin' ? (look === 'ink' ? 0.06 : 0.1) : 1;
+    m.transparent = faded || k === 'skin';
+    m.opacity = faded ? (ctx ? 0.03 : 0.12) : base;
+    m.depthWrite = !m.transparent;
+    if (look === 'tissue') m.emissive = new THREE.Color(k === selected ? '#3a1410' : '#000000');
+    else m.color = new THREE.Color(k === selected ? '#dfe8f2' : PORCELAIN);
+    outlines[k].material.uniforms.ink.value.set(k === selected ? NAVY : INK);
+    outlines[k].material.uniforms.a.value = faded ? 0.15 : 1;
+    outlines[k].material.uniforms.w.value = k === selected ? 0.9 : (ctx ? 0.35 : 0.55);
+  }
+  document.querySelectorAll('.layers li.part').forEach((li) => li.classList.toggle('on', li.dataset.k === selected));
+}
+
+function frame(view) {
+  const c = heartBox.getCenter(new THREE.Vector3());
+  const r = heartBox.getSize(new THREE.Vector3()).length() * 0.5;
+  const d = view === 'body' ? r * 7.5 : r * 3.1;
+  const v = { front: [0, 0.12, 1], left: [-1, 0.1, 0.05], back: [0, 0.12, -1], body: [0.25, 0.1, 1] }[view] || [0, 0.12, 1];
+  const target = view === 'body' ? c.clone().add(new THREE.Vector3(0, -r * 0.6, 0)) : c;
+  controls.target.copy(target);
+  camera.position.copy(target).add(new THREE.Vector3(...v).normalize().multiplyScalar(d));
+  camera.near = d / 50; camera.far = d * 20; camera.updateProjectionMatrix();
+  document.querySelectorAll('[data-view]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.view === view));
+  // The rib cage and the body outline are context: on in the body view, off around the heart.
+  ['ribs', 'skin'].forEach((k) => showPart(k, view === 'body'));
+}
+function showPart(k, on) {
+  if (!meshes[k]) return;
+  meshes[k].visible = on; outlines[k].visible = look === 'ink' && on && k !== 'skin';
+  const cb = document.querySelector(`[data-show="${k}"]`); if (cb) cb.checked = on;
+}
+
+function select(k) {
+  selected = selected === k ? null : k;
+  const card = document.getElementById('card');
+  if (!selected) { card.innerHTML = '<p class="hint">בחרו מבנה בלב או ברשימה. כדי לראות את המסתמים, הזיזו את החתך לאמצע.</p>'; document.getElementById('pin').hidden = true; restyle(); return; }
+  const p = PARTS[selected];
+  card.innerHTML = `<h2>${p.he}</h2><p class="en">${p.en}</p><p class="role">${p.role}</p>
+    <p class="meta"><span class="layer">ידוע</span><span class="src">Gray's Anatomy, מהדורה 42, 2020</span><span class="fma">${p.fma}</span></p>`;
+  restyle();
+}
+
+function buildLayers() {
+  const ul = document.getElementById('layers'); let g = '';
+  ul.innerHTML = Object.entries(PARTS).map(([k, p]) => {
+    const head = p.grp !== g ? `<li class="grp">${(g = p.grp)}</li>` : '';
+    return `${head}<li class="part" data-k="${k}"><input type="checkbox" checked aria-label="להציג: ${p.he}" data-show="${k}"><span class="sw" style="background:${p.tissue}"></span><button data-pick="${k}">${p.he}</button></li>`;
+  }).join('');
+  ul.addEventListener('change', (e) => { const k = e.target.dataset.show; if (k) showPart(k, e.target.checked); });
+  ul.addEventListener('click', (e) => { const k = e.target.closest('[data-pick]')?.dataset.pick; if (k) select(k); });
+}
+
+new GLTFLoader().load('heart.glb', (gltf) => {
+  gltf.scene.traverse((o) => {
+    if (!o.isMesh || !PARTS[o.name]) return;
+    o.geometry.computeVertexNormals();
+    meshes[o.name] = o; o.userData.k = o.name;
+    const ol = new THREE.Mesh(o.geometry, outlineMat(0.55)); ol.visible = false; ol.raycast = () => {};
+    o.add(ol); outlines[o.name] = ol;
+  });
+  // Keep every mesh in the BodyParts3D frame, so the parts stay registered to each other.
+  Object.values(meshes).forEach((m) => body.add(m));
+  scene.updateMatrixWorld(true);
+  HEART.forEach((k) => heartBox.expandByObject(meshes[k]));
+  // Explode directions, in the body frame: from the heart's centre to each part's centre.
+  const localBox = new THREE.Box3();
+  HEART.forEach((k) => { meshes[k].geometry.computeBoundingBox(); localBox.union(meshes[k].geometry.boundingBox); });
+  const hc = localBox.getCenter(new THREE.Vector3());
+  HEART.forEach((k) => {
+    home[k] = meshes[k].position.clone();
+    dir[k] = meshes[k].geometry.boundingBox.getCenter(new THREE.Vector3()).sub(hc);
+  });
+  cutRange = [heartBox.max.z + 2, heartBox.min.z - 2];
+  setCut(0);
+  buildLayers(); applyLook(); frame('front');
+  document.getElementById('loading').hidden = true;
+  document.body.dataset.ready = '1';
+}, undefined, () => { document.getElementById('loading').textContent = 'המודל לא נטען. נסו לרענן.'; });
+
+function setCut(v) {
+  document.getElementById('cut-v').textContent = `${v}%`;
+  cut.constant = v === 0 ? 1e5 : cutRange[0] + (cutRange[1] - cutRange[0]) * (v / 100);
+}
+document.getElementById('cut').addEventListener('input', (e) => setCut(+e.target.value));
+document.getElementById('exp').addEventListener('input', (e) => {
+  const t = +e.target.value / 100; document.getElementById('exp-v').textContent = `${e.target.value}%`;
+  HEART.forEach((k) => meshes[k].position.copy(home[k]).addScaledVector(dir[k], t * 1.4));
+});
+document.getElementById('iso').addEventListener('change', (e) => { isolate = e.target.checked; restyle(); });
+document.querySelectorAll('[data-look]').forEach((b) => b.addEventListener('click', () => { look = b.dataset.look; applyLook(); }));
+document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => { controls.autoRotate = false; frame(b.dataset.view); }));
+
+// Picking: the nearest visible surface that the cut has not removed.
+const ray = new THREE.Raycaster(); const ndc = new THREE.Vector2();
+function hit(ev) {
+  const r = renderer.domElement.getBoundingClientRect();
+  ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const list = Object.values(meshes).filter((m) => m.visible && m.name !== 'skin');
+  return ray.intersectObjects(list, false).find((h) => cut.distanceToPoint(h.point) >= 0 && !(isolate && selected && h.object.name !== selected && PARTS[h.object.name].context));
+}
+let down = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  const h = hit(e); if (h) { controls.autoRotate = false; select(h.object.name); }
+});
+const tip = document.getElementById('tip');
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (e.buttons) { tip.hidden = true; return; }
+  const h = hit(e); if (!h) { tip.hidden = true; return; }
+  const r = stage.getBoundingClientRect();
+  tip.textContent = PARTS[h.object.name].he; tip.style.left = `${e.clientX - r.left}px`; tip.style.top = `${e.clientY - r.top}px`; tip.hidden = false;
+});
+renderer.domElement.addEventListener('pointerleave', () => { tip.hidden = true; });
+
+const pin = document.getElementById('pin'); const tmp = new THREE.Vector3();
+function placePin() {
+  if (!selected || !meshes[selected]?.visible) { pin.hidden = true; return; }
+  const b = new THREE.Box3().setFromObject(meshes[selected]);
+  tmp.set((b.min.x + b.max.x) / 2, b.max.y + (b.max.y - b.min.y) * 0.08, (b.min.z + b.max.z) / 2).project(camera);
+  const r = stage.getBoundingClientRect();
+  pin.style.left = `${(tmp.x * 0.5 + 0.5) * r.width}px`; pin.style.top = `${(-tmp.y * 0.5 + 0.5) * r.height}px`;
+  pin.querySelector('b').textContent = PARTS[selected].he; pin.querySelector('i').textContent = PARTS[selected].en; pin.hidden = false;
+}
+
+function resize() { const r = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(stage); resize();
+renderer.setAnimationLoop(() => { controls.update(); placePin(); renderer.render(scene, camera); });
+</script>
+</body>
+</html>
