@@ -65,6 +65,14 @@ export const SOURCES = {
   'nhs-diabetes': { title: 'NHS, Diabetes', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/diabetes/' },
   'nhs-back-pain': { title: 'NHS, Back pain', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/back-pain/' },
   'nhs-pep': { title: 'NHS, Post-exposure prophylaxis (PEP)', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/post-exposure-prophylaxis/' },
+  'who-breast': { title: 'WHO, Breast cancer', type: 'הנחיה רשמית', year: 2025, note: 'נתוני 2024', url: 'https://www.who.int/news-room/fact-sheets/detail/breast-cancer' },
+  'who-cancer': { title: 'WHO, Cancer', type: 'הנחיה רשמית', year: 2025, note: 'נתוני 2024', url: 'https://www.who.int/news-room/fact-sheets/detail/cancer' },
+  'who-cervical': { title: 'WHO, Cervical cancer', type: 'הנחיה רשמית', year: 2025, note: 'נתוני 2024', url: 'https://www.who.int/news-room/fact-sheets/detail/cervical-cancer' },
+  'who-obesity': { title: 'WHO, Obesity and overweight', type: 'הנחיה רשמית', year: 2025, note: 'נתוני 2024', url: 'https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight' },
+  'nhs-prostate': { title: 'NHS, Prostate cancer', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/prostate-cancer/' },
+  'nhs-prostate-symptoms': { title: 'NHS, Prostate cancer: symptoms', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/prostate-cancer/symptoms/' },
+  'nhs-breast': { title: 'NHS, Symptoms of breast cancer in women', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/breast-cancer-in-women/symptoms-of-breast-cancer-in-women/' },
+  'nhs-cervical': { title: 'NHS, Cervical cancer: symptoms', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/cervical-cancer/symptoms/' },
   'rambam-deot': { title: 'רמב"ם, משנה תורה, הלכות דעות ד', type: 'מסורת', year: 1180, note: 'הלכה ב', url: 'https://www.sefaria.org.il/Mishneh_Torah,_Human_Dispositions.4' },
 };
 
@@ -158,6 +166,21 @@ export const SYSTEMS = [
     ],
     action: { urgency: 'emergency', sign_he: 'התנפחות בפנים או בגרון, או קושי בנשימה אחרי מזון או עקיצה', go_he: 'מד"א **101**, מיד', source_id: 'nhs-anaphylaxis', question_he: 'האם יש לי אלרגיה שכדאי לברר?' },
     bridge: { kind: 'city', layer: 'known', text_he: '**ג׳ון סנואו** (John Snow) מיפה ב-**1854** מקרי כולרה ב**לונדון** (London), ומצא אותם סביב משאבת מים אחת.', evidence: 'גבוהה', source_id: 'snow-1855', next_he: 'מפה אחת הולידה את האפידמיולוגיה', link: { app: 'city', topic: 'water' } },
+  },
+  {
+    id: 'reproductive',
+    name_he: 'מערכת הרבייה והשד',
+    short_he: 'מערכת הרבייה',
+    name_en: 'Reproductive system and breast',
+    insight: '==בשד ובאגן: שלושה מהסרטנים השכיחים.==',
+    city: 'מערך ההתחדשות של העיר: דור אחד מכין את הבא.',
+    role: { layer: 'known', text_he: 'מערכת הרבייה יוצרת **תאי רבייה** ו**הורמוני מין**. **השד** הוא בלוטה שמייצרת חלב.', evidence: 'גבוהה', source_id: 'guyton-2020' },
+    failure: [
+      { layer: 'known', text_he: '**סרטן השד** הוא הסרטן השכיח בנשים ב-**164** מתוך **186** מדינות.', evidence: 'גבוהה', source_id: 'who-breast' },
+      { layer: 'known', text_he: 'כמעט כל מקרי **סרטן צוואר הרחם** נגרמים מנגיף **HPV**, ויש נגדו חיסון.', evidence: 'גבוהה', source_id: 'who-cervical' },
+    ],
+    action: { urgency: 'doctor', sign_he: 'גוש או נפיחות בשד, בחזה או בבית השחי, או שינוי בעור או בפטמה', go_he: 'פנייה לרופא', source_id: 'nhs-breast', question_he: 'אילו בדיקות סקר מתאימות לגילי?' },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: '**שתיית אלכוהול** היא גורם סיכון מוכר לסרטן השד.', evidence: 'גבוהה', source_id: 'who-breast', next_he: 'אלכוהול', link: { app: 'nutrition', topic: 'alcohol' } },
   },
 ];
 
@@ -484,3 +507,56 @@ const MORE_DISEASES = [
 ];
 
 export const DISEASES = [...DEEP.cardio.diseases.map((d) => ({ ...d, system: 'cardio' })), ...MORE_DISEASES];
+
+// ---------- Stage 4b: cancer as a group, and obesity (Anat, 02.11.2026) ----------
+// Obesity is taught at population level only: no body measurements, no targets, no counting.
+const STAGE4B = [
+  { id: 'breast-cancer', system: 'reproductive', name_he: 'סרטן השד', name_en: 'Breast cancer', insight: '==שכיח בנשים, ולרוב בלי גורם סיכון מיוחד.==',
+    items: [
+      { layer: 'known', text_he: 'ב-**2024** אובחנו בעולם **2.4** מיליון נשים עם סרטן השד.', evidence: 'גבוהה', source_id: 'who-breast' },
+      { layer: 'known', text_he: 'כ-**80%** ממקרי סרטן השד מופיעים בנשים **בלי גורם סיכון מיוחד** מלבד מין וגיל.', evidence: 'גבוהה', source_id: 'who-breast' },
+      { layer: 'known', text_he: '**גילוי וטיפול מוקדמים** מפחיתים תמותה.', evidence: 'גבוהה', source_id: 'who-breast' },
+      { layer: 'known', text_he: 'גורמים שמעלים את הסיכון: **גיל**, היסטוריה משפחתית, **השמנה**, **שתיית אלכוהול** ועישון. גורם סיכון אינו סיבה, ואינו אשמה.', evidence: 'גבוהה', source_id: 'who-breast' },
+    ],
+    action: { urgency: 'doctor', sign_he: 'גוש או נפיחות בשד, בחזה או בבית השחי, או שינוי בעור או בפטמה', go_he: 'פנייה לרופא', source_id: 'nhs-breast', question_he: 'מתי מתאימה לי בדיקת ממוגרפיה?' },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: '**שתיית אלכוהול** היא גורם סיכון מוכר לסרטן השד.', evidence: 'גבוהה', source_id: 'who-breast', next_he: 'אלכוהול', link: { app: 'nutrition', topic: 'alcohol' } } },
+  { id: 'prostate-cancer', system: 'reproductive', name_he: 'סרטן הערמונית', name_en: 'Prostate cancer', insight: '==הרביעי בשכיחותו, ובגילוי מוקדם לרוב בר-ריפוי.==',
+    items: [
+      { layer: 'known', text_he: 'ב-**2024**: כ-**1.5** מיליון מקרים חדשים. הסרטן ה**רביעי** בשכיחותו בעולם.', evidence: 'גבוהה', source_id: 'who-cancer' },
+      { layer: 'known', text_he: 'מופיע לרוב בגברים מעל גיל **50**. בגילוי מוקדם, לעיתים קרובות אפשר לרפא אותו.', evidence: 'גבוהה', source_id: 'nhs-prostate' },
+      { layer: 'known', text_he: 'שינויים בהטלת שתן נובעים לעיתים קרובות מ**הגדלה שפירה** של הערמונית, שהיא שכיחה ואינה סרטן.', evidence: 'גבוהה', source_id: 'nhs-prostate-symptoms' },
+    ],
+    action: { urgency: 'doctor', sign_he: 'קושי להתחיל להטיל שתן, זרם חלש, או צורך תכוף, גם בלילה', go_he: 'פנייה לרופא', source_id: 'nhs-prostate-symptoms', question_he: 'האם בדיקת ערמונית רלוונטית לגיל ולמשפחה שלי?' } },
+  { id: 'cervical-cancer', system: 'reproductive', name_he: 'סרטן צוואר הרחם', name_en: 'Cervical cancer', insight: '==כמעט כולו מנגיף, ויש חיסון.==',
+    items: [
+      { layer: 'known', text_he: 'הסרטן ה**חמישי** בשכיחותו בנשים: **604,000** מקרים חדשים ב-**2024**.', evidence: 'גבוהה', source_id: 'who-cervical' },
+      { layer: 'known', text_he: 'כמעט כל המקרים נגרמים מזיהום בזנים מסוימים של נגיף **HPV**.', evidence: 'גבוהה', source_id: 'who-cervical' },
+      { layer: 'known', text_he: '**חיסון HPV** מומלץ לבנות בגילי **9** עד **14**. **בדיקת סקר** מגיל **30**, כל **5** עד **10** שנים.', evidence: 'גבוהה', source_id: 'who-cervical' },
+    ],
+    action: { urgency: 'doctor', sign_he: 'דימום חריג מהנרתיק: בזמן יחסי מין או אחריהם, בין וסתות, או אחרי גיל המעבר', go_he: 'פנייה לרופא', source_id: 'nhs-cervical', question_he: 'מתי בדיקת הסקר הבאה שלי?' } },
+  { id: 'obesity', system: 'digestive', name_he: 'השמנה', name_en: 'Obesity', insight: '==מחלה כרונית, שהסביבה שותפה לה.==',
+    items: [
+      { layer: 'known', text_he: 'השמנה היא **מחלה כרונית**, שנוצרת ממפגש של גורמים **סביבתיים**, **נפשיים וחברתיים**, ו**ביולוגיים**.', evidence: 'גבוהה', source_id: 'who-obesity' },
+      { layer: 'known', text_he: 'ב-**2024** חיו עם השמנה כ-**1.1** מיליארד אנשים: בערך **אחד מכל שבעה**.', evidence: 'גבוהה', source_id: 'who-obesity' },
+      { layer: 'known', text_he: 'השמנה תורמת ל**סוכרת מסוג 2**, ל**מחלות לב** ולכמה **סוגי סרטן**, ביניהם סרטן השד.', evidence: 'גבוהה', source_id: 'who-obesity' },
+      { layer: 'known', text_he: 'סביבה ש**מגבילה גישה למזון בריא** ול**תנועה** מגדילה את הסיכון. לכן זו אחריות של החברה, לא רק של היחיד.', evidence: 'גבוהה', source_id: 'who-obesity' },
+      { layer: 'believed', text_he: 'השמנה היא רק עניין של כוח רצון.', status: 'לא אוששה' },
+    ],
+    action: { urgency: 'doctor', sign_he: 'שינוי בגוף שמדאיג, או מחשבות מכאיבות על אוכל ועל הגוף', go_he: 'פנייה לרופא המשפחה. במצוקה: ער"ן **1201**', source_id: 'who-obesity', question_he: 'איזו דרך מתאימה לבריאות שלי, לאורך זמן?' },
+    bridge: { kind: 'city', layer: 'known', text_he: 'WHO קורא לפעולה ב**תכנון עירוני**, במערכות המזון ובמדיניות. עיר שמזמינה הליכה ומזון טרי היא חלק מהטיפול באוכלוסייה.', evidence: 'גבוהה', source_id: 'who-obesity', next_he: 'עיר שמזמינה תנועה', link: { app: 'city', topic: 'active-city' } } },
+];
+DISEASES.push(...STAGE4B);
+
+// Groups cut across systems. Cancer: overview first, then its cards.
+export const GROUPS = {
+  cancer: {
+    name_he: 'סרטן',
+    ids: ['breast-cancer', 'lung-cancer', 'colorectal-cancer', 'prostate-cancer', 'cervical-cancer'],
+    insight: '==כמעט **10** מיליון מקרי מוות, ו-**38%** אפשר למנוע.==',
+    items: [
+      { layer: 'known', text_he: 'סרטן הוא סיבת מוות מובילה בעולם: כמעט **10** מיליון מקרי מוות ב-**2024**, בערך **אחד מכל שישה**.', evidence: 'גבוהה', source_id: 'who-cancer' },
+      { layer: 'known', text_he: 'השכיחים ב-**2024**: **ריאה**, **שד**, **מעי גס** ו**ערמונית**.', evidence: 'גבוהה', source_id: 'who-cancer' },
+      { layer: 'known', text_he: 'כ-**38%** ממקרי הסרטן אפשר למנוע כבר היום, בהימנעות מגורמי סיכון כמו **עישון** ו**אלכוהול**.', evidence: 'גבוהה', source_id: 'who-cancer' },
+    ],
+  },
+};

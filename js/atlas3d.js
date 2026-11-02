@@ -8,8 +8,8 @@ let threePromise = null;
 const loadThree = () => (threePromise ||= import(THREE_URL));
 
 // Back to front. Outline at the back, skeleton behind the organs, nerves in front.
-const ORDER = ['outline', 'skeletal', 'digestive', 'cardio', 'respiratory', 'immune', 'nervous'];
-const GAP = 0.78;
+const ORDER = ['outline', 'skeletal', 'reproductive', 'digestive', 'cardio', 'respiratory', 'immune', 'nervous'];
+const GAP = 0.7;
 const W = 2, H = 4;
 const YAW0 = -0.78, PITCH0 = 0.14;
 

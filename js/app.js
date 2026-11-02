@@ -1,4 +1,4 @@
-import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES } from './data.js';
+import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS } from './data.js';
 import { detect, textMatches, normalize } from './match.js';
 import { bodySVG } from './body.js';
 import { circulationSVG } from './circulation.js';
@@ -287,34 +287,50 @@ function aboutView() {
 
 // ---------- Stage 4: diseases ----------
 const sysName = (id) => SYSTEMS.find((x) => x.id === id).name_he;
-const diseasesIn = (f) => (f ? DISEASES.filter((d) => d.system === f) : DISEASES);
+const diseasesIn = (f) => (GROUPS[f] ? GROUPS[f].ids.map((id) => DISEASES.find((d) => d.id === id)) : f ? DISEASES.filter((d) => d.system === f) : DISEASES);
+const groupOf = (id) => Object.entries(GROUPS).find(([, g]) => g.ids.includes(id))?.[0];
 const layerMarks = (d) => ['known', 'said', 'believed'].map((l) => (d.items.some((i) => i.layer === l) ? `<span class="lm lm-${l}" title="${LAYERS[l].he}"></span>` : '<span class="lm lm-none"></span>')).join('');
 
 function systemFilter(f) {
   return `<div class="filter" role="group" aria-label="סינון לפי מערכת">
     <button class="chip" data-f="" aria-pressed="${!f}">הכול <span class="num">${DISEASES.length}</span></button>
+    ${Object.entries(GROUPS).map(([gid, g]) => `<button class="chip chip-group" data-f="${gid}" aria-pressed="${f === gid}">${g.name_he} <span class="num">${g.ids.length}</span></button>`).join('')}
+    <span class="filter-sep" aria-hidden="true"></span>
     ${SYSTEMS.map((s) => `<button class="chip" data-f="${s.id}" aria-pressed="${f === s.id}">${s.name_he} <span class="num">${diseasesIn(s.id).length}</span></button>`).join('')}
   </div>`;
 }
 
+function dzTile(d) {
+  return `<li><button class="dz-tile press" data-open-dz="${d.id}">
+    <b>${d.name_he}</b><span class="dz-in">${rich(d.insight.replace(/==/g, ''))}</span>
+    <span class="lms" aria-label="שכבות: ${['known', 'said', 'believed'].filter((l) => d.items.some((i) => i.layer === l)).map((l) => LAYERS[l].he).join(', ')}">${layerMarks(d)}</span>
+    ${d.action.urgency === 'emergency' ? '<span class="dz-urgent">סימן חירום</span>' : ''}
+    ${groupOf(d.id) ? `<span class="dz-tag">${GROUPS[groupOf(d.id)].name_he}</span>` : ''}
+  </button></li>`;
+}
+
 function diseasesView(f) {
-  const groups = SYSTEMS.filter((s) => !f || s.id === f).map((s) => {
+  const G = GROUPS[f];
+  const groups = G ? `
+    <section class="group-intro rise" aria-labelledby="g-intro">
+      <h3 id="g-intro"><span>${G.name_he}: התמונה הכוללת</span></h3>
+      <p class="insight">${rich(G.insight)}</p>
+      ${G.items.map(item).join('')}
+    </section>
+    <section class="dz-group"><h3><span>${G.ids.length} סוגים</span></h3>
+      <ul class="dz-grid">${diseasesIn(f).map(dzTile).join('')}</ul></section>` : SYSTEMS.filter((s) => !f || s.id === f).map((s) => {
     const list = diseasesIn(s.id);
     return `<section class="dz-group" aria-labelledby="g-${s.id}">
       <h3 id="g-${s.id}"><span>${s.name_he}</span><span class="num">${list.length}</span></h3>
-      <ul class="dz-grid">${list.map((d) => `<li><button class="dz-tile press" data-open-dz="${d.id}">
-        <b>${d.name_he}</b><span class="dz-in">${rich(d.insight.replace(/==/g, ''))}</span>
-        <span class="lms" aria-label="שכבות: ${['known', 'said', 'believed'].filter((l) => d.items.some((i) => i.layer === l)).map((l) => LAYERS[l].he).join(', ')}">${layerMarks(d)}</span>
-        ${d.action.urgency === 'emergency' ? '<span class="dz-urgent">סימן חירום</span>' : ''}
-      </button></li>`).join('')}</ul>
+      <ul class="dz-grid">${list.map(dzTile).join('')}</ul>
     </section>`;
   }).join('');
   return `
   <header class="panel-head">
-    <div><p class="label">מחלות</p><h2>${DISEASES.length} מחלות, לפי מערכת</h2></div>
+    <div><p class="label">מחלות</p><h2>${G ? `${G.name_he}: ${G.ids.length} סוגים` : `${DISEASES.length} מחלות, לפי מערכת`}</h2></div>
     ${closeBtn}
   </header>
-  <p class="insight">${rich('==הסיבות המובילות למוות ולנכות, במבט אחד.==')}</p>
+  ${G ? '' : `<p class="insight">${rich('==הסיבות המובילות למוות ולנכות, במבט אחד.==')}</p>`}
   ${systemFilter(f)}
   ${groups}
   <p class="fine">לפי גיליונות העובדות של ארגון הבריאות העולמי (WHO). שלוש הקווים בכל כרטיס: אילו שכבות יש בו.</p>`;
@@ -340,6 +356,7 @@ function diseaseView(id, f) {
     </div>
   </header>
   <p class="insight rise">${rich(d.insight)}</p>
+  ${groupOf(d.id) ? `<button class="linkish rise" data-group-go="${groupOf(d.id)}">כל סוגי ה${GROUPS[groupOf(d.id)].name_he}, והתמונה הכוללת</button>` : ''}
   <section class="block rise" aria-labelledby="h-dz-l">
     <h3 id="h-dz-l"><span class="label">הבנה</span>מה ידוע, מה נאמר, מה מאמינים</h3>
     ${d.items.map(item).join('')}
@@ -415,7 +432,7 @@ function readState() {
   const t = TABS.some(([id]) => id === p.get('t')) ? p.get('t') : 'process';
   const k = D ? Math.min(Math.max(parseInt(p.get('k'), 10) || 0, 0), D.steps.length - 1) : 0;
   const m = p.get('m') === '3d' && !atlasFailed ? '3d' : '2d';
-  const f = SYSTEMS.some((x) => x.id === p.get('f')) ? p.get('f') : '';
+  const f = SYSTEMS.some((x) => x.id === p.get('f')) || GROUPS[p.get('f')] ? p.get('f') : '';
   return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m, f };
 }
 const VIEWS = ['emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease'];
@@ -480,7 +497,7 @@ function renderStage(s, v, k) {
   $('#deep-figure').hidden = !deep;
   $('#deep-controls').hidden = !deep;
   const dzMode = v === 'diseases' || v === 'disease';
-  if (!atlasFailed || deep) $('#figure-note').textContent = dzMode && !deep ? 'לחיצה על מערכת בדמות מסננת את המחלות שלה.' : deep ? 'לחיצה על מספר או על קטע בדרך מציגה את השלב.' : m3 ? 'שבעה שקפים בחלל: הדמות מאחור, והעצבים מקדימה.' : 'כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.';
+  if (!atlasFailed || deep) $('#figure-note').textContent = dzMode && !deep ? 'לחיצה על מערכת בדמות מסננת את המחלות שלה.' : deep ? 'לחיצה על מספר או על קטע בדרך מציגה את השלב.' : m3 ? 'שמונה שקפים בחלל: הדמות מאחור, והעצבים מקדימה.' : 'כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.';
   const museum = $('#museum');
   if (!deep) {
     if (museum.dataset.mode !== 'home') { museum.innerHTML = homeMuseum; museum.dataset.mode = 'home'; }
@@ -641,7 +658,9 @@ function boot() {
     const od = e.target.closest('[data-open-dz]');
     if (od) openDisease(od.dataset.openDz, readState().v === 'diseases' ? readState().f : '');
     const fb = e.target.closest('[data-f]');
-    if (fb) { const st = readState(); const nf = fb.dataset.f === st.f ? '' : fb.dataset.f; go(nf ? SYSTEMS.find((x) => x.id === nf) : st.s, 'diseases', { f: nf }); }
+    if (fb) { const st = readState(); const nf = fb.dataset.f === st.f ? '' : fb.dataset.f; go(SYSTEMS.find((x) => x.id === nf) || st.s, 'diseases', { f: nf }); }
+    const gg = e.target.closest('[data-group-go]');
+    if (gg) go(readState().s, 'diseases', { f: gg.dataset.groupGo });
     const ds = e.target.closest('[data-dz-step]');
     if (ds) stepDisease(Number(ds.dataset.dzStep));
     const dd = e.target.closest('[data-deep-dz]');
