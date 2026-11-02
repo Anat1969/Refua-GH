@@ -63,3 +63,12 @@
 - Andreas Vesalius, De humani corporis fabrica, 1543.
 - John Snow, On the Mode of Communication of Cholera, 1855.
 - הרמב"ם, משנה תורה, הלכות דעות ד, ב.
+
+## רשימה אדומה: נוספו ב-02.11.2026 (שלב 1)
+נבדקו ברשת באותו יום.
+- LiverTox, Germander (Teucrium), NBK548282.
+- LiverTox, Turmeric, NBK548561.
+- Ghassa et al., Annals of Medicine & Surgery 2024, DOI 10.1097/MS9.0000000000001760. תיאור מקרה יחיד: הפסקת אינסולין ושתיית ג׳עדה, חמצת קטוטית.
+- Saper et al., JAMA 2008;300(8):915-923, PMID 18728265. ב-20.7% מ-193 תכשירים נמצאו מתכות.
+- Debelle, Vanherweghem & Nortier, Kidney International 2008;74(2):158-169.
+- IARC Monographs vol. 82, 2002.

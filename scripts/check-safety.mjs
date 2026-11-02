@@ -1,7 +1,8 @@
 // Safety gate (docs/SAFETY.md, docs/CONTENT_RULES.md). Exit 1 blocks merge.
 // Run: node scripts/check-safety.mjs
 import { readFileSync } from 'node:fs';
-import { SYSTEMS, SOURCES, LAYERS } from '../js/data.js';
+import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS } from '../js/data.js';
+import { detect } from '../js/match.js';
 
 const errors = [];
 const err = (m) => errors.push(m);
@@ -62,8 +63,40 @@ for (const [id, src] of Object.entries(SOURCES)) {
   if (!src.title || !src.year || !src.url) err(`source ${id}: needs title, year and url`);
 }
 
+// Red list (SAFETY.md section 4): scientific name, risk, source, review date
+for (const r of REDLIST) {
+  if (!r.name_he || !r.name_la || !r.risk_he) err(`redlist ${r.id}: needs name_he, name_la and risk_he`);
+  if (!r.sources?.length) err(`redlist ${r.id}: needs at least one source`);
+  r.sources?.forEach((id) => { if (!SOURCES[id]) err(`redlist ${r.id}: source "${id}" not in SOURCES`); });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(r.last_reviewed || '')) err(`redlist ${r.id}: last_reviewed must be YYYY-MM-DD`);
+  walkKeys(r, r.id);
+}
+for (const id of ['teucrium-polium', 'aristolochia', 'rasa-shastra', 'turmeric-supplements']) {
+  if (!REDLIST.find((r) => r.id === id)) err(`redlist: ${id} from SAFETY.md is missing`);
+}
+
+// Keywords (SAFETY.md sections 2 and 3): every phrase must be detected, and lead to the right number
+const MUST = {
+  'קוצר נשימה': ['breath', '101'], 'התנפחות': ['swelling', '101'], 'כאב בחזה': ['chest', '101'],
+  'הרעלה': ['poison', '04-7771900'], 'בליעה אצל ילד': ['child-swallow', '101'], 'מחשבות אובדניות': ['suicide', '1201'],
+  'הפסקתי לקחת את התרופה': ['med-stop', '101'], 'פנים שמוטות': ['stroke', '101'],
+};
+for (const [phrase, [id, num]] of Object.entries(MUST)) {
+  const hits = detect(phrase, KEYWORDS);
+  if (hits[0]?.id !== id) err(`keyword "${phrase}": expected ${id} first, got ${hits.map((h) => h.id).join(',') || 'nothing'}`);
+  const nums = hits.flatMap((h) => h.calls.map((c) => EMERGENCY_NUMBERS[c]?.num));
+  if (!nums.includes(num)) err(`keyword "${phrase}": number ${num} missing`);
+}
+for (const k of KEYWORDS) {
+  k.calls.forEach((c) => { if (!EMERGENCY_NUMBERS[c]) err(`keyword ${k.id}: unknown call ${c}`); });
+  if (k.system && !SYSTEMS.find((s) => s.id === k.system)) err(`keyword ${k.id}: unknown system ${k.system}`);
+}
+if (KEYWORDS.find((k) => k.id === 'med-stop')?.plants !== false) err('keyword med-stop must stop plant content (plants:false)');
+if (detect('תאוריה של אור', KEYWORDS).length || detect('הלב שלי', KEYWORDS).length) err('keywords: false positive on neutral text');
+for (const i of PROFILE_ITEMS) if (BANNED_KEYS.test(i.id)) err(`profile item ${i.id}: banned field`);
+
 // Forbidden words in all user-facing text
-const files = ['js/data.js', 'index.html', 'js/app.js'];
+const files = ['js/data.js', 'index.html', 'js/app.js', 'js/match.js'];
 for (const f of files) {
   let text = readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
   for (const p of ALLOWED_PHRASES) text = text.split(p).join('');
@@ -81,4 +114,4 @@ if (errors.length) {
   process.exit(1);
 }
 const counts = SYSTEMS.reduce((n, s) => n + 1 + s.failure.length + 1, 0);
-console.log(`SAFETY GREEN  ${SYSTEMS.length} systems, ${counts} items, ${Object.keys(SOURCES).length} sources, 0 forbidden words`);
+console.log(`SAFETY GREEN  ${SYSTEMS.length} systems, ${counts} items, ${REDLIST.length} red list, ${KEYWORDS.length} keyword groups, ${Object.keys(SOURCES).length} sources, 0 forbidden words`);

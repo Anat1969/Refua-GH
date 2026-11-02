@@ -56,6 +56,7 @@
 ```
 
 ## רשימה אדומה (redlist)
+באפליקציית הרפואה: `REDLIST` ב-`js/data.js`, עם השדות `risk_he`, `context_he`, `organs` (לחיבור לשאלון), `sources` ו-`last_reviewed`.
 ```json
 {
   "id": "teucrium-polium",
@@ -113,3 +114,17 @@
 - `source_id` משותף: מקור שמופיע בשתי האפליקציות נושא אותו מזהה (למשל "predimed-2018", "smiles-2017", "rambam-deot").
 - בכיוון ההפוך: פריט מזון יכול להחזיק `body_systems: ["cardio"]`, עם אותם מזהי מערכות: nervous, respiratory, cardio, digestive, skeletal, immune.
 - כשהכתובת של אפליקציית התזונה תהיה ידועה, הקישור נבנה כך: `<nutrition-url>#food=<food_id>` או `#topic=<topic>`.
+
+## מילות חירום (KEYWORDS)
+```json
+{ "id": "poison", "terms": ["הרעלה", "חשד להרעלה"], "title_he": "חשד להרעלה",
+  "do_he": ["..."], "calls": ["poison", "mda"], "system": null, "plants": true }
+```
+- הסדר במערך הוא העדיפות: אובדנות, בליעה אצל ילד, הרעלה, הפסקת תרופה, ואחריהן סימני המערכות.
+- `plants: false`: המסך לא מציג שום תוכן על צמחים (SAFETY.md, סעיף 2).
+- ההתאמה ב-`js/match.js`: כל מילה במונח צריכה להופיע בשאילתה, בתחילת מילה ואחרי אותיות שימוש. מילה עד 3 אותיות רק שלמה.
+
+## שאלון בטיחות (PROFILE_ITEMS)
+- נשמר ב-`localStorage`, במפתח `refua.profile.v1`, ולא יוצא מהמכשיר.
+- `special: true`: מפעיל "צמח או תוסף מרוכז: לא מתאים בלי ייעוץ" (SAFETY.md, סעיף 5).
+- `organ`: מחבר לפריטים ברשימה האדומה עם אותו איבר.

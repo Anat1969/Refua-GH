@@ -1,4 +1,5 @@
-import { SYSTEMS, SOURCES, LAYERS, EMERGENCY } from './data.js';
+import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS } from './data.js';
+import { detect, textMatches, normalize } from './match.js';
 import { bodySVG } from './body.js';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -41,6 +42,37 @@ const ico = {
   prev: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',
   next: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',
   close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  warn: '<svg class="tri" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5L22 20.5H2Z"/><path d="M12 10v5M12 17.2v.6"/></svg>',
+};
+const closeBtn = `<div class="ops"><button class="icon press" data-close title="חזרה למערכת" aria-label="חזרה למערכת">${ico.close}</button></div>`;
+
+// ---------- Local safety profile: on this device only ----------
+const PROFILE_KEY = 'refua.profile.v1';
+function loadProfile() {
+  try { return JSON.parse(localStorage.getItem(PROFILE_KEY)) || {}; } catch { return {}; }
+}
+function saveProfile(p) {
+  try {
+    if (Object.values(p).some(Boolean)) localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+    else localStorage.removeItem(PROFILE_KEY);
+    return true;
+  } catch { return false; }
+}
+function profileNotes(p) {
+  const notes = [];
+  const special = PROFILE_ITEMS.filter((i) => i.special && p[i.id]);
+  if (special.length) notes.push({ tone: 'urgent', text: `סימנת: **${special.map((i) => i.he).join(', ')}**. לכן **צמח או תוסף מרוכז: לא מתאים בלי ייעוץ** של רופא או רוקח.` });
+  if (p.meds) notes.push({ tone: 'doctor', text: 'תרופות קבועות: לפני כל צמח או תוסף, **בדיקת אינטראקציה אצל רוקח**. אין להפסיק תרופה בלי רופא.' });
+  PROFILE_ITEMS.filter((i) => i.organ && p[i.id]).forEach((i) => {
+    const hits = REDLIST.filter((r) => r.organs.includes(i.organ));
+    if (hits.length) notes.push({ tone: 'doctor', text: `${i.he}: ברשימה האדומה **${hits.length}** פריטים שפוגעים באיבר הזה: ${hits.map((r) => r.name_he).join(', ')}.`, link: 'redlist' });
+  });
+  if (p.allergy) notes.push({ tone: 'doctor', text: 'אלרגיה ידועה: סימן החירום הוא **התנפחות בפנים או בגרון**, או קושי בנשימה. מד"א **101**.', pick: 'immune' });
+  return notes;
+}
+const callCard = (id) => {
+  const e = EMERGENCY_NUMBERS[id];
+  return `<a class="numcard press" href="tel:${e.num.replace(/-/g, '')}"><span class="label">${e.he}</span><b class="num" dir="ltr">${e.num}</b></a>`;
 };
 
 // ---------- Views ----------
@@ -121,6 +153,7 @@ function sourcesView() {
       if (x.source_id) used.set(x.source_id, (used.get(x.source_id) || []).concat(s.name_he));
     });
   });
+  REDLIST.forEach((r) => r.sources.forEach((id) => used.set(id, (used.get(id) || []).concat('רשימה אדומה'))));
   used.set('who-constitution', ['ציטוט פתיחה']);
   const rows = [...used.entries()]
     .sort((a, b) => SOURCES[a[0]].year - SOURCES[b[0]].year)
@@ -138,23 +171,146 @@ function sourcesView() {
   <ul class="sources">${rows}</ul>`;
 }
 
+function alertCards(hits) {
+  return hits.map((k) => `
+    <section class="alert-card" data-alert="${k.id}" role="alert">
+      <h3>${ico.warn}${esc(k.title_he)}</h3>
+      <ul>${k.do_he.map((d) => `<li>${rich(d)}</li>`).join('')}</ul>
+      <div class="numbers">${k.calls.map(callCard).join('')}</div>
+      ${k.system ? `<button class="linkish press-soft" data-pick="${k.system}">למה זה סימן: ${SYSTEMS.find((x) => x.id === k.system).name_he}</button>` : ''}
+    </section>`).join('');
+}
+
+function searchView(q) {
+  const hits = detect(q, KEYWORDS);
+  const stopPlants = hits.some((k) => k.plants === false);
+  const sys = SYSTEMS.filter((s) => textMatches(q, [s.name_he, s.city, s.role.text_he, ...s.failure.map((f) => f.text_he), s.action.sign_he, s.bridge.text_he].join(' ')));
+  const red = stopPlants ? [] : REDLIST.filter((r) => textMatches(q, [r.name_he, r.name_la, r.risk_he, r.context_he].join(' ')));
+  const total = sys.length + red.length;
+  return `
+  <header class="panel-head">
+    <div><p class="label">חיפוש</p><h2>„${esc(q)}”</h2></div>
+    ${closeBtn}
+  </header>
+  ${alertCards(hits)}
+  ${stopPlants || (hits.length && !total) ? '' : `
+  <p class="counts"><b class="num">${total}</b> תוצאות: <span>מערכות <b class="num">${sys.length}</b></span> <span>רשימה אדומה <b class="num">${red.length}</b></span></p>
+  ${total ? '' : `<p class="empty">אין תוצאה ל„${esc(q)}”.<br>נסו שם של איבר, מחלה או צמח, למשל: לב, שבץ, כבד.</p>`}
+  <ul class="results">
+    ${sys.map((s) => `<li><button class="result-row press" data-pick="${s.id}"><span class="label">מערכת</span><b>${s.name_he}</b><span>${rich(s.insight.replace(/==/g, ''))}</span></button></li>`).join('')}
+    ${red.map((r) => `<li><button class="result-row is-red press" data-view-go="redlist" data-anchor="${r.id}"><span class="label">רשימה אדומה</span><b>${r.name_he}</b><span>${rich(r.risk_he)}</span></button></li>`).join('')}
+  </ul>`}`;
+}
+
+function redlistView(anchor) {
+  const p = loadProfile();
+  const flagged = PROFILE_ITEMS.filter((i) => p[i.id]);
+  return `
+  <header class="panel-head">
+    <div><p class="label">בטיחות</p><h2 class="red-title">${ico.warn}רשימה אדומה</h2></div>
+    ${closeBtn}
+  </header>
+  <p class="insight">${rich('==טבעי אינו בהכרח בטוח. ארבעה פריטים עם נזק מתועד.==')}</p>
+  ${flagged.length ? `<p class="profile-flag">לפי השאלון שלך במכשיר: ${flagged.map((i) => i.he).join(', ')}. <button class="linkish" data-view-go="profile">לשאלון</button></p>` : ''}
+  <ol class="redlist">
+    ${REDLIST.map((r) => `
+      <li class="red-item${r.id === anchor ? ' is-anchor' : ''}" id="red-${r.id}">
+        <h3>${r.name_he}<span class="latin" dir="ltr">${esc(r.name_la)}</span></h3>
+        <p class="itext">${rich(r.risk_he)}</p>
+        <p class="ctx">${rich(r.context_he)}</p>
+        <p class="imeta"><span class="ev">נבדק <span class="num">${r.last_reviewed.split('-').reverse().join('.')}</span></span>${r.sources.map(srcLine).join('')}</p>
+      </li>`).join('')}
+  </ol>
+  <div class="alert tone-doctor">
+    <p class="sign">${rich(REDLIST_ACTION.sign_he)}</p>
+    <p class="go">${rich(REDLIST_ACTION.go_he)}</p>
+  </div>
+  <p class="question">${rich(REDLIST_ACTION.rule_he)}</p>`;
+}
+
+function profileView() {
+  const p = loadProfile();
+  const notes = profileNotes(p);
+  return `
+  <header class="panel-head">
+    <div><p class="label">בטיחות</p><h2>הבטיחות שלי</h2></div>
+    ${closeBtn}
+  </header>
+  <p class="insight">${rich('==שמונה שאלות. התשובות לא יוצאות מהמכשיר.==')}</p>
+  <form class="profile" id="profile-form" onsubmit="return false">
+    <fieldset>
+      <legend class="label">מה נכון לגביך, או לגבי מי שעבורו את קוראת או אתה קורא?</legend>
+      ${PROFILE_ITEMS.map((i) => `<label class="check press-soft"><input type="checkbox" name="${i.id}" ${p[i.id] ? 'checked' : ''}><span class="box" aria-hidden="true"></span>${i.he}</label>`).join('')}
+    </fieldset>
+    <p class="saved" id="saved" aria-live="polite">${Object.keys(p).length ? 'נשמר במכשיר בלבד' : 'לא נשמר דבר'}</p>
+  </form>
+  <section class="block" aria-labelledby="h-notes">
+    <h3 id="h-notes"><span class="label">מה זה אומר</span>קריאה, לא אבחנה</h3>
+    ${notes.length ? notes.map((n) => `<div class="alert tone-${n.tone}"><p>${rich(n.text)}</p>${n.link ? `<button class="linkish" data-view-go="${n.link}">לרשימה האדומה</button>` : ''}${n.pick ? `<button class="linkish" data-pick="${n.pick}">למערכת החיסון</button>` : ''}</div>`).join('') : '<p class="empty">לא סומן דבר. הסימון משנה רק את ההערות כאן ובראש הרשימה האדומה.</p>'}
+  </section>
+  <button class="btn press" data-clear-profile ${Object.keys(p).length ? '' : 'disabled'}>מחיקת השאלון מהמכשיר</button>`;
+}
+
+function aboutView() {
+  return `
+  <header class="panel-head">
+    <div><p class="label">הצהרה</p><h2>מה זה, ומה לא</h2></div>
+    ${closeBtn}
+  </header>
+  <p class="insight">${rich('==כלי לקריאה של הגוף, לא תחליף לרופא.==')}</p>
+  <div class="two">
+    <section class="box-tone box-yes"><h3>מה כן</h3><ul>
+      <li>מסבירה איך מערכות הגוף עובדות.</li>
+      <li>מפרידה בין <b>ידוע</b>, <b>נאמר</b> ו<b>מאמינים</b>.</li>
+      <li>מראה מתי פונים, ומה שואלים.</li>
+      <li>מציגה מקור לכל עובדה.</li>
+    </ul></section>
+    <section class="box-tone box-no"><h3>מה לא</h3><ul>
+      <li>לא מאבחנת ולא מטפלת, ולא ממליצה על טיפול.</li>
+      <li>אין מינונים לתרופה, צמח או תוסף.</li>
+      <li>אין משקל, קלוריות או ציון בריאות.</li>
+      <li>לא מחליפה רופא, רוקח או דיאטנית.</li>
+    </ul></section>
+  </div>
+  <section class="block"><h3><span class="label">פרטיות</span>מה נשמר</h3>
+    <p class="itext">אין שרת ואין חשבון. שאלון הבטיחות נשמר <b>רק במכשיר</b>, ונמחק בלחיצה.</p>
+    <p class="itext">מידע בריאותי הוא מידע ברגישות מיוחדת לפי <b>תיקון 13</b> לחוק הגנת הפרטיות. לכן לא אוספים אותו.</p>
+  </section>
+  <section class="block"><h3><span class="label">לפני השקה</span>מה עוד ייבדק</h3>
+    <p class="itext">כל תוכן רפואי ייבדק בידי רופא. מספרי החירום יאומתו מול הגורמים עצמם. ייעוץ משפטי לפי תיקון 13.</p>
+  </section>`;
+}
+
 // ---------- State in the URL ----------
 function readState() {
   const p = new URLSearchParams(location.hash.slice(1));
   const s = SYSTEMS.find((x) => x.id === p.get('s')) || SYSTEMS.find((x) => x.id === 'cardio');
-  const v = ['emergency', 'sources'].includes(p.get('v')) ? p.get('v') : 'system';
-  return { s, v };
+  const q = p.get('q') || '';
+  let v = VIEWS.includes(p.get('v')) ? p.get('v') : 'system';
+  if (v === 'search' && !normalize(q)) v = 'system';
+  return { s, v, q, a: p.get('a') || '' };
 }
-function go(s, v = 'system') {
-  const h = `#s=${s.id}${v !== 'system' ? `&v=${v}` : ''}`;
+const VIEWS = ['emergency', 'sources', 'redlist', 'profile', 'about', 'search'];
+function go(s, v = 'system', extra = {}) {
+  const prm = new URLSearchParams({ s: s.id });
+  if (v !== 'system') prm.set('v', v);
+  if (v === 'search' && extra.q) prm.set('q', extra.q);
+  if (extra.a) prm.set('a', extra.a);
+  const h = '#' + prm.toString();
   if (location.hash !== h) location.hash = h;
   else render();
 }
 
 function render() {
-  const { s, v } = readState();
+  const { s, v, q, a } = readState();
   const panel = $('#panel');
-  panel.innerHTML = v === 'emergency' ? emergencyView() : v === 'sources' ? sourcesView() : systemView(s);
+  const views = { emergency: emergencyView, sources: sourcesView, redlist: () => redlistView(a), profile: profileView, about: aboutView, search: () => searchView(q) };
+  panel.innerHTML = (views[v] || (() => systemView(s)))();
+  const box = $('#search');
+  if (v === 'search' && document.activeElement !== box) box.value = q;
+  if (v !== 'search' && document.activeElement !== box) box.value = '';
+  $('#search-clear').hidden = !box.value;
+  if (a) { const el = document.getElementById(`red-${a}`); if (el) el.scrollIntoView({ block: 'nearest' }); }
   panel.setAttribute('aria-labelledby', v === 'system' ? 'sys-title' : '');
   panel.scrollTop = 0;
   $$('.sys').forEach((g) => g.classList.toggle('on', g.dataset.id === s.id));
@@ -165,6 +321,7 @@ function render() {
   });
   $$('[data-view]').forEach((b) => b.setAttribute('aria-current', String(b.dataset.view === v)));
   document.title = v === 'system' ? `${s.name_he} | רפואה` : 'רפואה: גוף, מחלה, בריאות';
+  document.body.classList.toggle('has-alert', !!panel.querySelector('.alert-card'));
   // On narrow screens the panel sits below the figure: bring the change into view.
   if (render.ready && matchMedia('(max-width: 999px)').matches) {
     const r = panel.getBoundingClientRect();
@@ -208,7 +365,45 @@ function boot() {
     if (e.target.closest('[data-close]')) go(readState().s);
     const pick = e.target.closest('[data-pick]');
     if (pick) pickById(pick.dataset.pick);
+    const vg = e.target.closest('[data-view-go]');
+    if (vg) go(readState().s, vg.dataset.viewGo, { a: vg.dataset.anchor });
+    if (e.target.closest('[data-clear-profile]')) { saveProfile({}); render(); }
   });
+  $('#panel').addEventListener('change', (e) => {
+    const form = e.target.closest('#profile-form');
+    if (!form) return;
+    const p = {};
+    PROFILE_ITEMS.forEach((i) => { if (form.elements[i.id].checked) p[i.id] = true; });
+    const ok = saveProfile(p);
+    const name = e.target.name;
+    render();
+    const again = $(`#profile-form [name="${name}"]`);
+    if (again) again.focus();
+    const sv = $('#saved');
+    if (sv) sv.textContent = ok ? (Object.keys(p).length ? 'נשמר במכשיר בלבד' : 'נמחק מהמכשיר') : 'הדפדפן חוסם שמירה. הסימון יישאר רק עד סגירת הדף.';
+  });
+
+  // Search: emergency phrases are checked first, on every keystroke.
+  const box = $('#search');
+  let t;
+  box.addEventListener('input', () => {
+    $('#search-clear').hidden = !box.value;
+    clearTimeout(t);
+    const run = () => {
+      const { s } = readState();
+      if (normalize(box.value)) go(s, 'search', { q: box.value.trim() });
+      else go(s);
+    };
+    // An emergency phrase is shown at once, without waiting for the debounce.
+    if (detect(box.value, KEYWORDS).length) run();
+    else t = setTimeout(run, 180);
+  });
+  box.addEventListener('focus', () => box.select());
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { box.value = ''; go(readState().s); }
+  });
+  $('#search-clear').addEventListener('click', () => { box.value = ''; go(readState().s); box.focus(); });
+  $('#about-link').addEventListener('click', (e) => { e.preventDefault(); go(readState().s, 'about'); });
 
   $$('[data-view]').forEach((b) =>
     b.addEventListener('click', () => {
