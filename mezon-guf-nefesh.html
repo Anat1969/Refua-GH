@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מזון, גוף ונפש</title>
+<style>
+  :root {
+    --ink: #1b2a3a;
+    --paper: #fbf9f4;
+    --known: #1f4e79;
+    --said: #5b7f3a;
+    --believed: #7a7a7a;
+    --red: #7a1f2b;
+    --line: #e4dfd3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--paper); color: var(--ink); direction: rtl;
+  }
+  header { padding: 20px 24px 8px; }
+  h1 { margin: 0 0 4px; font-size: 26px; font-weight: 700; }
+  .sub { margin: 0; color: #556; font-size: 15px; }
+  nav { display: flex; gap: 8px; padding: 12px 24px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  nav button, .layers button, .seasons button {
+    border: 1px solid var(--line); background: #fff; padding: 8px 14px;
+    border-radius: 8px; cursor: pointer; font: inherit; color: var(--ink);
+  }
+  nav button.on, .layers button.on, .seasons button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  main { padding: 20px 24px 40px; max-width: 980px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .card h2 { margin: 0 0 2px; font-size: 19px; }
+  .latin { font-style: italic; color: #778; font-size: 13px; margin: 0 0 10px; direction: ltr; text-align: right; }
+  .cat { font-size: 12px; color: #667; margin-bottom: 8px; }
+  .redbanner {
+    background: #fbeeee; color: var(--red); border: 1px solid #e9c4c8;
+    padding: 8px 10px; border-radius: 8px; font-size: 13px; margin-bottom: 10px;
+  }
+  .layers { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .layers button { padding: 5px 10px; font-size: 13px; }
+  .layer-text { font-size: 15px; line-height: 1.6; min-height: 60px; }
+  .tag { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; color: #fff; margin-bottom: 6px; }
+  .t-known { background: var(--known); }
+  .t-said { background: var(--said); }
+  .t-believed { background: var(--believed); }
+  .src { font-size: 12px; color: #667; margin-top: 8px; }
+  .dashed { border-right: 3px dashed var(--believed); padding-right: 10px; }
+  .solid-k { border-right: 3px solid var(--known); padding-right: 10px; }
+  .solid-s { border-right: 3px solid var(--said); padding-right: 10px; }
+  .seasons { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .month-list { display: grid; gap: 10px; }
+  .month-row { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .month-row b { display: block; margin-bottom: 4px; }
+  .compare-pick { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  select { font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line); }
+  .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .note { font-size: 13px; color: #556; margin-top: 18px; line-height: 1.6; }
+  footer { border-top: 1px solid var(--line); padding: 14px 24px; font-size: 13px; color: #556; }
+  @media (max-width: 640px) { .cmp { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>מזון, גוף ונפש</h1>
+  <p class="sub">הכרה, הבנה ושימוש. כל פריט בשלוש שכבות: ידוע, נאמר, מאמינים.</p>
+</header>
+
+<nav>
+  <button class="on" data-view="foods">מזון</button>
+  <button data-view="seasons">עונות</button>
+  <button data-view="compare">השוואה</button>
+</nav>
+
+<main>
+  <section id="foods" class="view"></section>
+  <section id="seasons" class="view" hidden></section>
+  <section id="compare" class="view" hidden></section>
+  <p class="note">כלי ללמידה, לא ייעוץ רפואי. לפני שימוש בצמח או תוסף, בדקו אינטראקציה עם תרופות אצל רוקח או רופא. ערכי הראיה הם הערכה לפי המקורות שמצוינים.</p>
+</main>
+
+<footer>
+  שכבה "ידוע" = ממצא מחקרי עם מקור ועוצמת ראיה. שכבה "נאמר" = מסורת, עם מקור ההקשר. שכבה "מאמינים" = טענה שלא נבדקה או לא אוששה.
+</footer>
+
+<script>
+const LAYER_LABEL = { known: "ידוע", said: "נאמר", believed: "מאמינים" };
+
+const FOODS = [
+  {
+    id: "olive-oil", he: "שמן זית", la: "Olea europaea", cat: "שמנים", months: [10,11,12,1,2,3,4,5,6,7,8,9],
+    layers: {
+      known: { text: "בדיאטה ים-תיכונית עם שמן זית מכתיש נמצא שיעור נמוך יותר של אירועי לב גדולים (ניסוי PREDIMED).", ev: "בינונית", src: "PREDIMED, NEJM 2018" },
+      said: { text: "בתנ\"ך שמן זית מסמל ברכה ואור, ומופיע כמרכיב בתרופות העממיות.", ev: null, src: "מקרא" },
+      believed: { text: "שמן זית על בטן ריקה מנקה את הכבד.", ev: null, src: "לא נבדק" }
+    }
+  },
+  {
+    id: "fig", he: "תאנה", la: "Ficus carica", cat: "פירות", months: [7,8,9],
+    layers: {
+      known: { text: "תאנה מכילה סיבים תזונתיים ואשלגן. תאנה מיובשת צפופה יותר באנרגיה.", ev: "בינונית", src: "הנחיות WHO לתזונה בריאה" },
+      said: { text: "הרמב\"ם מונה את התאנה בין הפירות ה\"משלשלים\", ולכן ממליץ לאכלה לפני הארוחה.", ev: null, src: "משנה תורה, הלכות דעות ד" },
+      believed: { text: "תאנה מרפאת שיעול.", ev: null, src: "לא נבדק" }
+    }
+  },
+  {
+    id: "pomegranate", he: "רימון", la: "Punica granatum", cat: "פירות", months: [9,10,11],
+    layers: {
+      known: { text: "מחקרים קטנים על מיץ רימון ולחץ דם מצאו ירידה קלה. הראיה ראשונית ולא חד-משמעית.", ev: "ראשונית", src: "לאימות מול מקור ראשי" },
+      said: { text: "הרמב\"ם מונה את הרימון בין הפירות ה\"מאמצים\", ולכן ממליץ לאכלו אחרי הארוחה.", ev: null, src: "משנה תורה, הלכות דעות ד" },
+      believed: { text: "רימון מגן מפני סרטן בבני אדם.", ev: null, src: "לא נבדק בבני אדם" }
+    }
+  },
+  {
+    id: "chickpea", he: "חומוס", la: "Cicer arietinum", cat: "קטניות", months: [1,2,3,4,5,6,7,8,9,10,11,12],
+    layers: {
+      known: { text: "קטניות הן חלק מדפוס ים-תיכוני, ומומלצות בהנחיות משרד הבריאות לתזונה בריאה.", ev: "גבוהה", src: "הנחיות משרד הבריאות" },
+      said: { text: "חומוס וקטניות מופיעים במטבח הים-תיכוני והמזרחי כבסיס לארוחה ביתית.", ev: null, src: "מסורת קולינרית" },
+      believed: { text: "חומוס מחזק את המערכת החיסונית.", ev: null, src: "לא נבדק" }
+    }
+  },
+  {
+    id: "lentil", he: "עדשים", la: "Lens culinaris", cat: "קטניות", months: [1,2,3,4,5,6,7,8,9,10,11,12],
+    layers: {
+      known: { text: "עדשים מקור לסיבים ולחלבון צמחי, ונכללות בהמלצה לאכול קטניות.", ev: "גבוהה", src: "הנחיות WHO ומשרד הבריאות" },
+      said: { text: "בספר בראשית מופיע תבשיל העדשים שעליו נמכר הבכורה.", ev: null, src: "בראשית כה" },
+      believed: { text: "עדשים מנקות את הדם.", ev: null, src: "לא נבדק" }
+    }
+  },
+  {
+    id: "jaada", he: "ג'עדה", la: "Teucrium polium", cat: "צמחי מרפא", months: [], red: true,
+    layers: {
+      known: { text: "מתועדים מקרי פגיעה כבדית קשה. בשילוב אינסולין דווח מקרה של חמצת קטוטית סוכרתית.", ev: "מקרי דיווח", src: "Ghassa et al., 2024" },
+      said: { text: "בקרב מרפאים ערבים וביהודים בישראל משמשת לטיפול בסוכרת.", ev: null, src: "Said et al., 2002" },
+      believed: { text: "ג'עדה מורידה סוכר בבטיחות.", ev: null, src: "הבטיחות לא נבדקה" }
+    }
+  },
+  {
+    id: "turmeric-supp", he: "כורכום במינון תוסף", la: "Curcuma longa", cat: "תוספים", months: [], red: true,
+    layers: {
+      known: { text: "תוספים מרוכזים של כורכום נקשרו בדיווחים לפגיעה כבדית, במיוחד כשהם משולבים בפלפל שחור.", ev: "מקרי דיווח", src: "DILIN" },
+      said: { text: "הכורכום כתבלין מופיע במטבחים הודיים ובמסורות צמחוניות לאורך דורות.", ev: null, src: "מסורת קולינרית" },
+      believed: { text: "כורכום במינון תוסף מטפל בדלקת.", ev: null, src: "לא נבדק בתנאים מבוקרים" }
+    }
+  }
+];
+
+const MONTHS = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+
+function layerBlock(food, key) {
+  const L = food.layers[key];
+  const cls = key === "known" ? "solid-k" : key === "said" ? "solid-s" : "dashed";
+  const tagCls = "t-" + key;
+  return `
+    <span class="tag ${tagCls}">${LAYER_LABEL[key]}</span>
+    <div class="layer-text ${cls}">${L.text}</div>
+    <div class="src">${L.ev ? "עוצמת ראיה: " + L.ev + " · " : ""}מקור: ${L.src}</div>`;
+}
+
+function foodCard(food) {
+  const redBanner = food.red
+    ? `<div class="redbanner">צמח או תוסף רשום ברשימה האדומה. לא מוצג כטיפול. לפני כל שימוש: רוקח או רופא.</div>`
+    : "";
+  return `
+    <div class="card" data-id="${food.id}">
+      ${redBanner}
+      <h2>${food.he}</h2>
+      <p class="latin">${food.la}</p>
+      <div class="cat">${food.cat}</div>
+      <div class="layers">
+        <button class="on" data-key="known">ידוע</button>
+        <button data-key="said">נאמר</button>
+        <button data-key="believed">מאמינים</button>
+      </div>
+      <div class="body">${layerBlock(food, "known")}</div>
+    </div>`;
+}
+
+function renderFoods() {
+  const el = document.getElementById("foods");
+  el.innerHTML = `<div class="grid">${FOODS.map(foodCard).join("")}</div>`;
+  el.querySelectorAll(".card").forEach(card => {
+    const food = FOODS.find(f => f.id === card.dataset.id);
+    card.querySelectorAll(".layers button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        card.querySelectorAll(".layers button").forEach(b => b.classList.remove("on"));
+        btn.classList.add("on");
+        card.querySelector(".body").innerHTML = layerBlock(food, btn.dataset.key);
+      });
+    });
+  });
+}
+
+function renderSeasons() {
+  const el = document.getElementById("seasons");
+  const seasons = document.createElement("div");
+  seasons.className = "seasons";
+  MONTHS.forEach((m, i) => {
+    const b = document.createElement("button");
+    b.textContent = m;
+    b.dataset.m = i + 1;
+    b.addEventListener("click", () => {
+      seasons.querySelectorAll("button").forEach(x => x.classList.remove("on"));
+      b.classList.add("on");
+      showMonth(i + 1);
+    });
+    seasons.appendChild(b);
+  });
+  el.innerHTML = "";
+  el.appendChild(seasons);
+  const out = document.createElement("div");
+  out.id = "month-out";
+  out.className = "month-list";
+  el.appendChild(out);
+  const now = new Date().getMonth() + 1;
+  seasons.querySelector(`[data-m="${now}"]`).click();
+}
+
+function showMonth(m) {
+  const out = document.getElementById("month-out");
+  const inSeason = FOODS.filter(f => !f.red && f.months.includes(m));
+  if (!inSeason.length) { out.innerHTML = `<div class="month-row">אין פריטים בעונה.</div>`; return; }
+  out.innerHTML = inSeason.map(f => `
+    <div class="month-row">
+      <b>${f.he} <span class="latin" style="display:inline">${f.la}</span></b>
+      <div>${f.layers.known.text}</div>
+      <div class="src">${f.layers.said.text}</div>
+    </div>`).join("");
+}
+
+function renderCompare() {
+  const el = document.getElementById("compare");
+  const opts = FOODS.map(f => `<option value="${f.id}">${f.he}</option>`).join("");
+  el.innerHTML = `
+    <div class="compare-pick">
+      <select id="a">${opts}</select>
+      <select id="b">${opts}</select>
+    </div>
+    <div class="cmp" id="cmp-out"></div>`;
+  el.querySelector("#b").selectedIndex = 1;
+  const update = () => {
+    const a = FOODS.find(f => f.id === el.querySelector("#a").value);
+    const b = FOODS.find(f => f.id === el.querySelector("#b").value);
+    const col = f => `
+      <div class="card">
+        ${f.red ? `<div class="redbanner">רשימה אדומה</div>` : ""}
+        <h2>${f.he}</h2>
+        <p class="latin">${f.la}</p>
+        ${["known","said","believed"].map(k => `
+          <div style="margin-top:10px">${layerBlock(f, k)}</div>`).join("")}
+      </div>`;
+    el.querySelector("#cmp-out").innerHTML = col(a) + col(b);
+  };
+  el.querySelector("#a").addEventListener("change", update);
+  el.querySelector("#b").addEventListener("change", update);
+  update();
+}
+
+document.querySelectorAll("nav button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("on"));
+    btn.classList.add("on");
+    document.querySelectorAll(".view").forEach(v => v.hidden = v.id !== btn.dataset.view);
+  });
+});
+
+renderFoods();
+renderSeasons();
+renderCompare();
+</script>
+</body>
+</html>
