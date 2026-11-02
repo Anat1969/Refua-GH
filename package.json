@@ -1,0 +1,11 @@
+{
+  "name": "refua",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "safety": "node scripts/check-safety.mjs",
+    "serve": "python3 -m http.server 8765",
+    "e2e": "node tests/e2e.cjs",
+    "icons": "node scripts/icons.cjs"
+  }
+}
