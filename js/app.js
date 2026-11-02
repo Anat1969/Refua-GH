@@ -342,12 +342,15 @@ function readState() {
   const D = DEEP[s.id];
   const t = TABS.some(([id]) => id === p.get('t')) ? p.get('t') : 'process';
   const k = D ? Math.min(Math.max(parseInt(p.get('k'), 10) || 0, 0), D.steps.length - 1) : 0;
-  return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '' };
+  const m = p.get('m') === '3d' && !atlasFailed ? '3d' : '2d';
+  return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m };
 }
 const VIEWS = ['emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep'];
 function go(s, v = 'system', extra = {}, replace = false) {
   const prm = new URLSearchParams({ s: s.id });
   if (v !== 'system') prm.set('v', v);
+  const mode = extra.m || readState().m;
+  if (mode === '3d' && v !== 'deep') prm.set('m', '3d');
   if (v === 'search' && extra.q) prm.set('q', extra.q);
   if (extra.a) prm.set('a', extra.a);
   if (v === 'deep') {
@@ -361,16 +364,46 @@ function go(s, v = 'system', extra = {}, replace = false) {
   else render();
 }
 
+// ---------- 3D atlas: loaded only on request ----------
+let atlas = null, atlasLoading = null, atlasFailed = false;
+async function ensureAtlas(sid) {
+  if (atlas) return atlas.select(sid);
+  if (atlasLoading) return;
+  const host = $('#atlas');
+  host.innerHTML = '<p class="atlas-wait">טוען תלת־ממד…</p>';
+  atlasLoading = import('./atlas3d.js')
+    .then((mod) => mod.mountAtlas(host, SYSTEMS, {
+      selected: sid,
+      reduced: matchMedia('(prefers-reduced-motion: reduce)').matches,
+      onPick: (id) => go(SYSTEMS.find((x) => x.id === id)),
+    }))
+    .then((a) => { atlas = a; atlas.select(readState().s.id); $('#atlas-ops').hidden = readState().m !== '3d' || readState().v === 'deep'; })
+    .catch(() => {
+      atlasFailed = true;
+      host.innerHTML = '';
+      const st = readState();
+      go(st.s, st.v, { m: '2d' }, true);
+      $('#figure-note').textContent = 'התלת־ממד לא נטען במכשיר הזה. השקפים ממשיכים לעבוד.';
+    })
+    .finally(() => { atlasLoading = null; });
+}
+
 // The stage shows the body, or the system in depth. Museum text follows.
 let homeMuseum = '';
 function renderStage(s, v, k) {
   const deep = v === 'deep';
   const D = DEEP[s.id];
+  const m3 = !deep && readState().m === '3d';
   document.body.classList.toggle('is-deep', deep);
-  $('#figure').hidden = deep;
+  $('#stage-bar').hidden = deep;
+  $$('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === (m3 ? '3d' : '2d'))));
+  $('#atlas-ops').hidden = !m3 || !atlas;
+  $('#atlas').hidden = !m3;
+  if (m3) ensureAtlas(s.id);
+  $('#figure').hidden = deep || m3;
   $('#deep-figure').hidden = !deep;
   $('#deep-controls').hidden = !deep;
-  $('#figure-note').textContent = deep ? 'לחיצה על מספר או על קטע בדרך מציגה את השלב.' : 'כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.';
+  if (!atlasFailed || deep) $('#figure-note').textContent = deep ? 'לחיצה על מספר או על קטע בדרך מציגה את השלב.' : m3 ? 'שבעה שקפים בחלל: הדמות מאחור, והעצבים מקדימה.' : 'כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.';
   const museum = $('#museum');
   if (!deep) {
     if (museum.dataset.mode !== 'home') { museum.innerHTML = homeMuseum; museum.dataset.mode = 'home'; }
@@ -465,6 +498,13 @@ function boot() {
     const g = e.target.closest('.sysmark, .sys');
     $$('.sys, .sysmark').forEach((x) => x.classList.toggle('hover', !!g && x.dataset.id === g.dataset.id));
   });
+  $$('[data-mode]').forEach((b) => b.addEventListener('click', () => {
+    const st = readState();
+    if (b.dataset.mode === '3d') atlasFailed = false;
+    go(st.s, st.v, { m: b.dataset.mode, q: st.q, a: st.a });
+  }));
+  $('#atlas-reset').addEventListener('click', () => atlas?.reset());
+  $('#atlas-front').addEventListener('click', () => atlas?.front());
   homeMuseum = $('#museum').innerHTML;
   $('#museum').dataset.mode = 'home';
   $('#deep-figure').addEventListener('click', (e) => {

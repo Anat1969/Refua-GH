@@ -9,6 +9,15 @@ const BASE = process.env.BASE || 'http://localhost:8765/';
 const SHOTS = process.env.SHOTS || path.join(__dirname, 'shots');
 fs.mkdirSync(SHOTS, { recursive: true });
 const AIMENU = fs.readFileSync(path.join(__dirname, 'ai-menu.local.js'), 'utf8');
+// Three.js: from a local copy when THREE_LOCAL points to one (offline sandboxes), otherwise from cdnjs.
+const THREE_LOCAL = process.env.THREE_LOCAL && fs.existsSync(process.env.THREE_LOCAL) ? fs.readFileSync(process.env.THREE_LOCAL, 'utf8') : null;
+async function routeThree(page, mode = 'ok') {
+  await page.route('**/three.module.min.js', (r) => {
+    if (mode === 'block') return r.abort();
+    if (THREE_LOCAL) return r.fulfill({ body: THREE_LOCAL, contentType: 'text/javascript', headers: { 'access-control-allow-origin': '*' } });
+    return r.continue();
+  });
+}
 
 let fails = 0;
 const ok = (c, m) => { console.log(`${c ? 'PASS' : 'FAIL'}  ${m}`); if (!c) fails++; };
@@ -249,6 +258,64 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.click('[data-dz-open="hypertension"]');
       await page.waitForFunction(() => location.hash.includes('v=deep') && location.hash.includes('d=hypertension'));
       ok(true, 'search finds a disease and opens it in depth');
+
+      // ---------- Stage 3: 3D exploded atlas ----------
+      await routeThree(page);
+      await page.goto(BASE + '#s=cardio');
+      await page.waitForSelector('[data-mode="3d"]');
+      ok(await page.isVisible('#figure') && await page.isHidden('#atlas'), '3D is off by default: the 2D figure shows');
+      await page.click('[data-mode="3d"]');
+      await page.waitForFunction(() => location.hash.includes('m=3d') && document.querySelectorAll('.atlas-label').length === 6, null, { timeout: 20000 });
+      await page.waitForTimeout(800);
+      const drawn = await page.evaluate(() => {
+        const c = document.querySelector('.atlas-canvas');
+        const g = document.createElement('canvas'); g.width = 120; g.height = 120;
+        const x = g.getContext('2d'); x.drawImage(c, 0, 0, 120, 120);
+        const d = x.getImageData(0, 0, 120, 120).data; let ink = 0;
+        for (let i = 3; i < d.length; i += 4) if (d[i] > 40) ink++;
+        return ink;
+      });
+      ok(drawn > 300, `3D: the sheets are drawn on the canvas (${drawn} inked pixels)`);
+      const lab = await page.evaluate(() => {
+        const host = document.querySelector('#atlas').getBoundingClientRect();
+        const r = [...document.querySelectorAll('.atlas-label')].map((b) => b.getBoundingClientRect());
+        let overlap = false;
+        for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) {
+          const a = r[i], b = r[j];
+          if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) overlap = true;
+        }
+        const inside = r.every((x) => x.left >= host.left - 1 && x.right <= host.right + 1 && x.top >= host.top - 1 && x.bottom <= host.bottom + 1);
+        return { overlap, inside, on: document.querySelector('.atlas-label.on')?.dataset.id };
+      });
+      ok(!lab.overlap && lab.inside && lab.on === 'cardio', '3D: six names, inside the frame, no overlap, selected system marked');
+      await page.screenshot({ path: path.join(SHOTS, `atlas-${tag}.png`) });
+      await page.click('.atlas-label[data-id="nervous"]');
+      await page.waitForFunction(() => location.hash.includes('s=nervous') && location.hash.includes('m=3d') && document.querySelector('.atlas-label.on')?.dataset.id === 'nervous');
+      ok(true, '3D: a sheet name selects its system, the mode stays 3D');
+      const c = await page.$('.atlas-canvas');
+      const bb = await c.boundingBox();
+      await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(bb.x + bb.width / 2 + 160, bb.y + bb.height / 2 + 20, { steps: 8 });
+      await page.mouse.up();
+      ok(await page.evaluate(() => location.hash.includes('s=nervous')), '3D: dragging rotates without changing the selection');
+      await page.click('#atlas-front');
+      await page.click('#atlas-reset');
+      await page.click('[data-go="1"]');
+      await page.waitForFunction(() => location.hash.includes('s=respiratory') && location.hash.includes('m=3d'));
+      ok(true, '3D: next system keeps the 3D mode');
+      await page.click('[data-mode="2d"]');
+      await page.waitForFunction(() => !location.hash.includes('m=3d') && !document.querySelector('#figure').hidden && document.querySelector('#atlas').hidden);
+      ok(true, '3D: back to the 2D sheets');
+
+      // Fallback: the library cannot load, the 2D figure stays and says why.
+      const fb = await ctx.newPage();
+      await fb.route('**/ai-menu.js', (r) => r.fulfill({ body: AIMENU, contentType: 'text/javascript' }));
+      await routeThree(fb, 'block');
+      await fb.goto(BASE + '#s=cardio&m=3d');
+      await fb.waitForFunction(() => !location.hash.includes('m=3d') && /לא נטען/.test(document.querySelector('#figure-note').textContent), null, { timeout: 10000 });
+      ok(await fb.isVisible('#figure'), '3D fallback: blocked library keeps the 2D figure, with a note');
+      await fb.close();
     }
 
     if (w === 390) {

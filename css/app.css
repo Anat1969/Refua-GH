@@ -382,6 +382,26 @@ ai-menu { margin-inline-start: auto; }
 .dz-btn { font: inherit; font-size: 13.5px; border: 1px solid var(--hair); background: linear-gradient(#fff, #f3f4f6); padding: 8px 6px; color: var(--graphite); }
 .dz-btn.on { background: var(--ink); color: #fff; border-color: var(--ink); font-weight: 600; }
 
+/* ---------- Stage 3: 3D exploded atlas ---------- */
+.stage-bar { display: flex; align-items: center; gap: var(--s3); min-height: 34px; }
+.mode-pick { display: flex; gap: var(--s3); }
+.mode-pick .chip[aria-pressed='true'] { color: var(--ink); font-weight: 700; }
+.atlas-ops { display: flex; gap: 6px; margin-inline-start: auto; }
+.atlas-ops .icon svg { stroke-linejoin: round; }
+.atlas { position: relative; overflow: hidden; }
+.atlas-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.atlas-canvas:active { cursor: grabbing; }
+.atlas-labels { position: absolute; inset: 0; pointer-events: none; }
+.atlas-label {
+  position: absolute; left: 0; top: 0; pointer-events: auto; white-space: nowrap; cursor: pointer;
+  font: inherit; font-size: 13.5px; color: #6b7480; background: rgba(255,255,255,.88); border: 0; padding: 2px 6px;
+  text-shadow: 0 1px 0 #fff; box-shadow: 0 1px 2px rgba(22,32,43,.12); direction: rtl;
+}
+.atlas-label:hover { color: var(--ink); }
+.atlas-label.on { color: var(--ink); font-weight: 700; box-shadow: 0 0 0 1px var(--ink), 0 6px 14px -8px rgba(22,32,43,.5); }
+.atlas-hint, .atlas-wait { position: absolute; bottom: 4px; inset-inline-start: 0; font-size: 12.5px; color: var(--graphite); margin: 0; pointer-events: none; }
+.atlas-wait { inset: 0; display: grid; place-items: center; font-size: 14px; }
+
 /* Short screens: the figure keeps its room, the museum strip gets shorter */
 @media (min-width: 1000px) and (max-height: 820px) {
   .museum .q-en, .haiku figcaption, .figure-note { display: none; }
