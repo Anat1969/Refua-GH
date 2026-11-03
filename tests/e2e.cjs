@@ -582,6 +582,39 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     await ctx.close();
   }
 
+  // Creations (AppOfApp-GH creations standard): a room per topic, cards in nine designs, from the nav, on desktop and phone
+  const CR_JS = process.env.CREATIONS_JS || path.join(__dirname, '..', '..', 'appofapp-gh', 'public', 'creations.js');
+  for (const [w, h] of [[1440, 900], [390, 844]]) {
+    const cc = await browser.newContext({ viewport: { width: w, height: h } });
+    await cc.addInitScript(() => { try { localStorage.setItem('refua.mode', '2d'); } catch {} });
+    const cp = await cc.newPage();
+    const cerr = [];
+    cp.on('pageerror', (e) => cerr.push(e.message));
+    await cp.route('**/ai-menu.js', (r) => r.fulfill({ body: AIMENU, contentType: 'text/javascript' }));
+    if (fs.existsSync(CR_JS)) await cp.route('**/creations.js', (r) => r.fulfill({ path: CR_JS, contentType: 'text/javascript' }));
+    await cp.goto(BASE + '#s=cardio');
+    await cp.waitForSelector('[data-view="creations"]');
+    await cp.click('[data-view="creations"]');
+    await cp.waitForSelector('app-creations .cr-room .cr-card', { timeout: 20000 });
+    const cr = await cp.evaluate(() => ({
+      rooms: document.querySelectorAll('app-creations .cr-room').length,
+      cards: document.querySelectorAll('app-creations .cr-room .cr-card').length,
+      empty: [...document.querySelectorAll('app-creations .cr-room')].filter((r) => r.querySelectorAll('.cr-card').length < 4).length,
+      styles: new Set([...document.querySelectorAll('app-creations .cr-card')].map((c) => [...c.classList].find((x) => x.startsWith('cr-') && x !== 'cr-card'))).size,
+      hscroll: document.documentElement.scrollWidth > innerWidth + 1,
+      stageHidden: getComputedStyle(document.querySelector('.stage')).display === 'none',
+      scrolls: document.documentElement.scrollHeight > innerHeight * 2,
+      current: document.querySelector('[data-view="creations"]').getAttribute('aria-current'),
+    }));
+    const tg = `${w}x${h}`;
+    ok(cr.rooms >= 6 && cr.empty === 0, `${tg} creations: ${cr.rooms} rooms, each with 4 or more cards (${cr.cards} cards)`);
+    ok(cr.styles >= 7, `${tg} creations: ${cr.styles} designs`);
+    ok(!cr.hscroll && cr.stageHidden && cr.scrolls && cr.current === 'true', `${tg} creations: full page that scrolls, no horizontal scroll, nav marks it`);
+    await cp.screenshot({ path: path.join(SHOTS, `creations-${tg}.png`) });
+    ok(cerr.length === 0, `${tg} creations: no JS errors ${cerr.join(' | ')}`);
+    await cc.close();
+  }
+
   // Reduced motion
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, reducedMotion: 'reduce' });
   await ctx.addInitScript(() => { try { localStorage.setItem('refua.mode', '2d'); } catch {} });

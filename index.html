@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="css/app.css">
 <script type="importmap">{ "imports": { "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.170.0/three.module.min.js" } }</script>
 <script src="https://appofapp-gh.vercel.app/ai-menu.js" defer></script>
+<script src="https://anat1969.github.io/AppOfApp-GH/creations.js" async onerror="var s=document.createElement('script');s.src='https://appofapp-gh.vercel.app/creations.js';document.head.appendChild(s)"></script>
 </head>
 <body>
 <div class="app-shell">
@@ -30,6 +31,7 @@
       <button class="chip" data-view="diseases">מחלות</button>
       <button class="chip" data-view="history">גילויים</button>
       <button class="chip" data-view="sources">מקורות</button>
+      <button class="chip" data-view="creations">יצירות</button>
     </nav>
     <div class="search" role="search">
       <label for="search" class="sr-only">חיפוש: איבר, מחלה, צמח או תסמין</label>
@@ -119,6 +121,9 @@
         </figure>
       </div>
     </section>
+
+    <!-- יצירות: חדר לכל נושא, נטען רק בכניסה לדף (AppOfApp-GH/docs/creations-standard.md) -->
+    <section class="creations-page" id="creations-page" aria-label="יצירות" hidden></section>
 
     <article class="panel" id="panel" aria-live="polite" tabindex="-1"></article>
 

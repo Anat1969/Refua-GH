@@ -632,12 +632,12 @@ function readState() {
   const l = [1, 2, 3].includes(parseInt(p.get('l'), 10)) ? parseInt(p.get('l'), 10) : 1;
   return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m, f, e, h, l };
 }
-const VIEWS = ['home', 'emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease', 'history'];
+const VIEWS = ['home', 'emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease', 'history', 'creations'];
 function go(s, v = 'system', extra = {}, replace = false) {
   const prm = v === 'home' ? new URLSearchParams() : new URLSearchParams({ s: s.id });
   if (v !== 'system') prm.set('v', v);
   const mode = extra.m || readState().m;
-  if (v !== 'deep' && v !== 'history' && v !== 'home') {
+  if (v !== 'deep' && v !== 'history' && v !== 'home' && v !== 'creations') {
     if (mode === '3d') prm.set('m', '3d');
     else if (prefMode() === '3d') prm.set('m', '2d');
   }
@@ -815,8 +815,13 @@ function render() {
   const panel = $('#panel');
   const { t, k, d, f, e, h, l } = readState();
   const views = { home: homeView, history: () => historyView(e, h), diseases: () => diseasesView(f), disease: () => diseaseView(d, f, l), emergency: emergencyView, sources: sourcesView, redlist: () => redlistView(a), profile: profileView, about: aboutView, search: () => searchView(q), deep: () => deepView(s, t, k, d) };
-  panel.innerHTML = (views[v] || (() => systemView(s, l)))();
-  renderStage(s, v, k);
+  // Creations: a full page that scrolls, the shared <app-creations> component (AppOfApp-GH/public/creations.js).
+  const isCr = v === 'creations';
+  document.body.classList.toggle('is-creations', isCr);
+  $('#creations-page').hidden = !isCr;
+  if (isCr && !$('#creations-page').firstChild) $('#creations-page').innerHTML = '<app-creations src="./creations.json" heading="מה הגוף מלמד: יצירות מהאטלס"></app-creations>';
+  panel.innerHTML = isCr ? '' : (views[v] || (() => systemView(s, l)))();
+  if (!isCr) renderStage(s, v, k);
   const box = $('#search');
   if (v === 'search' && document.activeElement !== box) box.value = q;
   if (v !== 'search' && document.activeElement !== box) box.value = '';
@@ -836,16 +841,17 @@ function render() {
     g.setAttribute('aria-pressed', String(on));
   });
   $$('[data-view]').forEach((b) => b.setAttribute('aria-current', String((b.dataset.view === v && v !== 'home') || (b.dataset.view === 'system' && v === 'deep') || (b.dataset.view === 'diseases' && v === 'disease'))));
-  document.title = isHome ? 'רפואה: גוף, מחלה, בריאות' : v === 'system' ? `${s.name_he} | רפואה` : v === 'deep' ? `${DEEP[s.id].title_he} | רפואה` : v === 'disease' ? `${(DISEASES.find((x) => x.id === d) || DISEASES[0]).name_he} | רפואה` : v === 'history' ? 'ציר זמן | רפואה' : 'רפואה: גוף, מחלה, בריאות';
+  document.title = isHome ? 'רפואה: גוף, מחלה, בריאות' : v === 'system' ? `${s.name_he} | רפואה` : v === 'deep' ? `${DEEP[s.id].title_he} | רפואה` : v === 'disease' ? `${(DISEASES.find((x) => x.id === d) || DISEASES[0]).name_he} | רפואה` : v === 'history' ? 'ציר זמן | רפואה' : isCr ? 'יצירות | רפואה' : 'רפואה: גוף, מחלה, בריאות';
   document.body.classList.toggle('has-alert', !!panel.querySelector('.alert-card'));
   // On narrow screens the panel sits below the figure: bring the change into view.
   // Except where the stage itself is the content (map, circulation): there the stage stays first.
-  if (render.ready && v !== 'history' && v !== 'deep' && matchMedia('(max-width: 999px)').matches) {
+  if (render.ready && v !== 'history' && v !== 'deep' && !isCr && matchMedia('(max-width: 999px)').matches) {
     const r = panel.getBoundingClientRect();
     if (r.top > innerHeight * 0.8) panel.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   }
   // Entering a stage-first view (map, circulation) on a phone: start from the top, so the stage shows.
   if (render.ready && (v === 'history' || v === 'deep') && render.lastView !== v && matchMedia('(max-width: 999px)').matches) $('.work').scrollTop = 0;
+  if (isCr && render.lastView !== 'creations') scrollTo(0, 0);
   render.lastView = v;
   render.ready = true;
 }
@@ -1049,7 +1055,7 @@ function boot() {
   addEventListener('keydown', (e) => {
     if (e.target.closest('input, textarea')) return;
     const { s, v } = readState();
-    if (e.key === 'Escape' && v !== 'system') return go(s);
+    if (e.key === 'Escape' && v !== 'system' && v !== 'creations') return go(s);
     if (v === 'history') {
       const dh = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0;
       if (dh && !e.target.closest('.tabs')) { stopHistoryPlay(); eventTo(readState().e + dh); }
