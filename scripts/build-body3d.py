@@ -1,12 +1,15 @@
 # Builds models/<system>.glb and models/body.glb from BodyParts3D (CC BY 4.0, (c) DBCLS).
 # Source: https://dbarchive.biosciencedbc.jp/en/bodyparts3d/download.html
 #   partof_BP3D_4.0_obj_99.zip (unzip to ./obj) and partof_element_parts.txt, next to the working dir.
-# Run: pip install trimesh fast-simplification && python3 build-body3d.py <bp3d_dir> <repo>/models
+# Female organs, the spleen and the tonsils: Human Reference Atlas (HRA, NIH HuBMAP), CC BY 4.0.
+#   The GLB files listed in HRA_FILES, from https://apps.humanatlas.io/api/v1/reference-organs, in <hra_dir>/<id>.glb.
+#   They are placed in the BodyParts3D frame by a per-axis fit on the hip bones and the sternum (about 1 cm there).
+# Run: pip install trimesh fast-simplification && python3 build-body3d.py <bp3d_dir> <repo>/models <hra_dir>
 # Names, roles and colours live in js/data.js (ANATOMY3D). Here only: which mesh files make each part.
 import csv, os, re, sys, json
 import numpy as np, trimesh, fast_simplification as fs
 
-SRC, OUT = sys.argv[1], sys.argv[2]
+SRC, OUT, HRA = sys.argv[1], sys.argv[2], sys.argv[3]
 D = os.path.join(SRC, 'obj', 'partof_BP3D_4.0_obj_99')
 rows = [r for r in csv.reader(open(os.path.join(SRC, 'partof_element_parts.txt')), delimiter='\t')][1:]
 byn = {}
@@ -75,10 +78,53 @@ SYS = {
 }
 CONTEXT = [('skin', N('skin'), 12000)]
 
+# ---------- HRA: female organs, spleen, tonsils, registered to the BodyParts3D frame ----------
+def bp_mesh(els):
+    return trimesh.util.concatenate([trimesh.load(f'{D}/{e}.obj', force='mesh', process=False) for e in sorted(els) if os.path.exists(f'{D}/{e}.obj')])
+def hra_raw(name, pred=lambda n: True):
+    sc = trimesh.load(os.path.join(HRA, f'{name}.glb')); ms = []
+    for n in sc.graph.nodes_geometry:
+        if not pred(n): continue
+        T, g = sc.graph[n]; m = sc.geometry[g].copy(); m.apply_transform(T); ms.append(m)
+    m = trimesh.util.concatenate(ms); v = m.vertices * 1000.0
+    m.vertices = np.c_[v[:, 0], -v[:, 2], v[:, 1]]  # HRA: metres, y up, +z front -> BodyParts3D: mm, z up, -y front
+    return m
+corners = lambda b: np.array([[b[i][0], b[j][1], b[k][2]] for i in (0, 1) for j in (0, 1) for k in (0, 1)])
+P = np.r_[corners(hra_raw('pelvis-female', lambda n: 'compact' in n).bounds), corners(hra_raw('sternum-female').bounds)]
+Q = np.r_[corners(bp_mesh(N('left hip bone', 'right hip bone')).bounds), corners(bp_mesh(N('sternum')).bounds)]
+FIT = [np.linalg.lstsq(np.c_[P[:, a], np.ones(len(P))], Q[:, a], rcond=None)[0] for a in range(3)]
+def hra(names, pred=lambda n: True):
+    ms = []
+    for name in names:
+        m = hra_raw(name, pred); m.vertices = np.c_[[m.vertices[:, a] * FIT[a][0] + FIT[a][1] for a in range(3)]].T; ms.append(m)
+    return trimesh.util.concatenate(ms)
+print('HRA fit (scale, offset) per axis', [tuple(np.round(f, 3)) for f in FIT])
+MB = ['mammary-gland-female-left', 'mammary-gland-female-right']
+UT = ['uterus-female']
+CERVIX = lambda n: any(k in n for k in ('cervix', 'cervical_os', 'cervicovaginal'))
+SYS['reproductive'] = [
+    ('breast_lobes', hra(MB, lambda n: 'lobes' in n), 14000),
+    ('breast_ducts', hra(MB, lambda n: 'lactiferous' in n), 12000),
+    ('breast', hra(MB, lambda n: any(k in n for k in ('fat', 'areola', 'nipple'))), 9000),
+    ('uterus', hra(UT, lambda n: not CERVIX(n) and 'ostium' not in n), 8000),
+    ('cervix', hra(UT, CERVIX), 4000),
+    ('tubes', hra(['fallopian-tube-female-left', 'fallopian-tube-female-right']), 6000),
+    ('ovaries', hra(['ovary-female-left', 'ovary-female-right']), 1000),
+    ('prostate', N('prostate'), 3000), ('bladder', N('urinary bladder'), 3000),
+    ('skin_f', hra(['skin-female']), 12000),
+]
+SYS['immune'] += [
+    ('spleen', hra(['spleen-female']), 5000),
+    ('tonsils', hra(['palatine-tonsil-female-left', 'palatine-tonsil-female-right']), 4000),
+]
+
 def load(els, tgt):
-    ms = [trimesh.load(f'{D}/{e}.obj', force='mesh', process=False) for e in sorted(els) if os.path.exists(f'{D}/{e}.obj')]
-    if not ms: return None
-    m = trimesh.util.concatenate(ms); m.merge_vertices()
+    if isinstance(els, trimesh.Trimesh): m = els.copy()
+    else:
+        ms = [trimesh.load(f'{D}/{e}.obj', force='mesh', process=False) for e in sorted(els) if os.path.exists(f'{D}/{e}.obj')]
+        if not ms: return None
+        m = trimesh.util.concatenate(ms)
+    m.merge_vertices()
     v, f = m.vertices.astype(np.float32), m.faces.astype(np.int64)
     if len(f) > tgt: v, f = fs.simplify(v, f, target_reduction=1 - tgt / len(f))
     return trimesh.Trimesh(v, f, process=True)
@@ -94,11 +140,12 @@ overview = trimesh.Scene()
 for sid, parts in SYS.items():
     sc = trimesh.Scene(); used = set(); allm = []
     for pid, els, tgt in parts:
-        els = set(els) - used; used |= els
+        if not isinstance(els, trimesh.Trimesh): els = set(els) - used; used |= els
         m = load(els, tgt)
         if m is None: print('EMPTY', sid, pid); continue
-        sc.add_geometry(m, node_name=pid, geom_name=pid); allm.append(m)
-        report[f'{sid}:{pid}'] = [len(els), len(m.faces)]
+        sc.add_geometry(m, node_name=pid, geom_name=pid)
+        if not pid.startswith('skin'): allm.append(m)   # context skins stay out of the overview
+        report[f'{sid}:{pid}'] = [len(els) if not isinstance(els, trimesh.Trimesh) else 'HRA', len(m.faces)]
     size = export(sc, os.path.join(OUT, f'{sid}.glb'))
     # Overview: the whole system merged, light enough to show all seven at once.
     merged = trimesh.util.concatenate(allm)

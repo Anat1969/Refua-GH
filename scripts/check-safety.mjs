@@ -1,7 +1,7 @@
 // Safety gate (docs/SAFETY.md, docs/CONTENT_RULES.md). Exit 1 blocks merge.
 // Run: node scripts/check-safety.mjs
 import { readFileSync, existsSync, statSync } from 'node:fs';
-import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, nutritionHref, WONDERS, IMAGES, COUNTRIES, ANATOMY3D, MODEL_CREDIT } from '../js/data.js';
+import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, nutritionHref, WONDERS, IMAGES, COUNTRIES, ANATOMY3D, MODEL_CREDIT, DISEASE3D } from '../js/data.js';
 import { detect } from '../js/match.js';
 
 const errors = [];
@@ -222,6 +222,13 @@ for (const s of SYSTEMS) {
     if (!p.he || !p.en || !/^#[0-9a-f]{6}$/.test(p.tissue)) err(`3D ${s.id}:${p.id}: name or colour missing`);
   }
   for (const id of A.focus) if (!A.parts.some((p) => p.id === id)) err(`3D ${s.id}: focus ${id} is not a part`);
+}
+
+// A disease lights only structures that exist in its own system's model.
+for (const [id, parts] of Object.entries(DISEASE3D)) {
+  const d = DISEASES.find((x) => x.id === id);
+  if (!d) { err(`3D disease ${id}: no such disease`); continue; }
+  for (const p of parts) if (!ANATOMY3D[d.system]?.parts.some((q) => q.id === p)) err(`3D disease ${id}: ${p} is not a part of ${d.system}`);
 }
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');

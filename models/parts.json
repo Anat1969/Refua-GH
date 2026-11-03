@@ -163,6 +163,42 @@
 2,
 2080
 ],
+"immune:spleen": [
+"HRA",
+5000
+],
+"immune:tonsils": [
+"HRA",
+3998
+],
+"reproductive:breast_lobes": [
+"HRA",
+13998
+],
+"reproductive:breast_ducts": [
+"HRA",
+12000
+],
+"reproductive:breast": [
+"HRA",
+9000
+],
+"reproductive:uterus": [
+"HRA",
+8000
+],
+"reproductive:cervix": [
+"HRA",
+3999
+],
+"reproductive:tubes": [
+"HRA",
+5999
+],
+"reproductive:ovaries": [
+"HRA",
+834
+],
 "reproductive:prostate": [
 1,
 442
@@ -170,5 +206,9 @@
 "reproductive:bladder": [
 1,
 226
+],
+"reproductive:skin_f": [
+"HRA",
+11998
 ]
 }
