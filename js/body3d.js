@@ -41,7 +41,8 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
   const sysName = (id) => systems.find((s) => s.id === id)?.short_he || systems.find((s) => s.id === id)?.name_he || id;
   let look = 'ink';
   let sex = 'f';
-  try { look = localStorage.getItem(LOOK_KEY) === 'tissue' ? 'tissue' : 'ink'; sex = localStorage.getItem(SEX_KEY) === 'm' ? 'm' : 'f'; } catch { /* private mode */ }
+  let lookChosen = false;
+  try { const lv = localStorage.getItem(LOOK_KEY); lookChosen = lv === 'tissue' || lv === 'ink'; look = lv === 'tissue' ? 'tissue' : 'ink'; sex = localStorage.getItem(SEX_KEY) === 'm' ? 'm' : 'f'; } catch { /* private mode */ }
 
   host.innerHTML = `
     <div class="atlas-labels" role="group" aria-label="מערכות בגוף">${systems.map((s) => `<button class="atlas-label press-soft" data-id="${s.id}" aria-pressed="false">${esc(s.short_he || s.name_he)}</button>`).join('')}</div>
@@ -251,6 +252,8 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     const changed = id !== sel;
     const wasWhole = whole;
     whole = !!opts.whole;
+    // The home page shows the body in tissue colour, until the viewer chooses a look; elsewhere ink is the default.
+    if (!lookChosen) look = whole ? 'tissue' : 'ink';
     sel = id; hl = opts.hl || []; hlLabel = opts.label || ''; level = opts.level || 1;
     if (whole) { part = null; restyle(); frameBox(new THREE.Box3().setFromObject(over.skin), VIEW.front, 1.0); return; }
     if (opts.sex) sex = opts.sex;
@@ -295,7 +298,7 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
   host.addEventListener('click', (e) => {
     const lb = e.target.closest('.atlas-label'); if (lb) { onPick(lb.dataset.id); return; }
     const lk = e.target.closest('[data-b3-look]');
-    if (lk) { look = lk.dataset.b3Look; try { localStorage.setItem(LOOK_KEY, look); } catch { /* ignore */ } restyle(); return; }
+    if (lk) { look = lk.dataset.b3Look; lookChosen = true; try { localStorage.setItem(LOOK_KEY, look); } catch { /* ignore */ } restyle(); return; }
     const sx = e.target.closest('[data-b3-sex]');
     if (sx) { sex = sx.dataset.b3Sex; part = null; try { localStorage.setItem(SEX_KEY, sex); } catch { /* ignore */ } restyle(); frameSel(); return; }
     const pp = e.target.closest('[data-part]'); if (pp) { part = pp.dataset.part; restyle(); return; }
