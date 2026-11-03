@@ -423,6 +423,9 @@ ai-menu { margin-inline-start: auto; }
 .b3-card:empty { display: none; }
 .b3-card h4 { margin: 0; font-family: var(--display); font-size: 21px; font-weight: 700; }
 .b3-k { margin: 0 0 4px; font-weight: 700; font-size: 14px; }
+.b3-lit .b3-part { display: inline; padding: 0; font-weight: 700; color: var(--known); }
+.b3-lit span { color: var(--graphite); }
+.b3-sex { margin-bottom: 6px; }
 .b3-more summary { cursor: pointer; font-size: 13px; color: var(--graphite); list-style-position: inside; }
 .b3-more summary b { color: var(--ink); }
 .b3-more[open] summary { margin-bottom: 4px; }

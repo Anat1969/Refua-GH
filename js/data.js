@@ -689,7 +689,8 @@ export const FLAG_URL = (cc) => `https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/f
 // One model per system in models/<id>.glb, and models/body.glb with all seven, light, for context.
 // Each part: Hebrew name, the English term, one structural line (Gray's Anatomy, layer known), and a tissue colour.
 // Tissue colours are the anatomical convention (arteries red, veins blue). The ink look keeps the DNA palette.
-export const MODEL_CREDIT = { he: 'מודלים: BodyParts3D, © The Database Center for Life Science, ברישיון CC BY 4.0. מפושטים ומקובצים למבנים.', url: 'https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html' };
+export const MODEL_CREDIT = { he: 'מודלים: BodyParts3D, © The Database Center for Life Science, ו-Human Reference Atlas, NIH HuBMAP. שניהם ברישיון CC BY 4.0. מפושטים ומקובצים למבנים.', url: 'https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html', hra_url: 'https://humanatlas.io/3d-reference-library' };
+export const MODEL_SOURCES = { bp3d: 'BodyParts3D', hra: 'Human Reference Atlas (NIH)' };
 const P = (id, he, en, tissue, text_he) => ({ id, he, en, tissue, layer: 'known', text_he, source_id: 'gray-2020' });
 export const ANATOMY3D = {
   cardio: {
@@ -760,18 +761,40 @@ export const ANATOMY3D = {
     ],
   },
   immune: {
-    focus: ['thymus'],
-    gap_he: 'במקור אין טחול ואין בלוטות לימפה. לכן מוצג רק התימוס, במקומו מאחורי עצם החזה.',
+    focus: ['thymus', 'spleen'],
+    gap_he: 'הטחול והשקדים ממאגר HRA של NIH, והתימוס מ-BodyParts3D. בלוטות הלימפה עוד חסרות.',
     parts: [
       P('thymus', 'התימוס', 'Thymus', '#e6c3a0', 'בלוטה מאחורי עצם החזה. בה מבשילים תאי T. גדולה בילדות, ומצטמקת עם הגיל.'),
+      { ...P('spleen', 'הטחול', 'Spleen', '#6b2a3a', 'מסנן את הדם, מפרק תאי דם אדומים ישנים, ומשמש תחנה לתאי חיסון.'), model: 'hra' },
+      { ...P('tonsils', 'השקדים', 'Palatine tonsils', '#d99a8c', 'רקמה לימפטית בלוע: נקודת מפגש ראשונה של מערכת החיסון עם מה שנכנס בפה ובאף.'), model: 'hra' },
     ],
   },
   reproductive: {
-    focus: ['prostate', 'bladder'],
-    gap_he: 'המקור נבנה מגוף של גבר. השד, הרחם והשחלות לא קיימים בו, ולכן לא מוצגים כאן. בשקפים ובכרטיסים הם מופיעים.',
+    focus: ['breast', 'uterus', 'ovaries'],
+    focus_m: ['prostate', 'bladder'],
+    gap_he: 'איברי האישה ממאגר HRA של NIH, ואיברי הגבר מ-BodyParts3D. הם הוצבו בגוף לפי עצמות האגן ועצם החזה, בדיוק של סנטימטרים בודדים.',
     parts: [
-      P('prostate', 'הערמונית', 'Prostate', '#c48a7a', 'בלוטה מתחת לשלפוחית השתן, אצל גברים. מפרישה חלק מנוזל הזרע.'),
-      P('bladder', 'שלפוחית השתן', 'Urinary bladder', '#e0b8a0', 'לא חלק ממערכת הרבייה, אלא שכנה קרובה. מוצגת כנקודת ציון.'),
+      { ...P('breast_ducts', 'צינורות החלב', 'Lactiferous ducts', '#c9786a', 'מובילים חלב מהאונות אל הפטמה. תאי סרטן השד מתחילים בתוך צינורות החלב או באונות.'), source_id: 'who-breast', sex: 'f', model: 'hra' },
+      { ...P('breast_lobes', 'אונות החלב', 'Mammary lobes', '#e0a090', 'בכל שד 15 עד 20 אונות, ובהן נוצר החלב.'), sex: 'f', model: 'hra' },
+      { ...P('breast', 'השד', 'Breast: fat, areola, nipple', '#f0d2bf', 'רקמת שומן ורצועות תומכות סביב האונות והצינורות. הפטמה והעטרה בחזית.'), sex: 'f', model: 'hra' },
+      { ...P('uterus', 'הרחם', 'Uterus', '#b4565a', 'איבר שרירי, שבו מתפתח עובר. הדופן שלו בנויה בעיקר משריר חלק.'), sex: 'f', model: 'hra' },
+      { ...P('cervix', 'צוואר הרחם', 'Cervix', '#d58b86', 'החלק התחתון של הרחם, שנפתח אל הנרתיק. כמעט כל מקרי הסרטן בו נגרמים מנגיף HPV.'), source_id: 'who-cervical', sex: 'f', model: 'hra' },
+      { ...P('tubes', 'החצוצרות', 'Fallopian tubes', '#c98579', 'מובילות את הביצית מהשחלה אל הרחם. ההפריה מתרחשת בדרך כלל בהן.'), sex: 'f', model: 'hra' },
+      { ...P('ovaries', 'השחלות', 'Ovaries', '#e3b9a0', 'מבשילות ביציות, ומפרישות הורמונים כמו אסטרוגן ופרוגסטרון.'), sex: 'f', model: 'hra' },
+      { ...P('prostate', 'הערמונית', 'Prostate', '#c48a7a', 'בלוטה מתחת לשלפוחית השתן, אצל גברים. מפרישה חלק מנוזל הזרע.'), sex: 'm' },
+      { ...P('bladder', 'שלפוחית השתן', 'Urinary bladder', '#e0b8a0', 'לא חלק ממערכת הרבייה, אלא שכנה קרובה. מוצגת כנקודת ציון.'), sex: 'm' },
     ],
   },
+};
+
+// A disease lights up the structures where it is centred. Only where the model has that structure:
+// no lung tissue (pneumonia, tuberculosis), and no single place for depression, allergy or obesity.
+export const DISEASE3D = {
+  ischemic: ['coronary'], hypertension: ['arteries'], 'heart-failure': ['lv', 'rv'],
+  stroke: ['cerebrum_r', 'cerebrum_l'], dementia: ['cerebrum_r', 'cerebrum_l'],
+  copd: ['airways'], asthma: ['airways'], 'lung-cancer': ['airways'],
+  'colorectal-cancer': ['large'], diarrhoeal: ['small', 'large'], hepatitis: ['liver'], diabetes: ['pancreas'],
+  osteoporosis: ['spine', 'pelvis'], osteoarthritis: ['legs'], 'low-back-pain': ['spine'],
+  hiv: ['thymus', 'spleen', 'tonsils'],
+  'breast-cancer': ['breast_ducts', 'breast_lobes'], 'prostate-cancer': ['prostate'], 'cervical-cancer': ['cervix'],
 };

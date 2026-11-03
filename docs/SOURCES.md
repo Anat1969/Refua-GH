@@ -125,3 +125,5 @@
 - **BodyParts3D**, © The Database Center for Life Science (DBCLS), ברישיון CC BY 4.0: https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html. הקבצים: `partof_BP3D_4.0_obj_99.zip` ו-`partof_element_parts.txt`. מפושטים ומקובצים למבנים בסקריפט `scripts/build-body3d.py`.
 - שורת התפקיד של כל מבנה: Gray's Anatomy, מהדורה 42, 2020 (`gray-2020`), בשכבת "ידוע".
 - Three.js r170 (MIT), והרכיבים GLTFLoader, OrbitControls ו-RoomEnvironment (MIT), בעותק מקומי ב-`js/vendor/`.
+- **Human Reference Atlas (HRA)**, NIH HuBMAP, ברישיון CC BY 4.0 (לפי `metadata.json` של כל איבר): https://humanatlas.io/3d-reference-library. האיברים: mammary-gland-female (שמאל וימין), uterus-female, fallopian-tube-female, ovary-female, spleen-female, palatine-tonsil-female. ועוד pelvis-female ו-sternum-female, כעוגנים ליישור.
+- שורת צינורות החלב: WHO, Breast cancer, "Breast cancer cells begin inside the milk ducts and/or the milk-producing lobules of the breast" (נבדק ב-03.11.2026). שורת צוואר הרחם: WHO, Cervical cancer.

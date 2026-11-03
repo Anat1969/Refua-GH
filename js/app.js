@@ -1,4 +1,4 @@
-import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, NUTRITION_APP, nutritionHref, IMAGES, WONDERS, COUNTRIES, FLAG_URL } from './data.js';
+import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, NUTRITION_APP, nutritionHref, IMAGES, WONDERS, COUNTRIES, FLAG_URL, ANATOMY3D, DISEASE3D } from './data.js';
 import { historySVG, setEvent } from './history.js';
 import { detect, textMatches, normalize } from './match.js';
 import { bodySVG, sheetSVG } from './body.js';
@@ -395,6 +395,7 @@ function diseaseView(id, f, l) {
     return `${head}
     <section class="glance rise">
       <p class="case-headline">${rich(d.insight)}</p>
+      ${DISEASE3D[d.id] && readState().m !== '3d' ? `<button class="to-3d press-soft" data-mode-go="3d"><b>${d.name_he}, בגוף אמיתי</b><span>${DISEASE3D[d.id].map((pid) => ANATOMY3D[d.system].parts.find((p) => p.id === pid)?.he).filter(Boolean).join(', ')}: מוארים במודל התלת־ממדי.</span></button>` : ''}
       ${known[0] ? item(known[0]) : ''}
       ${groupOf(d.id) ? `<button class="linkish" data-group-go="${groupOf(d.id)}">כל סוגי ה${GROUPS[groupOf(d.id)].name_he}, והתמונה הכוללת</button>` : ''}
       ${seeAlso(1)}
@@ -640,8 +641,17 @@ function go(s, v = 'system', extra = {}, replace = false) {
 // ---------- 3D atlas: loaded only on request ----------
 let atlas = null, atlasLoading = null, atlasFailed = false;
 let pickSystem = (id) => go(SYSTEMS.find((x) => x.id === id));
+// What the 3D body shows for the current screen: on a disease card, the structures where it is centred.
+function atlasFocus(st) {
+  if (st.v !== 'disease') return {};
+  const d = DISEASES.find((x) => x.id === st.d);
+  const parts = d && DISEASE3D[d.id];
+  if (!parts) return {};
+  const sexOf = ANATOMY3D[d.system]?.parts.find((p) => p.id === parts[0])?.sex;
+  return { hl: parts, label: d.name_he, ...(sexOf ? { sex: sexOf } : {}) };
+}
 async function ensureAtlas(sid) {
-  if (atlas) return atlas.select(sid);
+  if (atlas) return atlas.select(sid, atlasFocus(readState()));
   if (atlasLoading) return;
   const host = $('#atlas');
   host.innerHTML = '<p class="atlas-wait">טוען תלת־ממד…</p>';
@@ -651,7 +661,7 @@ async function ensureAtlas(sid) {
       reduced: matchMedia('(prefers-reduced-motion: reduce)').matches,
       onPick: (id) => pickSystem(id),
     }))
-    .then((a) => { atlas = a; atlas.select(readState().s.id); $('#atlas-ops').hidden = readState().m !== '3d' || readState().v === 'deep'; })
+    .then((a) => { atlas = a; atlas.select(readState().s.id, atlasFocus(readState())); $('#atlas-ops').hidden = readState().m !== '3d' || readState().v === 'deep'; })
     .catch(() => {
       atlasFailed = true;
       host.innerHTML = '';
@@ -729,7 +739,7 @@ function renderStage(s, v, k) {
   $('#deep-figure').hidden = !deep;
   $('#deep-controls').hidden = !deep;
   const dzMode = v === 'diseases' || v === 'disease';
-  if (!atlasFailed || deep) $('#figure-note').textContent = dzMode && !deep ? 'לחיצה על מערכת בדמות מסננת את המחלות שלה.' : deep ? 'לחיצה על מספר או על קטע בדרך מציגה את השלב.' : m3 ? 'גוף אמיתי, מסריקות של אדם: לחיצה על מבנה מציגה את שמו ואת התפקיד שלו.' : 'כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.';
+  if (!atlasFailed || deep) $('#figure-note').textContent = m3 && !deep ? 'גוף אמיתי, מסריקות של אדם: לחיצה על מבנה מציגה את שמו ואת התפקיד שלו.' : dzMode && !deep ? 'לחיצה על מערכת בדמות מסננת את המחלות שלה.' : deep ? 'לחיצה על מספר או על קטע בדרך מציגה את השלב.' : m3 ? 'גוף אמיתי, מסריקות של אדם: לחיצה על מבנה מציגה את שמו ואת התפקיד שלו.' : 'כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.';
   const museum = $('#museum');
   if (!deep && v === 'home') {
     if (museum.dataset.mode !== 'front') {
