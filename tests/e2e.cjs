@@ -29,6 +29,8 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
 
   for (const [w, h] of SIZES) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
+    // The real body is the default stage; these runs check the sheets, so they choose them, as a viewer can.
+    await ctx.addInitScript(() => { try { if (!sessionStorage.getItem('t')) { localStorage.setItem('refua.mode', '2d'); sessionStorage.setItem('t', '1'); } } catch {} });
     const page = await ctx.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -284,7 +286,22 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await routeThree(page);
       await page.goto(BASE + '#s=cardio');
       await page.waitForSelector('[data-mode="3d"]');
-      ok(await page.isVisible('#figure') && await page.isHidden('#atlas'), '3D is off by default: the 2D figure shows');
+      ok(await page.isVisible('#figure') && await page.isHidden('#atlas'), 'a viewer who chose the sheets gets the sheets');
+      // A first visit: the real body is the default, on the home page too, as one body with seven networks.
+      const fresh = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+      const fp = await fresh.newPage();
+      await fp.route('**/ai-menu.js', (r) => r.fulfill({ body: AIMENU, contentType: 'text/javascript' }));
+      await routeThree(fp);
+      await fp.goto(BASE);
+      await fp.waitForFunction(() => !document.querySelector('#atlas').hidden && document.querySelector('.atlas-wait')?.hidden && /שבע רשתות/.test(document.querySelector('.b3-card')?.textContent || ''), null, { timeout: 60000 });
+      ok(await fp.isHidden('#figure'), 'first visit: the home page opens on the real body, seven networks in one figure');
+      await fp.screenshot({ path: path.join(SHOTS, `home-3d-${tag}.png`), timeout: 120000 });
+      await fp.click('[data-mode="2d"]');
+      await fp.waitForFunction(() => !document.querySelector('#figure').hidden && localStorage.getItem('refua.mode') === '2d');
+      await fp.goto(BASE + '#s=nervous');
+      await fp.waitForSelector('.sys[data-id="nervous"].on');
+      ok(await fp.isHidden('#atlas'), 'choosing the sheets is remembered across screens');
+      await fresh.close();
       await page.click('[data-mode="3d"]');
       await page.waitForFunction(() => location.hash.includes('m=3d') && document.querySelectorAll('.atlas-label').length === 7 && document.querySelector('.atlas-wait')?.hidden, null, { timeout: 60000 });
       await page.waitForTimeout(1500);
@@ -567,6 +584,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
 
   // Reduced motion
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, reducedMotion: 'reduce' });
+  await ctx.addInitScript(() => { try { localStorage.setItem('refua.mode', '2d'); } catch {} });
   const p = await ctx.newPage();
   await p.route('**/ai-menu.js', (r) => r.fulfill({ body: AIMENU, contentType: 'text/javascript' }));
   await p.goto(BASE);

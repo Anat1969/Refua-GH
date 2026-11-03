@@ -597,6 +597,21 @@ function deepView(s, t, k, d) {
   ${body}`;
 }
 
+// ---------- Stage mode: the real body is the default wherever the device can draw it ----------
+const MODE_KEY = 'refua.mode';
+const can3d = (() => {
+  try {
+    if (navigator.connection?.saveData) return false;
+    const c = document.createElement('canvas');
+    return !!(c.getContext('webgl2') || c.getContext('webgl'));
+  } catch { return false; }
+})();
+function prefMode() {
+  try { const v = localStorage.getItem(MODE_KEY); if (v === '2d' || v === '3d') return v; } catch { /* private mode */ }
+  return can3d ? '3d' : '2d';
+}
+function savePrefMode(v) { try { localStorage.setItem(MODE_KEY, v); } catch { /* private mode */ } }
+
 // ---------- State in the URL ----------
 function readState() {
   const p = new URLSearchParams(location.hash.slice(1));
@@ -608,7 +623,8 @@ function readState() {
   const D = DEEP[s.id];
   const t = TABS.some(([id]) => id === p.get('t')) ? p.get('t') : 'process';
   const k = D ? Math.min(Math.max(parseInt(p.get('k'), 10) || 0, 0), D.steps.length - 1) : 0;
-  const m = p.get('m') === '3d' && !atlasFailed ? '3d' : '2d';
+  const pm = p.get('m');
+  const m = !atlasFailed && (pm === '3d' || (pm !== '2d' && prefMode() === '3d')) ? '3d' : '2d';
   const f = SYSTEMS.some((x) => x.id === p.get('f')) || GROUPS[p.get('f')] ? p.get('f') : '';
   const e = Math.min(Math.max(parseInt(p.get('e'), 10) || 0, 0), TIMELINE.length - 1);
   const h = p.get('h') === 'traditions' ? 'traditions' : 'timeline';
@@ -620,7 +636,10 @@ function go(s, v = 'system', extra = {}, replace = false) {
   const prm = v === 'home' ? new URLSearchParams() : new URLSearchParams({ s: s.id });
   if (v !== 'system') prm.set('v', v);
   const mode = extra.m || readState().m;
-  if (mode === '3d' && v !== 'deep' && v !== 'history') prm.set('m', '3d');
+  if (v !== 'deep' && v !== 'history' && v !== 'home') {
+    if (mode === '3d') prm.set('m', '3d');
+    else if (prefMode() === '3d') prm.set('m', '2d');
+  }
   if (v === 'search' && extra.q) prm.set('q', extra.q);
   if (extra.a) prm.set('a', extra.a);
   if ((v === 'diseases' || v === 'disease') && extra.f) prm.set('f', extra.f);
@@ -643,6 +662,7 @@ let atlas = null, atlasLoading = null, atlasFailed = false;
 let pickSystem = (id) => go(SYSTEMS.find((x) => x.id === id));
 // What the 3D body shows for the current screen: on a disease card, the structures where it is centred.
 function atlasFocus(st) {
+  if (st.v === 'home') return { whole: true };
   if (st.v === 'system') return { level: st.l };
   if (st.v !== 'disease') return {};
   const d = DISEASES.find((x) => x.id === st.d);
@@ -874,6 +894,8 @@ function boot() {
   $$('[data-mode]').forEach((b) => b.addEventListener('click', () => {
     const st = readState();
     if (b.dataset.mode === '3d') atlasFailed = false;
+    savePrefMode(b.dataset.mode);
+    if (st.v === 'home') { render(); return; }
     go(st.s, st.v, { m: b.dataset.mode, q: st.q, a: st.a });
   }));
   $('#atlas-reset').addEventListener('click', () => atlas?.reset());
@@ -968,7 +990,7 @@ function boot() {
     const lt = e.target.closest('[data-l]');
     if (lt) { const st = readState(); go(st.s, st.v, { ...st, l: Number(lt.dataset.l) }); }
     const mg = e.target.closest('[data-mode-go]');
-    if (mg) { const st = readState(); atlasFailed = false; go(st.s, st.v, { ...st, m: mg.dataset.modeGo }); }
+    if (mg) { const st = readState(); atlasFailed = false; savePrefMode(mg.dataset.modeGo); go(st.s, st.v, { ...st, m: mg.dataset.modeGo }); }
     const evg = e.target.closest('[data-ev-go]');
     if (evg) go(readState().s, 'history', { e: Number(evg.dataset.evGo) });
     const sdz = e.target.closest('[data-sys-dz]');

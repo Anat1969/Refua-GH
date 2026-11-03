@@ -81,7 +81,7 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
 
   // Overview: every system, light, for context. Detail: the selected system, part by part.
   const over = {}; const detail = {}; const loading = {};
-  let sel = selected, part = null, isolate = false, partsOpen = false, hl = [], hlLabel = '', level = 1;
+  let sel = selected, part = null, isolate = false, partsOpen = false, hl = [], hlLabel = '', level = 1, whole = false;
   // Three depth levels, as in the panel: 1 the organ, 2 the outer layer translucent, 3 the inner layer alone.
   const depthOf = (id) => ANATOMY3D[id]?.depth || { outer: [], inner: [] };
   // Parts shown for the chosen body: the reproductive system has a woman's and a man's set.
@@ -114,9 +114,9 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     const hasDetail = !!detail[sel];
     for (const [id, m] of Object.entries(over)) {
       const ctx = id === 'skin';
-      const isSel = id === sel;
-      m.visible = !(isSel && hasDetail) && !(ctx && femaleBody());
-      const ghost = ctx || !isSel;
+      const isSel = !whole && id === sel;
+      m.visible = whole || (!(isSel && hasDetail) && !(ctx && femaleBody()));
+      const ghost = ctx || (!whole && !isSel);
       m.material.dispose(); m.material = materialFor(ctx ? '#f2dccb' : tint(id), ghost);
       if (ctx) m.material.opacity = look === 'ink' ? 0.05 : 0.08;
       const ol = m.userData.outline;
@@ -126,8 +126,8 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
       ol.material.uniforms.w.value = ghost ? 0.8 : 0.6;
     }
     for (const [id, d] of Object.entries(detail)) {
-      d.group.visible = id === sel;
-      if (id !== sel) continue;
+      d.group.visible = !whole && id === sel;
+      if (whole || id !== sel) continue;
       if (d.skin) {
         d.skin.visible = femaleBody();
         d.skin.material.dispose(); d.skin.material = materialFor('#f2dccb', true); d.skin.material.opacity = look === 'ink' ? 0.05 : 0.08;
@@ -151,13 +151,14 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
         ol.material.uniforms.w.value = on ? 1 : 0.6;
       }
     }
-    host.querySelectorAll('.atlas-label').forEach((b) => { const on = b.dataset.id === sel; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    host.querySelectorAll('.atlas-label').forEach((b) => { const on = !whole && b.dataset.id === sel; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     card(); request();
   }
 
   function card() {
     const A = ANATOMY3D[sel];
     const c = $('.b3-card');
+    if (whole) { c.innerHTML = `<p class="b3-k">גוף אחד, שבע רשתות</p><p class="b3-hint">לחיצה על מערכת בגוף, או על שמה למעלה, פותחת אותה. גרירה מסובבת, גלגלת מקרבת.</p>`; return; }
     if (!A) { c.innerHTML = ''; return; }
     const list = partsOf(sel);
     const sexSeg = sel === 'reproductive' ? `<div class="b3-seg b3-sex" role="group" aria-label="גוף"><button data-b3-sex="f" aria-pressed="${sex === 'f'}">אישה</button><button data-b3-sex="m" aria-pressed="${sex === 'm'}">גבר</button></div>` : '';
@@ -244,16 +245,19 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
   let lastKey = '';
   async function select(id, opts = {}) {
     if (!id) return;
-    const key = [id, (opts.hl || []).join(','), opts.sex || '', opts.level || 1].join('|');
+    const key = [id, (opts.hl || []).join(','), opts.sex || '', opts.level || 1, opts.whole ? 'w' : ''].join('|');
     if (key === lastKey) return;
     lastKey = key;
     const changed = id !== sel;
+    const wasWhole = whole;
+    whole = !!opts.whole;
     sel = id; hl = opts.hl || []; hlLabel = opts.label || ''; level = opts.level || 1;
+    if (whole) { part = null; restyle(); frameBox(new THREE.Box3().setFromObject(over.skin), VIEW.front, 1.0); return; }
     if (opts.sex) sex = opts.sex;
-    if (changed || hl.length) { part = null; isolate = false; $('.b3-cut input').value = 0; setCut(0); }
+    if (changed || hl.length || wasWhole) { part = null; isolate = false; $('.b3-cut input').value = 0; setCut(0); }
     restyle(); frameSel();
     await ensureDetail(id);
-    if (sel === id) { restyle(); frameSel(); }
+    if (sel === id && !whole) { restyle(); frameSel(); }
   }
 
   // Picking: the nearest visible surface that the cut has not removed.
@@ -274,7 +278,7 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     down = null;
     const h = hit(e); if (!h) return;
     if (h.object.userData.part) { part = part === h.object.userData.part ? null : h.object.userData.part; restyle(); }
-    else if (h.object.userData.sys !== sel) onPick(h.object.userData.sys);
+    else if (whole || h.object.userData.sys !== sel) onPick(h.object.userData.sys);
   });
   el.addEventListener('pointermove', (e) => {
     if (e.buttons) return;
@@ -348,7 +352,7 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
   return {
     select(id, opts) { select(id, opts); },
     // "Whole body": the skin's box, from the front.
-    reset() { view = 'front'; part = null; restyle(); frameBox(new THREE.Box3().setFromObject(over.skin), VIEW.front, 0.72); },
+    reset() { view = 'front'; part = null; restyle(); frameBox(new THREE.Box3().setFromObject(over.skin), VIEW.front, 1.0); },
     front() { view = 'front'; frameSel(); },
     destroy() {
       cancelAnimationFrame(raf); ro.disconnect(); controls.dispose(); renderer.dispose(); pmrem.dispose(); host.innerHTML = '';
