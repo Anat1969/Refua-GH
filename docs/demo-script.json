@@ -8,100 +8,126 @@
     "ink": "#16202b",
     "accent": "#fff0a0"
   },
+  "voice": "he-IL-HilaNeural",
+  "sayTitle": "רפואה. אטלס של גילויים על גוף האדם.",
+  "sayClose": "רפואה. שבע מערכות, שלוש רמות עומק, וכל משפט עם מקור.",
   "ready": ".atlas-label",
   "scenes": [
     {
       "insight": "הגוף כעיר של שבע רשתות",
       "detail": "גוף אמיתי בתלת־ממד: כל מערכת היא רשת, וכל רשת היא גילוי.",
+      "say": "הגוף הוא עיר של שבע רשתות, וכל רשת היא גילוי.",
       "steps": [
         {
           "hover": ".atlas-label[data-id=\"nervous\"]",
-          "pause": 700
+          "pause": 500
         },
         {
           "hover": ".atlas-label[data-id=\"respiratory\"]",
-          "pause": 700
+          "pause": 500
         },
         {
           "hover": ".atlas-label[data-id=\"cardio\"]",
-          "pause": 900
+          "pause": 500
         }
-      ],
-      "hold": 400
+      ]
     },
     {
-      "insight": "כל מערכת בשלוש רמות עומק",
-      "detail": "מבט, הבנה ועומק: מהמספר המפתיע אל המנגנון, ואל מי שגילה.",
+      "insight": "הלב: 5 ליטר דם בדקה",
+      "detail": "גוף אמיתי, ממאגר BodyParts3D, במראה רקמה: עורקים באדום, ורידים בכחול.",
+      "say": "הלב, בגוף אמיתי בתלת־ממד. במנוחה הוא מזרים חמישה ליטר דם בדקה.",
       "nav": ".atlas-label[data-id=\"cardio\"]",
       "ready": ".depth-tab",
       "steps": [
         {
-          "wait": 2200
+          "wait": 600
         },
         {
+          "click": "[data-b3-look=\"tissue\"]",
+          "wait": 1800
+        }
+      ]
+    },
+    {
+      "insight": "שלוש רמות עומק, עד המסתמים",
+      "detail": "מבט, הבנה ועומק: המעטפת נעשית שקופה, ואז נפתחת אל השכבה הפנימית.",
+      "say": "שלוש רמות עומק. המעטפת נעשית שקופה, ונפתחת אל המסתמים שבפנים.",
+      "steps": [
+        {
           "click": ".depth-tab >> nth=1",
-          "wait": 2000
+          "wait": 1800
         },
         {
           "click": ".depth-tab >> nth=2",
-          "wait": 2000
+          "wait": 2200
         }
-      ],
-      "hold": 600
+      ]
     },
     {
-      "insight": "24 מחלות, וכל אחת מאירה איבר",
-      "detail": "כרטיס מחלה מסמן בגוף את המבנה שבו היא מתרכזת.",
-      "nav": "nav.nav [data-view=\"diseases\"]",
-      "ready": ".dz-tile",
+      "insight": "הריאות: חצי ליטר בכל נשימה",
+      "detail": "עץ הסימפונות, ברמת העומק השלישית.",
+      "say": "בריאות, עץ הסימפונות. בכל נשימה רגילה נכנס כחצי ליטר אוויר.",
+      "nav": ".atlas-label[data-id=\"respiratory\"]",
+      "ready": ".depth-tab",
       "steps": [
         {
-          "hover": ".dz-tile >> nth=0",
-          "pause": 600
-        },
-        {
-          "click": ".dz-tile >> nth=0",
-          "wait": 2600
+          "wait": 1500
         }
       ],
-      "hold": 600
+      "pre": [
+        {
+          "click": ".depth-tab >> nth=2",
+          "wait": 4500
+        }
+      ]
     },
     {
-      "insight": "15 גילויים על ציר זמן ומפה",
-      "detail": "מי גילה, איפה ומתי: כל גילוי במקום שבו נולד.",
+      "insight": "המוח: 86 מיליארד תאי עצב",
+      "detail": "מערכת העצבים, כרשת התקשורת של העיר.",
+      "say": "ובמוח, כשמונים ושישה מיליארד תאי עצב.",
+      "nav": ".atlas-label[data-id=\"nervous\"]",
+      "ready": ".depth-tab",
+      "steps": [
+        {
+          "click": ".depth-tab >> nth=0",
+          "wait": 900
+        }
+      ]
+    },
+    {
+      "insight": "מחזור הדם בשמונה שלבים",
+      "detail": "דם עשיר בחמצן בקו מלא, ודל בחמצן בקו דק.",
+      "say": "מחזור הדם, בשמונה שלבים. הדם יוצא לעיר, ושב הביתה.",
+      "goto": "#v=deep&s=cardio",
+      "steps": [
+        {
+          "wait": 500
+        },
+        {
+          "click": "#step-play",
+          "wait": 3600
+        }
+      ]
+    },
+    {
+      "insight": "15 גילויים, מקוס עד רחובות",
+      "detail": "כל גילוי במקום שבו נולד, על ציר זמן ומפה אחת.",
+      "say": "חמישה־עשר גילויים על מפה אחת, מהיפוקרטס באי קוס ועד מכון ויצמן ברחובות.",
       "nav": "nav.nav [data-view=\"history\"]",
       "ready": "#ev-next",
       "steps": [
         {
-          "wait": 1200
+          "wait": 600
         },
         {
           "click": "#ev-next",
-          "wait": 1500
+          "wait": 1300
         },
         {
           "click": "#ev-next",
-          "wait": 1500
+          "wait": 1300
         }
-      ],
-      "hold": 400
-    },
-    {
-      "insight": "ידוע, נאמר, או רק מאמינים",
-      "detail": "בדיקה של דקה: מבחינים בין עובדה, מסורת ואמונה.",
-      "nav": "a.brand",
-      "ready": ".q-opt",
-      "steps": [
-        {
-          "hover": ".numcell >> nth=0",
-          "pause": 500
-        },
-        {
-          "click": ".q-opt >> nth=0",
-          "wait": 1800
-        }
-      ],
-      "hold": 1200
+      ]
     }
   ]
 }
