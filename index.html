@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
+<script type="importmap">{ "imports": { "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.170.0/three.module.min.js" } }</script>
 <script src="https://appofapp-gh.vercel.app/ai-menu.js" defer></script>
 </head>
 <body>
@@ -71,11 +72,11 @@
         <span class="label">תצוגה</span>
         <div class="mode-pick" role="group" aria-label="סוג התצוגה">
           <button class="chip" data-mode="2d" aria-pressed="true">שקפים</button>
-          <button class="chip" data-mode="3d" aria-pressed="false">תלת־ממד</button>
+          <button class="chip" data-mode="3d" aria-pressed="false">גוף בתלת־ממד</button>
         </div>
         <div class="atlas-ops" id="atlas-ops" hidden>
-          <button class="icon press" id="atlas-front" title="מבט מלפנים" aria-label="מבט מלפנים"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="4" width="10" height="16"/></svg></button>
-          <button class="icon press" id="atlas-reset" title="מבט מפורק" aria-label="מבט מפורק"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7l6-3v13l-6 3zM11 4l8 3v13l-8-3"/></svg></button>
+          <button class="icon press" id="atlas-front" title="אל המערכת, מלפנים" aria-label="אל המערכת, מלפנים"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="4" width="10" height="16"/></svg></button>
+          <button class="icon press" id="atlas-reset" title="כל הגוף" aria-label="כל הגוף"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.2"/><path d="M12 7.5v7M8 10h8M12 14.5l-3 6M12 14.5l3 6"/></svg></button>
         </div>
       </div>
       <div class="figure" id="figure"></div>

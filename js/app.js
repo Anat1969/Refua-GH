@@ -131,6 +131,7 @@ function systemView(s, l) {
     return `${head}
     <section class="glance rise">
       ${wonderBlock(w)}
+      ${readState().m !== '3d' ? `<button class="to-3d press-soft" data-mode-go="3d"><b>${s.name_he}, בגוף אמיתי</b><span>מודל תלת־ממדי מסריקות של אדם. לסובב, לחתוך, לגלות.</span></button>` : ''}
       ${plate(w.image, s.id)}
       <p class="city"><span class="label">בעיר</span>${rich(s.city)} <span class="ev">פרשנות</span></p>
       ${seeAlso(1)}
@@ -644,7 +645,7 @@ async function ensureAtlas(sid) {
   if (atlasLoading) return;
   const host = $('#atlas');
   host.innerHTML = '<p class="atlas-wait">טוען תלת־ממד…</p>';
-  atlasLoading = import('./atlas3d.js')
+  atlasLoading = import('./body3d.js')
     .then((mod) => mod.mountAtlas(host, SYSTEMS, {
       selected: sid,
       reduced: matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -728,7 +729,7 @@ function renderStage(s, v, k) {
   $('#deep-figure').hidden = !deep;
   $('#deep-controls').hidden = !deep;
   const dzMode = v === 'diseases' || v === 'disease';
-  if (!atlasFailed || deep) $('#figure-note').textContent = dzMode && !deep ? 'לחיצה על מערכת בדמות מסננת את המחלות שלה.' : deep ? 'לחיצה על מספר או על קטע בדרך מציגה את השלב.' : m3 ? 'שמונה שקפים בחלל: הדמות מאחור, והעצבים מקדימה.' : 'כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.';
+  if (!atlasFailed || deep) $('#figure-note').textContent = dzMode && !deep ? 'לחיצה על מערכת בדמות מסננת את המחלות שלה.' : deep ? 'לחיצה על מספר או על קטע בדרך מציגה את השלב.' : m3 ? 'גוף אמיתי, מסריקות של אדם: לחיצה על מבנה מציגה את שמו ואת התפקיד שלו.' : 'כל מערכת היא שקף. לחיצה על שם או על איבר חושפת אותה.';
   const museum = $('#museum');
   if (!deep && v === 'home') {
     if (museum.dataset.mode !== 'front') {
@@ -955,6 +956,8 @@ function boot() {
     if (ln) { const g = HOME.lines[Number(ln.dataset.line)].go; const x = g.d && DISEASES.find((y) => y.id === g.d); go(x ? SYSTEMS.find((y) => y.id === x.system) : SYSTEMS.find((y) => y.id === g.s) || readState().s, g.v, g); }
     const lt = e.target.closest('[data-l]');
     if (lt) { const st = readState(); go(st.s, st.v, { ...st, l: Number(lt.dataset.l) }); }
+    const mg = e.target.closest('[data-mode-go]');
+    if (mg) { const st = readState(); atlasFailed = false; go(st.s, st.v, { ...st, m: mg.dataset.modeGo }); }
     const evg = e.target.closest('[data-ev-go]');
     if (evg) go(readState().s, 'history', { e: Number(evg.dataset.evGo) });
     const sdz = e.target.closest('[data-sys-dz]');

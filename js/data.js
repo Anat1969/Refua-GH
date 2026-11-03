@@ -684,3 +684,94 @@ export const COUNTRIES = {
   de: 'גרמניה', ch: 'שווייץ', il: 'ישראל', cn: 'סין',
 };
 export const FLAG_URL = (cc) => `https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/${cc}.svg`;
+
+// ---------- The real body in 3D (BodyParts3D, CC BY 4.0, © DBCLS) ----------
+// One model per system in models/<id>.glb, and models/body.glb with all seven, light, for context.
+// Each part: Hebrew name, the English term, one structural line (Gray's Anatomy, layer known), and a tissue colour.
+// Tissue colours are the anatomical convention (arteries red, veins blue). The ink look keeps the DNA palette.
+export const MODEL_CREDIT = { he: 'מודלים: BodyParts3D, © The Database Center for Life Science, ברישיון CC BY 4.0. מפושטים ומקובצים למבנים.', url: 'https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html' };
+const P = (id, he, en, tissue, text_he) => ({ id, he, en, tissue, layer: 'known', text_he, source_id: 'gray-2020' });
+export const ANATOMY3D = {
+  cardio: {
+    focus: ['lv', 'rv', 'la', 'ra', 'pulmtrunk', 'svc'],
+    parts: [
+      P('lv', 'החדר השמאלי', 'Left ventricle', '#7d1f1d', 'שולח דם עשיר בחמצן לכל הגוף, דרך אבי העורקים. הדופן שלו היא העבה ביותר בלב.'),
+      P('rv', 'החדר הימני', 'Right ventricle', '#8c2a25', 'שולח דם דל בחמצן אל הריאות, דרך גזע עורק הריאה.'),
+      P('la', 'העלייה השמאלית', 'Left atrium', '#9a3a33', 'מקבלת דם עשיר בחמצן מהריאות, ומעבירה אותו לחדר השמאלי.'),
+      P('ra', 'העלייה הימנית', 'Right atrium', '#7e3b45', 'מקבלת דם דל בחמצן מהגוף, דרך הוורידים הנבובים, ומעבירה אותו לחדר הימני.'),
+      P('mitral', 'המסתם המיטרלי', 'Mitral valve, anterior leaflet', '#e8d6bb', 'בין העלייה השמאלית לחדר השמאלי. במודל מופיע העלה הקדמי שלו.'),
+      P('tricuspid', 'המסתם התלת־צניפי', 'Tricuspid valve', '#ead9c0', 'בין העלייה הימנית לחדר הימני. שלושה עלים.'),
+      P('aorticv', 'מסתם אבי העורקים', 'Aortic valve', '#f0e2c9', 'ביציאה מהחדר השמאלי אל אבי העורקים. שלוש כיסות, שנסגרות כשהחדר נרפה.'),
+      P('pulmv', 'מסתם עורק הריאה', 'Pulmonary valve', '#eedcc4', 'ביציאה מהחדר הימני אל עורק הריאה. שלוש כיסות.'),
+      P('coronary', 'העורקים הכליליים', 'Coronary arteries', '#d11a22', 'מזינים את שריר הלב עצמו. יוצאים מאבי העורקים, ממש מעל המסתם שלו.'),
+      P('cveins', 'ורידי הלב', 'Cardiac veins', '#2a4795', 'מחזירים דם משריר הלב. רובם נאספים לסינוס הכלילי, שנפתח לעלייה הימנית.'),
+      P('aorta', 'אבי העורקים', 'Aorta', '#b5181c', 'העורק הגדול בגוף. עולה מהחדר השמאלי, מתקשת, ויורדת לאורך עמוד השדרה אל הבטן.'),
+      P('pulmtrunk', 'גזע עורק הריאה', 'Pulmonary trunk', '#2f4d9e', 'מוביל דם דל בחמצן מהחדר הימני, ומתפצל לשתי הריאות.'),
+      P('svc', 'הווריד הנבוב העליון', 'Superior vena cava', '#2a4795', 'מחזיר דם מהראש, מהצוואר ומהזרועות אל העלייה הימנית.'),
+      P('arteries', 'רשת העורקים', 'Systemic arteries', '#c0262b', 'העורקים מובילים דם מהלב אל כל רקמה. במודל: מאות ענפים, מהצוואר ועד כף הרגל.'),
+      P('veins', 'רשת הוורידים', 'Systemic veins', '#34539f', 'הוורידים מחזירים את הדם אל הלב. הווריד הנבוב התחתון אוסף את הדם מחצי הגוף התחתון.'),
+    ],
+  },
+  respiratory: {
+    focus: ['trachea', 'airways', 'pulmart', 'pulmvein'],
+    gap_he: 'הריאות מוצגות כעץ: סימפונות, עורקים וורידים. רקמת הריאה עצמה לא קיימת במודל.',
+    parts: [
+      P('trachea', 'קנה הנשימה', 'Trachea', '#e3c9b6', 'צינור שטבעות סחוס מחזיקות אותו פתוח. מתפצל לשני סימפונות ראשיים.'),
+      P('airways', 'עץ הסימפונות', 'Bronchial tree', '#ead7c6', 'האוויר עובר בענפים שהולכים וצרים, עד שקיקי האוויר.'),
+      P('pulmart', 'עורקי הריאה', 'Pulmonary arteries', '#2f4d9e', 'מביאים דם דל בחמצן מהלב אל הריאה, בצמוד לסימפונות.'),
+      P('pulmvein', 'ורידי הריאה', 'Pulmonary veins', '#b5181c', 'מחזירים דם עשיר בחמצן מהריאה אל העלייה השמאלית.'),
+      P('diaphragm', 'הסרעפת', 'Diaphragm', '#8c2a25', 'שריר כיפתי בין החזה לבטן. כשהוא מתכווץ ויורד, אוויר נכנס לריאות.'),
+    ],
+  },
+  nervous: {
+    focus: ['cerebrum_r', 'cerebrum_l', 'cerebellum', 'brainstem'],
+    parts: [
+      P('cerebrum_r', 'ההמיספרה הימנית', 'Right cerebral hemisphere', '#e3c4b8', 'חצי המוח הגדול. הקפלים מגדילים את שטח הקליפה, שבה רוב תאי העצב של החשיבה.'),
+      P('cerebrum_l', 'ההמיספרה השמאלית', 'Left cerebral hemisphere', '#dcbcae', 'אצל רוב האנשים, אזורי השפה נמצאים בחצי הזה.'),
+      P('cerebellum', 'המוח הקטן', 'Cerebellum', '#cfa596', 'מתאם תנועה, יציבה ואיזון.'),
+      P('brainstem', 'גזע המוח', 'Brainstem', '#e8d2c4', 'המוח התיכון, הגשר והמוח המוארך. מחבר את המוח לחוט השדרה, ומווסת נשימה וקצב לב.'),
+      P('diencephalon', 'המוח הביניים', 'Diencephalon', '#d8bcae', 'התלמוס וההיפותלמוס. תחנת ממסר לחושים, ומרכז לוויסות הגוף.'),
+      P('cord', 'חוט השדרה', 'Spinal cord', '#f0e0c8', 'הכביש הראשי בין המוח לגוף, בתוך עמוד השדרה.'),
+      P('eyes', 'גלגלי העיניים', 'Eyeballs', '#f4f1ea', 'הרשתית שבעין היא חלק ממערכת העצבים המרכזית.'),
+    ],
+  },
+  digestive: {
+    focus: ['stomach', 'liver', 'pancreas', 'small', 'large'],
+    parts: [
+      P('esophagus', 'הוושט', 'Esophagus', '#c7746a', 'צינור שריר שמוביל מזון מהלוע אל הקיבה.'),
+      P('stomach', 'הקיבה', 'Stomach', '#d08a7c', 'שק שרירי שמערבל מזון עם חומצה ואנזימים.'),
+      P('liver', 'הכבד', 'Liver', '#6e2a20', 'האיבר הפנימי הגדול בגוף. במודל רואים גם את כלי הדם ואת צינורות המרה שבתוכו.'),
+      P('gallbladder', 'כיס המרה', 'Gallbladder', '#5b7f3a', 'אוגר מרה שהכבד מייצר, ומשחרר אותה אל המעי הדק.'),
+      P('pancreas', 'הלבלב', 'Pancreas', '#e3b48a', 'מפריש אנזימי עיכול אל המעי, והורמונים כמו אינסולין אל הדם.'),
+      P('small', 'המעי הדק', 'Small intestine', '#d99a86', 'התריסריון, המעי הריק והמעי העקום. כאן נספג רוב המזון.'),
+      P('large', 'המעי הגס', 'Large intestine', '#c98a72', 'סופג מים ומלחים, ומסתיים בחלחולת.'),
+    ],
+  },
+  skeletal: {
+    focus: ['skull', 'spine', 'thorax', 'pelvis', 'arms', 'legs'],
+    gap_he: 'השרירים לא כלולים במודל הזה.',
+    parts: [
+      P('skull', 'הגולגולת', 'Skull and mandible', '#ece4d2', 'עצמות הראש והפנים, והלסת התחתונה. מגינה על המוח.'),
+      P('spine', 'עמוד השדרה', 'Vertebral column', '#e6dcc6', 'חוליות ודיסקים, מהצוואר ועד העצה. נושא את הגוף ומגן על חוט השדרה.'),
+      P('thorax', 'בית החזה', 'Rib cage and sternum', '#ebe3d1', 'צלעות ועצם החזה. כלוב שזז עם כל נשימה.'),
+      P('pelvis', 'עצמות האגן', 'Hip bones', '#e4d9c2', 'מחברות את עמוד השדרה לרגליים, ותומכות באיברי הבטן התחתונה.'),
+      P('arms', 'עצמות הידיים', 'Bones of the upper limbs', '#ede6d6', 'מעצם הבריח ועצם השכמה ועד אצבעות היד.'),
+      P('legs', 'עצמות הרגליים', 'Bones of the lower limbs', '#e9e0cc', 'מעצם הירך, העצם הארוכה בגוף, ועד אצבעות הרגל.'),
+    ],
+  },
+  immune: {
+    focus: ['thymus'],
+    gap_he: 'במקור אין טחול ואין בלוטות לימפה. לכן מוצג רק התימוס, במקומו מאחורי עצם החזה.',
+    parts: [
+      P('thymus', 'התימוס', 'Thymus', '#e6c3a0', 'בלוטה מאחורי עצם החזה. בה מבשילים תאי T. גדולה בילדות, ומצטמקת עם הגיל.'),
+    ],
+  },
+  reproductive: {
+    focus: ['prostate', 'bladder'],
+    gap_he: 'המקור נבנה מגוף של גבר. השד, הרחם והשחלות לא קיימים בו, ולכן לא מוצגים כאן. בשקפים ובכרטיסים הם מופיעים.',
+    parts: [
+      P('prostate', 'הערמונית', 'Prostate', '#c48a7a', 'בלוטה מתחת לשלפוחית השתן, אצל גברים. מפרישה חלק מנוזל הזרע.'),
+      P('bladder', 'שלפוחית השתן', 'Urinary bladder', '#e0b8a0', 'לא חלק ממערכת הרבייה, אלא שכנה קרובה. מוצגת כנקודת ציון.'),
+    ],
+  },
+};

@@ -1,7 +1,7 @@
 // Safety gate (docs/SAFETY.md, docs/CONTENT_RULES.md). Exit 1 blocks merge.
 // Run: node scripts/check-safety.mjs
 import { readFileSync, existsSync, statSync } from 'node:fs';
-import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, nutritionHref, WONDERS, IMAGES, COUNTRIES } from '../js/data.js';
+import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, nutritionHref, WONDERS, IMAGES, COUNTRIES, ANATOMY3D, MODEL_CREDIT } from '../js/data.js';
 import { detect } from '../js/match.js';
 
 const errors = [];
@@ -176,7 +176,7 @@ if (detect('תאוריה של אור', KEYWORDS).length || detect('הלב שלי
 for (const i of PROFILE_ITEMS) if (BANNED_KEYS.test(i.id)) err(`profile item ${i.id}: banned field`);
 
 // Forbidden words in all user-facing text
-const files = ['js/data.js', 'index.html', 'js/app.js', 'js/match.js', 'js/circulation.js', 'js/atlas3d.js', 'js/history.js'];
+const files = ['js/data.js', 'index.html', 'js/app.js', 'js/match.js', 'js/circulation.js', 'js/body3d.js', 'js/history.js'];
 for (const f of files) {
   let text = readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
   for (const p of ALLOWED_PHRASES) text = text.split(p).join('');
@@ -201,6 +201,28 @@ for (const e of TIMELINE) {
   if (e.image && !IMAGES[e.image]) err(`timeline ${e.id}: image "${e.image}" not in IMAGES`);
 }
 for (const t of TRADITIONS) for (const cc of t.flags || []) if (!COUNTRIES[cc]) err(`tradition ${t.id}: unknown country ${cc}`);
+
+// The real body in 3D: every system has a model; every part is a node in it, sourced and in the known layer.
+const glbNodes = (f) => {
+  const b = readFileSync(f); const len = b.readUInt32LE(12);
+  return new Set((JSON.parse(b.subarray(20, 20 + len).toString('utf8')).nodes || []).map((n) => n.name));
+};
+if (!MODEL_CREDIT?.url?.startsWith('https://')) err('3D: model credit missing');
+const bodyNodes = glbNodes(new URL('../models/body.glb', import.meta.url));
+for (const s of SYSTEMS) {
+  const A = ANATOMY3D[s.id];
+  if (!A) { err(`3D: ${s.id} has no anatomy`); continue; }
+  const f = new URL(`../models/${s.id}.glb`, import.meta.url);
+  if (!existsSync(f)) { err(`3D: models/${s.id}.glb missing`); continue; }
+  const nodes = glbNodes(f);
+  if (!bodyNodes.has(s.id)) err(`3D: body.glb has no overview for ${s.id}`);
+  for (const p of A.parts) {
+    if (!nodes.has(p.id)) err(`3D ${s.id}: part ${p.id} not in the model`);
+    if (p.layer !== 'known' || !SOURCES[p.source_id]) err(`3D ${s.id}:${p.id}: needs layer known and a source`);
+    if (!p.he || !p.en || !/^#[0-9a-f]{6}$/.test(p.tissue)) err(`3D ${s.id}:${p.id}: name or colour missing`);
+  }
+  for (const id of A.focus) if (!A.parts.some((p) => p.id === id)) err(`3D ${s.id}: focus ${id} is not a part`);
+}
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 if (!html.includes('לא מאבחנת ולא מטפלת')) err('index.html: declaration missing from the first screen');

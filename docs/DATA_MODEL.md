@@ -162,3 +162,10 @@
 ## דף הבית (HOME)
 - `hillel_he`, `hillel_tr`, `hillel_source`, `one_foot`, `one_foot_more`, `lines` (שבעה: `text_he`, `source_id`, `go`), `haiku`.
 - "בדיקה של דקה" לוקחת שלושה משפטים מ-`SYSTEMS`, אחד לכל שכבה. השכבה שכבר רשומה בדאטה היא התשובה. התוצאה ב-`localStorage`, במפתח `refua.quiz.v1`.
+
+## הגוף בתלת־ממד: `ANATOMY3D` ו-`MODEL_CREDIT`
+- `ANATOMY3D[systemId] = { focus: [partId], gap_he?, parts: [{ id, he, en, tissue, layer: 'known', text_he, source_id }] }`.
+- `id` של כל מבנה הוא שם הצומת ב-`models/<systemId>.glb`. `focus` הם המבנים שהמצלמה ממסגרת.
+- `gap_he`: מה שחסר במקור, במילים. מוצג בבמה.
+- `tissue`: צבע במראה "רקמה". במראה "דיו" כל המבנים בפורצלן ובקו דיו.
+- `models/body.glb`: צומת לכל מערכת (לפי ה-id שלה) ו-`skin`, מפושטים, להקשר.

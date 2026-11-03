@@ -286,8 +286,8 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.waitForSelector('[data-mode="3d"]');
       ok(await page.isVisible('#figure') && await page.isHidden('#atlas'), '3D is off by default: the 2D figure shows');
       await page.click('[data-mode="3d"]');
-      await page.waitForFunction(() => location.hash.includes('m=3d') && document.querySelectorAll('.atlas-label').length === 7, null, { timeout: 20000 });
-      await page.waitForTimeout(800);
+      await page.waitForFunction(() => location.hash.includes('m=3d') && document.querySelectorAll('.atlas-label').length === 7 && document.querySelector('.atlas-wait')?.hidden, null, { timeout: 60000 });
+      await page.waitForTimeout(1500);
       const drawn = await page.evaluate(() => {
         const c = document.querySelector('.atlas-canvas');
         const g = document.createElement('canvas'); g.width = 120; g.height = 120;
@@ -296,7 +296,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
         for (let i = 3; i < d.length; i += 4) if (d[i] > 40) ink++;
         return ink;
       });
-      ok(drawn > 300, `3D: the sheets are drawn on the canvas (${drawn} inked pixels)`);
+      ok(drawn > 300, `3D: the real body is drawn on the canvas (${drawn} inked pixels)`);
       const lab = await page.evaluate(() => {
         const host = document.querySelector('#atlas').getBoundingClientRect();
         const r = [...document.querySelectorAll('.atlas-label')].map((b) => b.getBoundingClientRect());
@@ -309,10 +309,22 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
         return { overlap, inside, on: document.querySelector('.atlas-label.on')?.dataset.id };
       });
       ok(!lab.overlap && lab.inside && lab.on === 'cardio', '3D: seven names, inside the frame, no overlap, selected system marked');
-      await page.screenshot({ path: path.join(SHOTS, `atlas-${tag}.png`) });
+      await page.screenshot({ path: path.join(SHOTS, `atlas-${tag}.png`), timeout: 120000 });
+      // Parts: the list opens, a part shows its name, role and source; the look switches.
+      await page.click('.b3-more summary');
+      const nParts = await page.$$eval('.b3-part', (l) => l.length);
+      await page.click('.b3-part[data-part="coronary"]');
+      await page.waitForSelector('.b3-card h4');
+      const pc = await page.evaluate(() => ({ h: document.querySelector('.b3-card h4').textContent, src: /Gray/.test(document.querySelector('.b3-meta').textContent), layer: !!document.querySelector('.b3-layer') }));
+      ok(nParts === 15 && pc.h === 'העורקים הכליליים' && pc.src && pc.layer, `3D parts: ${nParts} heart parts; a part shows its Hebrew name, the known layer and Gray's Anatomy`);
+      await page.click('[data-b3-look="tissue"]');
+      ok(await page.evaluate(() => document.querySelector('#atlas').classList.contains('is-tissue') && localStorage.getItem('refua.look3d') === 'tissue'), '3D: the tissue look switches on and is remembered on the device');
+      await page.screenshot({ path: path.join(SHOTS, `atlas-tissue-${tag}.png`), timeout: 120000 });
+      await page.click('[data-b3-look="ink"]');
+      await page.click('[data-part-clear]');
       await page.click('.atlas-label[data-id="nervous"]');
       await page.waitForFunction(() => location.hash.includes('s=nervous') && location.hash.includes('m=3d') && document.querySelector('.atlas-label.on')?.dataset.id === 'nervous');
-      ok(true, '3D: a sheet name selects its system, the mode stays 3D');
+      ok(true, '3D: a system name selects its system, the mode stays 3D');
       const c = await page.$('.atlas-canvas');
       const bb = await c.boundingBox();
       await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2);
@@ -325,6 +337,9 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.click('[data-go="1"]');
       await page.waitForFunction(() => location.hash.includes('s=respiratory') && location.hash.includes('m=3d'));
       ok(true, '3D: next system keeps the 3D mode');
+      await page.click('.atlas-label[data-id="reproductive"]');
+      await page.waitForFunction(() => location.hash.includes('s=reproductive') && /השד, הרחם והשחלות/.test(document.querySelector('.b3-card').textContent));
+      ok(true, '3D: where the source model has no part (breast, uterus), the gap is said in words');
       await page.click('[data-mode="2d"]');
       await page.waitForFunction(() => !location.hash.includes('m=3d') && !document.querySelector('#figure').hidden && document.querySelector('#atlas').hidden);
       ok(true, '3D: back to the 2D sheets');
@@ -337,6 +352,15 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await fb.waitForFunction(() => !location.hash.includes('m=3d') && /לא נטען/.test(document.querySelector('#figure-note').textContent), null, { timeout: 10000 });
       ok(await fb.isVisible('#figure'), '3D fallback: blocked library keeps the 2D figure, with a note');
       await fb.close();
+
+      // The invitation on level 1 (a light system: software rendering in CI has no GPU).
+      await page.goto(BASE + '#s=immune');
+      await page.waitForSelector('.to-3d');
+      await page.$eval('.to-3d', (b) => b.click());
+      await page.waitForFunction(() => location.hash.includes('s=immune') && location.hash.includes('m=3d') && !document.querySelector('#atlas').hidden, null, { timeout: 60000 });
+      ok(true, 'level 1 invites into the real body: one click to 3D');
+      await page.click('[data-mode="2d"]');
+      await page.waitForFunction(() => !location.hash.includes('m=3d'));
 
       // ---------- Stage 4: twenty diseases ----------
       await page.goto(BASE + '#s=cardio');
