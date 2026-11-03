@@ -1,5 +1,5 @@
-// Page from the network, assets from the cache.
-const CACHE = 'refua-v8';
+// Network first, for everything: an update always reaches the screen. The cache is the offline copy.
+const CACHE = 'refua-v9';
 const ASSETS = ['./', 'index.html', 'css/app.css', 'js/app.js', 'js/data.js', 'js/body.js', 'js/match.js', 'js/circulation.js', 'js/body3d.js', 'js/history.js', 'js/map-data.js', 'img/vesalius-fabrica.jpg', 'img/harvey-veins.jpg', 'img/snow-cholera-map.jpg', 'icons/icon.svg', 'manifest.webmanifest'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS))); self.skipWaiting(); });
 self.addEventListener('activate', (e) => {
@@ -9,9 +9,8 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
-  if (req.mode === 'navigate') {
-    e.respondWith(fetch(req).then((r) => { caches.open(CACHE).then((c) => c.put(req, r.clone())); return r; }).catch(() => caches.match(req).then((r) => r || caches.match('index.html'))));
-    return;
-  }
-  e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((r) => { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); return r; })));
+  e.respondWith(fetch(req).then((r) => {
+    if (r.ok) { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
+    return r;
+  }).catch(() => caches.match(req).then((r) => r || (req.mode === 'navigate' ? caches.match('index.html') : Response.error()))));
 });
