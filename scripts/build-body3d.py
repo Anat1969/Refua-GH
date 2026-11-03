@@ -113,6 +113,17 @@ SYS['reproductive'] = [
     ('prostate', N('prostate'), 3000), ('bladder', N('urinary bladder'), 3000),
     ('skin_f', hra(['skin-female']), 12000),
 ]
+# Lung tissue (bronchopulmonary segments): fitted on its own bronchi, onto the BodyParts3D bronchial tree.
+def fit_on(src, dst):
+    P, Q = corners(src.bounds), corners(dst.bounds)
+    return [np.linalg.lstsq(np.c_[P[:, a], np.ones(len(P))], Q[:, a], rcond=None)[0] for a in range(3)]
+LUNG_BRONCHI = lambda n: 'bronch' in n and 'bronchopulmonary' not in n
+SEGMENT = lambda n: 'bronchopulmonary' in n
+LFIT = fit_on(hra_raw('lung-male', LUNG_BRONCHI), bp_mesh(airways))
+lungs = hra_raw('lung-male', SEGMENT)
+lungs.vertices = np.c_[[lungs.vertices[:, a] * LFIT[a][0] + LFIT[a][1] for a in range(3)]].T
+print('lung fit', [tuple(np.round(f, 3)) for f in LFIT], 'lung tissue bounds', lungs.bounds.round(0).tolist())
+SYS['respiratory'].insert(0, ('lungs', lungs, 22000))
 SYS['immune'] += [
     ('spleen', hra(['spleen-female']), 5000),
     ('tonsils', hra(['palatine-tonsil-female-left', 'palatine-tonsil-female-right']), 4000),

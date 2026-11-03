@@ -127,3 +127,4 @@
 - Three.js r170 (MIT), והרכיבים GLTFLoader, OrbitControls ו-RoomEnvironment (MIT), בעותק מקומי ב-`js/vendor/`.
 - **Human Reference Atlas (HRA)**, NIH HuBMAP, ברישיון CC BY 4.0 (לפי `metadata.json` של כל איבר): https://humanatlas.io/3d-reference-library. האיברים: mammary-gland-female (שמאל וימין), uterus-female, fallopian-tube-female, ovary-female, spleen-female, palatine-tonsil-female. ועוד pelvis-female ו-sternum-female, כעוגנים ליישור.
 - שורת צינורות החלב: WHO, Breast cancer, "Breast cancer cells begin inside the milk ducts and/or the milk-producing lobules of the breast" (נבדק ב-03.11.2026). שורת צוואר הרחם: WHO, Cervical cancer.
+- רקמת הריאה: HRA, lung-male v1.4 (CC BY 4.0), 20 מקטעים ברונכו־ריאתיים. השורה על המקטעים: Gray's Anatomy, 2020.

@@ -426,6 +426,8 @@ ai-menu { margin-inline-start: auto; }
 .b3-lit .b3-part { display: inline; padding: 0; font-weight: 700; color: var(--known); }
 .b3-lit span { color: var(--graphite); }
 .b3-sex { margin-bottom: 6px; }
+.b3-depth { margin: 0 0 6px; font-size: 13px; line-height: 1.45; }
+.b3-depth b { font-family: var(--display); }
 .b3-more summary { cursor: pointer; font-size: 13px; color: var(--graphite); list-style-position: inside; }
 .b3-more summary b { color: var(--ink); }
 .b3-more[open] summary { margin-bottom: 4px; }
