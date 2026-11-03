@@ -1,0 +1,107 @@
+{
+  "title": "רפואה: גוף, מחלה, בריאות",
+  "promise": "אטלס של גילויים: הגוף כעיר של רשתות",
+  "close": "שבע מערכות, שלוש רמות עומק, וכל משפט עם מקור",
+  "url": "refua-gh.vercel.app",
+  "owner": "A&I · אד׳ ענת שטיבלמן",
+  "colors": {
+    "ink": "#16202b",
+    "accent": "#fff0a0"
+  },
+  "ready": ".atlas-label",
+  "scenes": [
+    {
+      "insight": "הגוף כעיר של שבע רשתות",
+      "detail": "גוף אמיתי בתלת־ממד: כל מערכת היא רשת, וכל רשת היא גילוי.",
+      "steps": [
+        {
+          "hover": ".atlas-label[data-id=\"nervous\"]",
+          "pause": 700
+        },
+        {
+          "hover": ".atlas-label[data-id=\"respiratory\"]",
+          "pause": 700
+        },
+        {
+          "hover": ".atlas-label[data-id=\"cardio\"]",
+          "pause": 900
+        }
+      ],
+      "hold": 400
+    },
+    {
+      "insight": "כל מערכת בשלוש רמות עומק",
+      "detail": "מבט, הבנה ועומק: מהמספר המפתיע אל המנגנון, ואל מי שגילה.",
+      "nav": ".atlas-label[data-id=\"cardio\"]",
+      "ready": ".depth-tab",
+      "steps": [
+        {
+          "wait": 2200
+        },
+        {
+          "click": ".depth-tab >> nth=1",
+          "wait": 2000
+        },
+        {
+          "click": ".depth-tab >> nth=2",
+          "wait": 2000
+        }
+      ],
+      "hold": 600
+    },
+    {
+      "insight": "24 מחלות, וכל אחת מאירה איבר",
+      "detail": "כרטיס מחלה מסמן בגוף את המבנה שבו היא מתרכזת.",
+      "nav": "nav.nav [data-view=\"diseases\"]",
+      "ready": ".dz-tile",
+      "steps": [
+        {
+          "hover": ".dz-tile >> nth=0",
+          "pause": 600
+        },
+        {
+          "click": ".dz-tile >> nth=0",
+          "wait": 2600
+        }
+      ],
+      "hold": 600
+    },
+    {
+      "insight": "15 גילויים על ציר זמן ומפה",
+      "detail": "מי גילה, איפה ומתי: כל גילוי במקום שבו נולד.",
+      "nav": "nav.nav [data-view=\"history\"]",
+      "ready": "#ev-next",
+      "steps": [
+        {
+          "wait": 1200
+        },
+        {
+          "click": "#ev-next",
+          "wait": 1500
+        },
+        {
+          "click": "#ev-next",
+          "wait": 1500
+        }
+      ],
+      "hold": 400
+    },
+    {
+      "insight": "ידוע, נאמר, או רק מאמינים",
+      "detail": "בדיקה של דקה: מבחינים בין עובדה, מסורת ואמונה.",
+      "nav": "a.brand",
+      "ready": ".q-opt",
+      "steps": [
+        {
+          "hover": ".numcell >> nth=0",
+          "pause": 500
+        },
+        {
+          "click": ".q-opt >> nth=0",
+          "wait": 1800
+        }
+      ],
+      "hold": 1200
+    }
+  ]
+}

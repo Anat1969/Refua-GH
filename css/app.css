@@ -673,3 +673,8 @@ body.is-home .sysmark text { animation: mark-cycle 14s infinite; animation-delay
   .chip .xl { display: none; }
   .two, .profile fieldset { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Demo video (ai-menu, "סרטון הדגמה"): the button sits under the numbers on the home page.
+   Its colours follow the DNA: ink ground, insight-marker accent. */
+:root { --aoa-demo-ink: #16202b; --aoa-demo-accent: #fff0a0; --aoa-demo-accent-hover: #ffe766; }
+.home-demo:empty { display: none; }
