@@ -678,3 +678,10 @@ body.is-home .sysmark text { animation: mark-cycle 14s infinite; animation-delay
    Its colours follow the DNA: ink ground, insight-marker accent. */
 :root { --aoa-demo-ink: #16202b; --aoa-demo-accent: #fff0a0; --aoa-demo-accent-hover: #ffe766; }
 .home-demo:empty { display: none; }
+
+/* ---------- יצירות: דף שנקרא בגלילה, ברוחב המסך (AppOfApp-GH/public/creations.js) ---------- */
+body.is-creations .app-shell { height: auto; min-height: 100dvh; }
+body.is-creations .work { display: block; overflow: visible; }
+body.is-creations .intro, body.is-creations .stage, body.is-creations .panel, body.is-creations .home-lead { display: none; }
+.creations-page { display: block; max-width: 1280px; margin: 0 auto; padding: var(--s2) 0 var(--s5); }
+.creations-page app-creations { --cr-sans: var(--sans); --cr-mono: var(--mono); --cr-accent: var(--known); }
