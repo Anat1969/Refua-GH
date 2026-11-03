@@ -294,7 +294,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await routeThree(fp);
       await fp.goto(BASE);
       await fp.waitForFunction(() => !document.querySelector('#atlas').hidden && document.querySelector('.atlas-wait')?.hidden && /שבע רשתות/.test(document.querySelector('.b3-card')?.textContent || ''), null, { timeout: 60000 });
-      ok(await fp.isHidden('#figure'), 'first visit: the home page opens on the real body, seven networks in one figure');
+      ok(await fp.isHidden('#figure') && await fp.evaluate(() => document.querySelector('#atlas').classList.contains('is-tissue')), 'first visit: the home page opens on the real body, seven networks in one figure, in tissue colour');
       await fp.screenshot({ path: path.join(SHOTS, `home-3d-${tag}.png`), timeout: 120000 });
       await fp.click('[data-mode="2d"]');
       await fp.waitForFunction(() => !document.querySelector('#figure').hidden && localStorage.getItem('refua.mode') === '2d');

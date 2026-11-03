@@ -256,6 +256,12 @@ ai-menu { margin-inline-start: auto; }
   .numbers { grid-template-columns: minmax(0, 1fr); }
   .foot { padding: 6px var(--s3); font-size: 12px; }
   .disclaimer { flex-basis: 100%; }
+  /* Home on a phone: the real body first, then the teaching on one foot. */
+  body.is-home .work { display: flex; flex-direction: column; }
+  body.is-home .work > * { flex: none; }
+  body.is-home .stage { order: -1; margin-top: 0; }
+  body.is-home .stage .figure { flex: none; }
+  body.is-home .home-lead { margin-top: var(--s3); }
 }
 
 /* ---------- Stage 1: search, alerts, red list, profile, declaration ---------- */
