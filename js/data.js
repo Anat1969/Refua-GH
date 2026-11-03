@@ -695,6 +695,7 @@ const P = (id, he, en, tissue, text_he) => ({ id, he, en, tissue, layer: 'known'
 export const ANATOMY3D = {
   cardio: {
     focus: ['lv', 'rv', 'la', 'ra', 'pulmtrunk', 'svc'],
+    depth: { outer: ['lv', 'rv', 'la', 'ra', 'aorta', 'pulmtrunk', 'svc'], inner: ['mitral', 'tricuspid', 'aorticv', 'pulmv'] },
     parts: [
       P('lv', 'החדר השמאלי', 'Left ventricle', '#7d1f1d', 'שולח דם עשיר בחמצן לכל הגוף, דרך אבי העורקים. הדופן שלו היא העבה ביותר בלב.'),
       P('rv', 'החדר הימני', 'Right ventricle', '#8c2a25', 'שולח דם דל בחמצן אל הריאות, דרך גזע עורק הריאה.'),
@@ -714,9 +715,11 @@ export const ANATOMY3D = {
     ],
   },
   respiratory: {
-    focus: ['trachea', 'airways', 'pulmart', 'pulmvein'],
-    gap_he: 'הריאות מוצגות כעץ: סימפונות, עורקים וורידים. רקמת הריאה עצמה לא קיימת במודל.',
+    focus: ['lungs', 'trachea'],
+    gap_he: 'רקמת הריאה, בעשרים מקטעים, ממאגר HRA של NIH. יושרה על עץ הסימפונות של BodyParts3D, לפי הסימפונות של שני המודלים.',
+    depth: { outer: ['lungs', 'diaphragm'], inner: ['airways'] },
     parts: [
+      { ...P('lungs', 'רקמת הריאה', 'Lungs: bronchopulmonary segments', '#e7b3a8', 'כל ריאה מחולקת למקטעים, ולכל מקטע סימפון ועורק משלו. כך אפשר להסיר מקטע אחד, ולהשאיר את השאר.'), model: 'hra' },
       P('trachea', 'קנה הנשימה', 'Trachea', '#e3c9b6', 'צינור שטבעות סחוס מחזיקות אותו פתוח. מתפצל לשני סימפונות ראשיים.'),
       P('airways', 'עץ הסימפונות', 'Bronchial tree', '#ead7c6', 'האוויר עובר בענפים שהולכים וצרים, עד שקיקי האוויר.'),
       P('pulmart', 'עורקי הריאה', 'Pulmonary arteries', '#2f4d9e', 'מביאים דם דל בחמצן מהלב אל הריאה, בצמוד לסימפונות.'),
@@ -726,6 +729,7 @@ export const ANATOMY3D = {
   },
   nervous: {
     focus: ['cerebrum_r', 'cerebrum_l', 'cerebellum', 'brainstem'],
+    depth: { outer: ['cerebrum_r', 'cerebrum_l'], inner: ['diencephalon', 'brainstem'] },
     parts: [
       P('cerebrum_r', 'ההמיספרה הימנית', 'Right cerebral hemisphere', '#e3c4b8', 'חצי המוח הגדול. הקפלים מגדילים את שטח הקליפה, שבה רוב תאי העצב של החשיבה.'),
       P('cerebrum_l', 'ההמיספרה השמאלית', 'Left cerebral hemisphere', '#dcbcae', 'אצל רוב האנשים, אזורי השפה נמצאים בחצי הזה.'),
@@ -738,6 +742,7 @@ export const ANATOMY3D = {
   },
   digestive: {
     focus: ['stomach', 'liver', 'pancreas', 'small', 'large'],
+    depth: { outer: ['liver', 'stomach', 'large'], inner: ['pancreas', 'gallbladder'] },
     parts: [
       P('esophagus', 'הוושט', 'Esophagus', '#c7746a', 'צינור שריר שמוביל מזון מהלוע אל הקיבה.'),
       P('stomach', 'הקיבה', 'Stomach', '#d08a7c', 'שק שרירי שמערבל מזון עם חומצה ואנזימים.'),
@@ -750,6 +755,7 @@ export const ANATOMY3D = {
   },
   skeletal: {
     focus: ['skull', 'spine', 'thorax', 'pelvis', 'arms', 'legs'],
+    depth: { outer: ['thorax', 'skull'], inner: ['spine'] },
     gap_he: 'השרירים לא כלולים במודל הזה.',
     parts: [
       P('skull', 'הגולגולת', 'Skull and mandible', '#ece4d2', 'עצמות הראש והפנים, והלסת התחתונה. מגינה על המוח.'),
@@ -762,7 +768,7 @@ export const ANATOMY3D = {
   },
   immune: {
     focus: ['thymus', 'spleen'],
-    gap_he: 'הטחול והשקדים ממאגר HRA של NIH, והתימוס מ-BodyParts3D. בלוטות הלימפה עוד חסרות.',
+    gap_he: 'הטחול והשקדים ממאגר HRA של NIH, והתימוס מ-BodyParts3D. ב-HRA יש בלוטת לימפה אחת, מוגדלת, בלי מקום בגוף, ולכן היא לא מוצבת כאן.',
     parts: [
       P('thymus', 'התימוס', 'Thymus', '#e6c3a0', 'בלוטה מאחורי עצם החזה. בה מבשילים תאי T. גדולה בילדות, ומצטמקת עם הגיל.'),
       { ...P('spleen', 'הטחול', 'Spleen', '#6b2a3a', 'מסנן את הדם, מפרק תאי דם אדומים ישנים, ומשמש תחנה לתאי חיסון.'), model: 'hra' },
@@ -771,6 +777,7 @@ export const ANATOMY3D = {
   },
   reproductive: {
     focus: ['breast', 'uterus', 'ovaries'],
+    depth: { outer: ['breast', 'uterus'], inner: ['breast_lobes', 'breast_ducts', 'cervix'] },
     focus_m: ['prostate', 'bladder'],
     gap_he: 'איברי האישה ממאגר HRA של NIH, ואיברי הגבר מ-BodyParts3D. הם הוצבו בגוף לפי עצמות האגן ועצם החזה, בדיוק של סנטימטרים בודדים.',
     parts: [

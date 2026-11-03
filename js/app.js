@@ -643,12 +643,13 @@ let atlas = null, atlasLoading = null, atlasFailed = false;
 let pickSystem = (id) => go(SYSTEMS.find((x) => x.id === id));
 // What the 3D body shows for the current screen: on a disease card, the structures where it is centred.
 function atlasFocus(st) {
+  if (st.v === 'system') return { level: st.l };
   if (st.v !== 'disease') return {};
   const d = DISEASES.find((x) => x.id === st.d);
   const parts = d && DISEASE3D[d.id];
-  if (!parts) return {};
+  if (!parts) return { level: st.l };
   const sexOf = ANATOMY3D[d.system]?.parts.find((p) => p.id === parts[0])?.sex;
-  return { hl: parts, label: d.name_he, ...(sexOf ? { sex: sexOf } : {}) };
+  return { hl: parts, label: d.name_he, level: st.l, ...(sexOf ? { sex: sexOf } : {}) };
 }
 async function ensureAtlas(sid) {
   if (atlas) return atlas.select(sid, atlasFocus(readState()));

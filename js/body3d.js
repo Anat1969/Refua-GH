@@ -81,7 +81,9 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
 
   // Overview: every system, light, for context. Detail: the selected system, part by part.
   const over = {}; const detail = {}; const loading = {};
-  let sel = selected, part = null, isolate = false, partsOpen = false, hl = [], hlLabel = '';
+  let sel = selected, part = null, isolate = false, partsOpen = false, hl = [], hlLabel = '', level = 1;
+  // Three depth levels, as in the panel: 1 the organ, 2 the outer layer translucent, 3 the inner layer alone.
+  const depthOf = (id) => ANATOMY3D[id]?.depth || { outer: [], inner: [] };
   // Parts shown for the chosen body: the reproductive system has a woman's and a man's set.
   const showsPart = (p) => !p.sex || p.sex === sex;
   const partsOf = (id) => (ANATOMY3D[id]?.parts || []).filter(showsPart);
@@ -131,13 +133,15 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
         d.skin.material.dispose(); d.skin.material = materialFor('#f2dccb', true); d.skin.material.opacity = look === 'ink' ? 0.05 : 0.08;
         d.skin.userData.outline.visible = false;
       }
+      const dp = depthOf(id), deep = !hl.length && !part;
       for (const [pid, m] of Object.entries(d.meshes)) {
         const info = ANATOMY3D[id].parts.find((q) => q.id === pid);
-        m.visible = showsPart(info);
-        const on = pid === part || hl.includes(pid);
-        const faded = (isolate && part && !on) || (hl.length > 0 && !on);
+        m.visible = showsPart(info) && !(deep && level === 3 && dp.outer.includes(pid));
+        const on = pid === part || hl.includes(pid) || (deep && level === 3 && dp.inner.includes(pid));
+        const peeled = deep && level === 2 && dp.outer.includes(pid);
+        const faded = (isolate && part && !on) || (hl.length > 0 && !on) || peeled;
         m.material.dispose(); m.material = materialFor(m.userData.color, faded);
-        if (faded) m.material.opacity = 0.12;
+        if (faded) m.material.opacity = peeled ? 0.2 : 0.12;
         if (on && look === 'ink') m.material.color.set('#dfe8f2');
         if (on && look === 'tissue') m.material.emissive = new THREE.Color('#3a1410');
         const ol = m.userData.outline;
@@ -158,9 +162,11 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     const list = partsOf(sel);
     const sexSeg = sel === 'reproductive' ? `<div class="b3-seg b3-sex" role="group" aria-label="גוף"><button data-b3-sex="f" aria-pressed="${sex === 'f'}">אישה</button><button data-b3-sex="m" aria-pressed="${sex === 'm'}">גבר</button></div>` : '';
     const lit = hl.map((id) => A.parts.find((p) => p.id === id)).filter(Boolean);
+    const dp = depthOf(sel), names = (ids) => ids.map((id) => A.parts.find((p) => p.id === id)).filter((p) => p && showsPart(p)).map((p) => esc(p.he)).join(', ');
+    const depthLine = !lit.length && level > 1 && dp.inner.length ? `<p class="b3-depth"><b>${level === 2 ? 'הבנה' : 'עומק'}:</b> ${level === 2 ? `${names(dp.outer)} שקופים, ומתחת: ${names(dp.inner)}.` : `${names(dp.inner)}, בלי המעטפת.`}</p>` : '';
     const litBlock = lit.length ? `<p class="b3-k">${esc(hlLabel)}: <span class="b3-lit">${lit.map((p) => `<button class="b3-part" data-part="${p.id}">${esc(p.he)}</button>`).join('<span>, </span>')}</span></p><p class="b3-hint">מואר בגוף. השאר שקוף.</p>` : '';
     if (!part) {
-      c.innerHTML = `${sexSeg}${litBlock}<details class="b3-more"${partsOpen ? ' open' : ''}><summary><b>${list.length} מבנים</b> במודל</summary>
+      c.innerHTML = `${sexSeg}${litBlock}${depthLine}<details class="b3-more"${partsOpen ? ' open' : ''}><summary><b>${list.length} מבנים</b> במודל</summary>
         <ul class="b3-parts">${list.map((p) => `<li><button class="b3-part" data-part="${p.id}"><span class="b3-sw" style="--c:${p.tissue}"></span>${esc(p.he)}</button></li>`).join('')}</ul>
         ${A.gap_he ? `<p class="b3-gap">${esc(A.gap_he)}</p>` : ''}</details>`;
       c.querySelector('details').addEventListener('toggle', (e) => { partsOpen = e.target.open; });
@@ -181,7 +187,8 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     const b = new THREE.Box3();
     const d = detail[id];
     const A = ANATOMY3D[id];
-    const focus = id === sel && hl.length ? hl : (sex === 'm' && A?.focus_m ? A.focus_m : A?.focus || []);
+    const inner = (A?.depth?.inner || []).filter((pid) => showsPart(A.parts.find((p) => p.id === pid)));
+    const focus = id === sel && hl.length ? hl : id === sel && level === 3 && inner.length ? inner : (sex === 'm' && A?.focus_m ? A.focus_m : A?.focus || []);
     if (d) focus.forEach((pid) => d.meshes[pid] && b.expandByObject(d.meshes[pid]));
     if (b.isEmpty() && over[id]) b.expandByObject(over[id]);
     return b;
@@ -201,7 +208,8 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
   }
   let view = 'front';
   const PAD = { skeletal: 0.7, cardio: 1.15, immune: 2.2, reproductive: 2.2 };
-  const frameSel = () => frameBox(boxOf(sel), VIEW[view], PAD[sel] || 0.82);
+  const padOf = (id) => (id === 'reproductive' && sex === 'f' ? 0.95 : PAD[id] || 0.82);
+  const frameSel = () => frameBox(boxOf(sel), VIEW[view], padOf(sel));
   function setCut(v) {
     if (!+v) { cut.constant = 1e6; request(); return; }
     const b = boxOf(sel);
@@ -236,11 +244,11 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
   let lastKey = '';
   async function select(id, opts = {}) {
     if (!id) return;
-    const key = [id, (opts.hl || []).join(','), opts.sex || ''].join('|');
+    const key = [id, (opts.hl || []).join(','), opts.sex || '', opts.level || 1].join('|');
     if (key === lastKey) return;
     lastKey = key;
     const changed = id !== sel;
-    sel = id; hl = opts.hl || []; hlLabel = opts.label || '';
+    sel = id; hl = opts.hl || []; hlLabel = opts.label || ''; level = opts.level || 1;
     if (opts.sex) sex = opts.sex;
     if (changed || hl.length) { part = null; isolate = false; $('.b3-cut input').value = 0; setCut(0); }
     restyle(); frameSel();
@@ -334,7 +342,7 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
   const ro = new ResizeObserver(resize); ro.observe(host); resize();
 
   restyle();
-  frameBox(boxOf(sel), VIEW.front, PAD[sel] || 0.82);
+  frameBox(boxOf(sel), VIEW.front, padOf(sel));
   select(sel);
 
   return {
