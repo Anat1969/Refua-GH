@@ -1,0 +1,174 @@
+{
+"cardio:lv": [
+4,
+7138
+],
+"cardio:rv": [
+4,
+4336
+],
+"cardio:la": [
+2,
+7000
+],
+"cardio:ra": [
+2,
+6998
+],
+"cardio:mitral": [
+1,
+3000
+],
+"cardio:tricuspid": [
+3,
+2998
+],
+"cardio:aorticv": [
+3,
+2000
+],
+"cardio:pulmv": [
+3,
+2000
+],
+"cardio:coronary": [
+54,
+9000
+],
+"cardio:cveins": [
+7,
+4000
+],
+"cardio:aorta": [
+5,
+7000
+],
+"cardio:pulmtrunk": [
+1,
+1302
+],
+"cardio:svc": [
+1,
+598
+],
+"cardio:arteries": [
+267,
+44998
+],
+"cardio:veins": [
+69,
+29998
+],
+"respiratory:trachea": [
+1,
+4996
+],
+"respiratory:airways": [
+100,
+40000
+],
+"respiratory:pulmart": [
+97,
+30000
+],
+"respiratory:pulmvein": [
+85,
+20948
+],
+"respiratory:diaphragm": [
+1,
+7998
+],
+"nervous:cerebrum_r": [
+19,
+30000
+],
+"nervous:cerebrum_l": [
+19,
+30000
+],
+"nervous:cerebellum": [
+2,
+14000
+],
+"nervous:brainstem": [
+11,
+9000
+],
+"nervous:diencephalon": [
+7,
+5000
+],
+"nervous:cord": [
+1,
+728
+],
+"nervous:eyes": [
+17,
+4998
+],
+"digestive:esophagus": [
+1,
+578
+],
+"digestive:stomach": [
+1,
+1810
+],
+"digestive:liver": [
+60,
+21998
+],
+"digestive:gallbladder": [
+1,
+2396
+],
+"digestive:pancreas": [
+4,
+6000
+],
+"digestive:small": [
+56,
+16058
+],
+"digestive:large": [
+8,
+18000
+],
+"skeletal:skull": [
+26,
+22000
+],
+"skeletal:spine": [
+48,
+19998
+],
+"skeletal:thorax": [
+41,
+18000
+],
+"skeletal:pelvis": [
+2,
+4706
+],
+"skeletal:arms": [
+56,
+15998
+],
+"skeletal:legs": [
+58,
+15998
+],
+"immune:thymus": [
+2,
+2080
+],
+"reproductive:prostate": [
+1,
+442
+],
+"reproductive:bladder": [
+1,
+226
+]
+}

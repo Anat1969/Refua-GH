@@ -120,3 +120,8 @@
   - Snow, מפת הכולרה בסוהו, 1854 (`img/snow-cholera-map.jpg`).
 - תמונה שלא ירדה במלואה לא נכנסת. במקומה מוצג השקף של המערכת, בקו דיו. השער בודק שכל תמונה היא קובץ אמיתי.
 - דגלים: flag-icons@7.2.3 (MIT), דרך jsdelivr.
+
+## הגוף בתלת־ממד: נוסף ב-03.11.2026
+- **BodyParts3D**, © The Database Center for Life Science (DBCLS), ברישיון CC BY 4.0: https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html. הקבצים: `partof_BP3D_4.0_obj_99.zip` ו-`partof_element_parts.txt`. מפושטים ומקובצים למבנים בסקריפט `scripts/build-body3d.py`.
+- שורת התפקיד של כל מבנה: Gray's Anatomy, מהדורה 42, 2020 (`gray-2020`), בשכבת "ידוע".
+- Three.js r170 (MIT), והרכיבים GLTFLoader, OrbitControls ו-RoomEnvironment (MIT), בעותק מקומי ב-`js/vendor/`.
