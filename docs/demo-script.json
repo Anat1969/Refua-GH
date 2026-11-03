@@ -8,7 +8,7 @@
     "ink": "#16202b",
     "accent": "#fff0a0"
   },
-  "voice": "he-IL-HilaNeural",
+  "voice": "he-IL-AvriNeural",
   "sayTitle": "רפואה. אטלס של גילויים על גוף האדם.",
   "sayClose": "רפואה. שבע מערכות, שלוש רמות עומק, וכל משפט עם מקור.",
   "ready": ".atlas-label",
