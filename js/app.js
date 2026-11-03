@@ -450,6 +450,7 @@ function homeLead() {
       <li><button class="numcell press-soft" data-view-go="history">${n(TIMELINE.length)}<span>גילויים</span></button></li>
       <li><button class="numcell press-soft" data-view-go="sources">${n(Object.keys(SOURCES).length)}<span>מקורות</span></button></li>
     </ul>
+    <div class="home-demo" data-aoa-demo="large" aria-label="סרטון הדגמה"></div>
     <div id="quiz-box"></div>
     <p class="inspo">בהשראת <b>הלל הזקן</b>, ו<b>ארונות הפלאות</b> של אירופה, <span class="num">1600</span> לערך: כל פריט מעורר שאלה.</p>`;
 }
