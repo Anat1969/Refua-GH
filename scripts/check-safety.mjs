@@ -1,7 +1,7 @@
 // Safety gate (docs/SAFETY.md, docs/CONTENT_RULES.md). Exit 1 blocks merge.
 // Run: node scripts/check-safety.mjs
 import { readFileSync, existsSync, statSync } from 'node:fs';
-import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, nutritionHref, WONDERS, IMAGES, COUNTRIES, ANATOMY3D, MODEL_CREDIT, DISEASE3D } from '../js/data.js';
+import { SYSTEMS, SOURCES, LAYERS, REDLIST, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, nutritionHref, nutritionFoodHref, WONDERS, IMAGES, COUNTRIES, ANATOMY3D, MODEL_CREDIT, DISEASE3D } from '../js/data.js';
 import { detect } from '../js/match.js';
 
 const errors = [];
@@ -141,6 +141,7 @@ if (!SOURCES[HOME.hillel_source]) err('home: Hillel quote without source');
 const bridges = [...SYSTEMS.map((x) => x.bridge), ...DISEASES.map((x) => x.bridge), ...REDLIST.map((r) => r.bridge && { link: r.bridge })].filter(Boolean);
 for (const b of bridges) {
   if (b.link?.app === 'nutrition' && !nutritionHref(b.link)) err(`bridge ${JSON.stringify(b.link)}: no address in the nutrition app`);
+  (b.link?.foods || []).forEach((id) => { if (!nutritionFoodHref(id)) err(`bridge ${JSON.stringify(b.link)}: food "${id}" has no name in NUTRITION_APP.names`); });
 }
 
 // Red list (SAFETY.md section 4): scientific name, risk, source, review date

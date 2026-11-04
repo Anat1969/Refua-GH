@@ -545,6 +545,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.goto(BASE + '#s=cardio&l=2');
       await page.waitForSelector('.bridge-go');
       ok((await page.getAttribute('.bridge-go', 'href')).startsWith('https://tzuna-gh.vercel.app/#/foods?id=olive'), 'bridge: heart card links to olive in the nutrition app');
+      ok(await page.evaluate(() => [...document.querySelectorAll('.bridge-foods a')].some((a) => a.href.endsWith('#/foods?id=walnut'))), 'bridge: heart card also opens the walnut sheet');
       await page.goto(BASE + '#s=cardio&v=redlist');
       await page.waitForSelector('.red-item .bridge-go');
       ok((await page.getAttribute('.red-item .bridge-go', 'href')).includes('id=turmeric'), 'bridge: turmeric in the red list links to turmeric as food');
