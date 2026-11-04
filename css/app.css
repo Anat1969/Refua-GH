@@ -571,6 +571,9 @@ body.is-home .intro { display: none; }
 .bridge-go { display: grid; gap: 0; text-decoration: none; color: var(--ink); border: 1px solid var(--said); background: #fff; padding: 6px var(--s3); justify-self: start; }
 .bridge-go .label { color: var(--said); }
 .bridge-go b { font-size: 15px; }
+.bridge-foods { direction: rtl; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; margin: 0; font-size: 13.5px; }
+.bridge-foods .label { display: inline; color: var(--said); margin-inline-end: 2px; }
+.bridge-foods a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--said); padding: 1px 2px; }
 .quiz .q-row { display: grid; gap: 4px; padding: 6px 0; border-bottom: 1px solid var(--hair); }
 .q-text { font-size: 14.5px; }
 .q-opts { display: flex; gap: 6px; }

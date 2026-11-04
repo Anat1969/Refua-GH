@@ -1,4 +1,4 @@
-import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, NUTRITION_APP, nutritionHref, IMAGES, WONDERS, COUNTRIES, FLAG_URL, ANATOMY3D, DISEASE3D } from './data.js';
+import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, NUTRITION_APP, nutritionHref, nutritionFoodHref, IMAGES, WONDERS, COUNTRIES, FLAG_URL, ANATOMY3D, DISEASE3D } from './data.js';
 import { historySVG, setEvent } from './history.js';
 import { detect, textMatches, normalize } from './match.js';
 import { bodySVG, sheetSVG } from './body.js';
@@ -26,7 +26,10 @@ const srcLine = (id) => {
 
 const bridgeGo = (b) => {
   const href = b && nutritionHref(b.link);
-  return href ? `<a class="bridge-go press" href="${href}" target="_blank" rel="noopener"><span class="label">באפליקציית ${NUTRITION_APP.name_he}</span><b>${esc(b.next_he || '')}</b></a>` : '';
+  if (!href) return '';
+  const more = (b.link.foods || []).filter(nutritionFoodHref).map((id) => `<a class="press" href="${nutritionFoodHref(id)}" target="_blank" rel="noopener">${esc(NUTRITION_APP.names[id])}</a>`);
+  return `<a class="bridge-go press" href="${href}" target="_blank" rel="noopener"><span class="label">באפליקציית ${NUTRITION_APP.name_he}</span><b>${esc(b.next_he || '')}</b></a>`
+    + (more.length ? `<p class="bridge-foods"><span class="label">ועוד גיליונות</span>${more.join('')}</p>` : '');
 };
 
 function item(it) {

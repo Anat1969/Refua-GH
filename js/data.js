@@ -43,6 +43,7 @@ export const SOURCES = {
   'who-cvd': { title: 'WHO, Cardiovascular diseases', type: 'הנחיה רשמית', year: 2025, note: '', url: 'https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds)' },
   'who-hypertension': { title: 'WHO, Hypertension', type: 'הנחיה רשמית', year: 2025, note: 'נתוני 2024', url: 'https://www.who.int/news-room/fact-sheets/detail/hypertension' },
   'nhs-heart-failure': { title: 'NHS, Heart failure: symptoms', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/heart-failure/symptoms/' },
+  'eu-1169': { title: 'EU Regulation 1169/2011, Annex II', type: 'רגולציה', year: 2011, note: '14 האלרגנים שחובה לסמן', url: 'https://eur-lex.europa.eu/eli/reg/2011/1169/oj' },
   'dash-2001': { title: 'DASH-Sodium, NEJM', type: 'ניסוי מבוקר', year: 2001, note: '', url: 'https://doi.org/10.1056/NEJM200101043440101' },
   'nccih-tcm': { title: 'NCCIH, Traditional Chinese Medicine', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nccih.nih.gov/health/traditional-chinese-medicine-what-you-need-to-know' },
   'who-stroke': { title: 'WHO, Stroke', type: 'הנחיה רשמית', year: 2025, note: '', url: 'https://www.who.int/news-room/fact-sheets/detail/stroke' },
@@ -123,7 +124,7 @@ export const SYSTEMS = [
       { layer: 'believed', text_he: 'כוס יין ביום שומרת על הלב.', status: 'לא אוששה' },
     ],
     action: { urgency: 'emergency', sign_he: 'כאב או לחץ בחזה, שמתפשט ליד, ללסת או לגב', go_he: 'מד"א **101**, מיד', source_id: 'nhs-heart-attack', question_he: 'מה לחץ הדם שלי, ומה הוא אומר?' },
-    bridge: { kind: 'nutrition', layer: 'known', text_he: 'בתזונה ים-תיכונית עשירה ב**שמן זית** נמצא שיעור נמוך יותר של אירועי לב.', evidence: 'בינונית', source_id: 'predimed-2018', next_he: 'שמן זית', link: { app: 'nutrition', food_id: 'olive-oil' } },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: 'בתזונה ים-תיכונית עם תוספת של **שמן זית** או של **אגוזים** נמצא שיעור נמוך יותר של אירועי לב.', evidence: 'בינונית', source_id: 'predimed-2018', next_he: 'שמן זית', link: { app: 'nutrition', food_id: 'olive-oil', foods: ['almond', 'walnut'] } },
   },
   {
     id: 'digestive',
@@ -138,7 +139,7 @@ export const SYSTEMS = [
       { layer: 'believed', text_he: 'מסטיק שנבלע נשאר בקיבה שבע שנים.', status: 'לא אוששה' },
     ],
     action: { urgency: 'doctor', sign_he: 'דם בצואה, צואה שחורה, או שינוי מתמשך ביציאות', go_he: 'פנייה לרופא', source_id: 'nhs-bowel', question_he: 'האם אני בגיל או בסיכון שמתאים לבדיקת סקר למעי הגס?' },
-    bridge: { kind: 'nutrition', layer: 'known', text_he: 'תזונה עשירה ב**סיבים תזונתיים** נקשרה בסיכון נמוך יותר לסרטן המעי הגס.', evidence: 'בינונית', source_id: 'reynolds-2019', next_he: 'סיבים תזונתיים', link: { app: 'nutrition', topic: 'fiber' } },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: 'תזונה עשירה ב**סיבים תזונתיים** נקשרה בסיכון נמוך יותר לסרטן המעי הגס.', evidence: 'בינונית', source_id: 'reynolds-2019', next_he: 'סיבים תזונתיים', link: { app: 'nutrition', topic: 'fiber', foods: ['wheat', 'barley', 'oat', 'lentil', 'chickpea', 'fava', 'pea', 'bean', 'corn'] } },
   },
   {
     id: 'skeletal',
@@ -153,7 +154,7 @@ export const SYSTEMS = [
       { layer: 'believed', text_he: 'פיצוח מפרקי האצבעות גורם לדלקת מפרקים.', status: 'לא אוששה' },
     ],
     action: { urgency: 'doctor', sign_he: 'נפילה עם כאב חד, נפיחות או עיוות באיבר', go_he: 'מוקד רפואי או מיון', source_id: 'nhs-fracture', question_he: 'האם בדיקת צפיפות עצם רלוונטית לי?' },
-    bridge: { kind: 'nutrition', layer: 'known', text_he: '**סידן** הוא חומר הבניין העיקרי של העצם.', evidence: 'גבוהה', source_id: 'guyton-2020', next_he: 'סידן במזון', link: { app: 'nutrition', topic: 'calcium' } },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: '**סידן** הוא חומר הבניין העיקרי של העצם.', evidence: 'גבוהה', source_id: 'guyton-2020', next_he: 'סידן במזון', link: { app: 'nutrition', topic: 'calcium', foods: ['sesame', 'fig'] } },
   },
   {
     id: 'immune',
@@ -182,7 +183,7 @@ export const SYSTEMS = [
       { layer: 'known', text_he: 'כמעט כל מקרי **סרטן צוואר הרחם** נגרמים מנגיף **HPV**, ויש נגדו חיסון.', evidence: 'גבוהה', source_id: 'who-cervical' },
     ],
     action: { urgency: 'doctor', sign_he: 'גוש או נפיחות בשד, בחזה או בבית השחי, או שינוי בעור או בפטמה', go_he: 'פנייה לרופא', source_id: 'nhs-breast', question_he: 'אילו בדיקות סקר מתאימות לגילי?' },
-    bridge: { kind: 'nutrition', layer: 'known', text_he: '**שתיית אלכוהול** היא גורם סיכון מוכר לסרטן השד.', evidence: 'גבוהה', source_id: 'who-breast', next_he: 'אלכוהול', link: { app: 'nutrition', topic: 'alcohol' } },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: '**שתיית אלכוהול** היא גורם סיכון מוכר לסרטן השד.', evidence: 'גבוהה', source_id: 'who-breast', next_he: 'אלכוהול', link: { app: 'nutrition', topic: 'alcohol', foods: ['grape'] } },
   },
 ];
 
@@ -347,7 +348,7 @@ export const DEEP = {
           { layer: 'believed', text_he: 'התקף לב מתחיל תמיד בכאב חד ביד שמאל.', status: 'לא אוששה' },
         ],
         action: { urgency: 'emergency', sign_he: 'כאב או לחץ בחזה, שמתפשט ליד, ללסת או לגב', go_he: 'מד"א **101**, מיד', source_id: 'nhs-heart-attack', question_he: 'מה גורמי הסיכון שלי ללב, ואיך בודקים אותם?' },
-        bridge: { kind: 'nutrition', layer: 'known', text_he: 'בתזונה ים-תיכונית עשירה ב**שמן זית** נמצא שיעור נמוך יותר של אירועי לב.', evidence: 'בינונית', source_id: 'predimed-2018', next_he: 'שמן זית', link: { app: 'nutrition', food_id: 'olive-oil' } },
+        bridge: { kind: 'nutrition', layer: 'known', text_he: 'בתזונה ים-תיכונית עם תוספת של **שמן זית** או של **אגוזים** נמצא שיעור נמוך יותר של אירועי לב.', evidence: 'בינונית', source_id: 'predimed-2018', next_he: 'שמן זית', link: { app: 'nutrition', food_id: 'olive-oil', foods: ['almond', 'walnut'] } },
       },
       {
         id: 'hypertension',
@@ -451,7 +452,7 @@ const MORE_DISEASES = [
       { layer: 'known', text_he: '**בדיקת סקר** סדירה היא הדרך היעילה לגילוי מוקדם, ומפחיתה תחלואה ותמותה.', evidence: 'גבוהה', source_id: 'who-crc' },
     ],
     action: { urgency: 'doctor', sign_he: 'דם בצואה, צואה שחורה, או שינוי מתמשך ביציאות', go_he: 'פנייה לרופא', source_id: 'nhs-bowel', question_he: 'האם אני בגיל או בסיכון שמתאים לבדיקת סקר?' },
-    bridge: { kind: 'nutrition', layer: 'known', text_he: 'תזונה עשירה ב**סיבים תזונתיים** נקשרה בסיכון נמוך יותר לסרטן המעי הגס.', evidence: 'בינונית', source_id: 'reynolds-2019', next_he: 'סיבים תזונתיים', link: { app: 'nutrition', topic: 'fiber' } } },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: 'תזונה עשירה ב**סיבים תזונתיים** נקשרה בסיכון נמוך יותר לסרטן המעי הגס.', evidence: 'בינונית', source_id: 'reynolds-2019', next_he: 'סיבים תזונתיים', link: { app: 'nutrition', topic: 'fiber', foods: ['wheat', 'barley', 'oat', 'lentil', 'chickpea', 'fava', 'pea', 'bean', 'corn'] } } },
   { id: 'diarrhoeal', system: 'digestive', name_he: 'מחלות שלשול', name_en: 'Diarrhoeal disease', insight: '==מים נקיים ותברואה מונעים את רובן.==',
     items: [
       { layer: 'known', text_he: 'סיבת המוות ה**שלישית** בילדים מתחת לגיל **5**: כ-**443,832** ילדים בשנה.', evidence: 'גבוהה', source_id: 'who-diarrhoea' },
@@ -479,7 +480,7 @@ const MORE_DISEASES = [
       { layer: 'known', text_he: 'העצם **נבנית ומתפרקת כל החיים**. כשהפירוק גובר על הבנייה, היא נחלשת.', evidence: 'גבוהה', source_id: 'gray-2020' },
     ],
     action: { urgency: 'doctor', sign_he: 'נפילה עם כאב חד, נפיחות או עיוות באיבר', go_he: 'מוקד רפואי או מיון', source_id: 'nhs-fracture', question_he: 'האם בדיקת צפיפות עצם רלוונטית לי?' },
-    bridge: { kind: 'nutrition', layer: 'known', text_he: '**סידן** הוא חומר הבניין העיקרי של העצם.', evidence: 'גבוהה', source_id: 'guyton-2020', next_he: 'סידן במזון', link: { app: 'nutrition', topic: 'calcium' } } },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: '**סידן** הוא חומר הבניין העיקרי של העצם.', evidence: 'גבוהה', source_id: 'guyton-2020', next_he: 'סידן במזון', link: { app: 'nutrition', topic: 'calcium', foods: ['sesame', 'fig'] } } },
   { id: 'osteoarthritis', system: 'skeletal', name_he: 'שחיקת מפרקים', name_en: 'Osteoarthritis', insight: '==**528** מיליון אנשים, והברך בראש.==',
     items: [
       { layer: 'known', text_he: 'ב-**2019** חיו כ-**528** מיליון אנשים עם שחיקת מפרקים. **הברך** הכי שכיחה, אחריה הירך וכף היד.', evidence: 'גבוהה', source_id: 'who-oa' },
@@ -505,7 +506,8 @@ const MORE_DISEASES = [
       { layer: 'known', text_he: '**אלרגיה** היא תגובה של מערכת החיסון לחומר לא מזיק, כמו אבקה או מזון.', evidence: 'גבוהה', source_id: 'janeway-2022' },
       { layer: 'known', text_he: '**אנפילקסיס** היא תגובה אלרגית קשה ומהירה, ומצב חירום.', evidence: 'גבוהה', source_id: 'nhs-anaphylaxis' },
     ],
-    action: { urgency: 'emergency', sign_he: 'התנפחות בפנים או בגרון, או קושי בנשימה אחרי מזון או עקיצה', go_he: 'מד"א **101**, מיד', source_id: 'nhs-anaphylaxis', question_he: 'האם יש לי אלרגיה שכדאי לברר?' } },
+    action: { urgency: 'emergency', sign_he: 'התנפחות בפנים או בגרון, או קושי בנשימה אחרי מזון או עקיצה', go_he: 'מד"א **101**, מיד', source_id: 'nhs-anaphylaxis', question_he: 'האם יש לי אלרגיה שכדאי לברר?' },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: 'באירופה חובה לסמן על אריזת מזון **14** אלרגנים, ביניהם **אגוזים**, **שומשום**, **תורמוס**, **חרדל** ודגנים עם **גלוטן**.', evidence: 'גבוהה', source_id: 'eu-1169', next_he: 'שומשום', link: { app: 'nutrition', food_id: 'sesame', foods: ['almond', 'walnut', 'lupin', 'mustard', 'wheat', 'barley', 'oat'] } } },
 ];
 
 export const DISEASES = [...DEEP.cardio.diseases.map((d) => ({ ...d, system: 'cardio' })), ...MORE_DISEASES];
@@ -521,7 +523,7 @@ const STAGE4B = [
       { layer: 'known', text_he: 'גורמים שמעלים את הסיכון: **גיל**, היסטוריה משפחתית, **השמנה**, **שתיית אלכוהול** ועישון. גורם סיכון אינו סיבה, ואינו אשמה.', evidence: 'גבוהה', source_id: 'who-breast' },
     ],
     action: { urgency: 'doctor', sign_he: 'גוש או נפיחות בשד, בחזה או בבית השחי, או שינוי בעור או בפטמה', go_he: 'פנייה לרופא', source_id: 'nhs-breast', question_he: 'מתי מתאימה לי בדיקת ממוגרפיה?' },
-    bridge: { kind: 'nutrition', layer: 'known', text_he: '**שתיית אלכוהול** היא גורם סיכון מוכר לסרטן השד.', evidence: 'גבוהה', source_id: 'who-breast', next_he: 'אלכוהול', link: { app: 'nutrition', topic: 'alcohol' } } },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: '**שתיית אלכוהול** היא גורם סיכון מוכר לסרטן השד.', evidence: 'גבוהה', source_id: 'who-breast', next_he: 'אלכוהול', link: { app: 'nutrition', topic: 'alcohol', foods: ['grape'] } } },
   { id: 'prostate-cancer', system: 'reproductive', name_he: 'סרטן הערמונית', name_en: 'Prostate cancer', insight: '==הרביעי בשכיחותו, ובגילוי מוקדם לרוב בר-ריפוי.==',
     items: [
       { layer: 'known', text_he: 'ב-**2024**: כ-**1.5** מיליון מקרים חדשים. הסרטן ה**רביעי** בשכיחותו בעולם.', evidence: 'גבוהה', source_id: 'who-cancer' },
@@ -621,10 +623,14 @@ export const TRADITIONS = [
 
 // ---------- Stage 6: the live bridge to the nutrition app (Tzuna-GH) ----------
 // Food ids map to Tzuna's own ids; topics open its search. Routing there: #/foods?id= or #/foods?q=
+// link.foods (optional): more Tzuna food ids, shown as a row of food sheets under the main link.
+// The other direction lives in Tzuna's js/data/medicine.js. Every pair rests on a sourced item in both apps.
 export const NUTRITION_APP = {
   name_he: 'מזון, גוף ונפש',
   url: 'https://tzuna-gh.vercel.app/',
-  foods: { 'olive-oil': 'olive', turmeric: 'turmeric' },
+  foods: { 'olive-oil': 'olive', turmeric: 'turmeric', sesame: 'sesame' },
+  // Tzuna food id -> its Hebrew name there (js/data/foods.js and kitchen.js).
+  names: { almond: 'שקד', walnut: 'אגוז מלך', wheat: 'חיטה', barley: 'שעורה', oat: 'שיבולת שועל', lentil: 'עדשים', chickpea: 'חומוס', fava: 'פול', pea: 'אפונה', bean: 'שעועית', corn: 'תירס', sesame: 'שומשום', fig: 'תאנה', grape: 'ענבים', lupin: 'תורמוס', mustard: 'חרדל' },
   topics: { fiber: 'סיבים', calcium: 'סידן', sodium: 'מלח', alcohol: 'אלכוהול', 'mediterranean-diet': 'ים תיכונית' },
 };
 export function nutritionHref(link) {
@@ -634,6 +640,7 @@ export function nutritionHref(link) {
   if (link.topic && N.topics[link.topic]) return `${N.url}#/foods?q=${encodeURIComponent(N.topics[link.topic])}`;
   return null;
 }
+export const nutritionFoodHref = (id) => (NUTRITION_APP.names[id] ? `${NUTRITION_APP.url}#/foods?id=${encodeURIComponent(id)}` : null);
 
 // ---------- Home: the whole teaching on one foot ----------
 export const HOME = {

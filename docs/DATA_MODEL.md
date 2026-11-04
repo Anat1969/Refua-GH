@@ -157,6 +157,7 @@
 
 ## הגשר בפועל (שלב 6)
 - `NUTRITION_APP` ב-`js/data.js`: כתובת, מיפוי `foods` (המזהה שלנו למזהה של Tzuna) ו-`topics` (נושא למילת חיפוש).
+- `bridge.link.foods` (רשות): עוד מזהים של Tzuna, שמוצגים כשורת גיליונות מתחת לקישור הראשי ("ועוד גיליונות"). השם העברי מ-`NUTRITION_APP.names`, והכתובת מ-`nutritionFoodHref(id)`. שער הבטיחות חוסם מזהה בלי שם. הכיוון ההפוך: `js/data/medicine.js` ב-Tzuna. כל זוג נשען על פריט עם מקור בשתי האפליקציות.
 - `nutritionHref(link)` מחזיר `https://tzuna-gh.vercel.app/#/foods?id=<id>` או `#/foods?q=<מילה>`. בלי כתובת, אין קישור. שער הבטיחות חוסם גשר תזונה בלי כתובת.
 
 ## דף הבית (HOME)
