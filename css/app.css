@@ -42,7 +42,7 @@ mark { background: linear-gradient(transparent 38%, var(--marker) 38%, var(--mar
 :focus-visible { outline: 2px solid var(--known); outline-offset: 2px; }
 
 /* ---------- Shell: the app is the size of the screen ---------- */
-.app-shell { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr); }
+.app-shell { height: calc(100dvh - var(--ab-h, 0px)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr); }
 
 .bar {
   position: sticky; top: 0; z-index: 5;
@@ -683,7 +683,7 @@ body.is-home .sysmark text { animation: mark-cycle 14s infinite; animation-delay
 .home-demo:empty { display: none; }
 
 /* ---------- יצירות: דף שנקרא בגלילה, ברוחב המסך (AppOfApp-GH/public/creations.js) ---------- */
-body.is-creations .app-shell { height: auto; min-height: 100dvh; }
+body.is-creations .app-shell { height: auto; min-height: 100dvh; padding-bottom: var(--ab-h, 0px); }
 body.is-creations .work { display: block; overflow: visible; }
 body.is-creations .intro, body.is-creations .stage, body.is-creations .panel, body.is-creations .home-lead { display: none; }
 .creations-page { display: block; max-width: 1280px; margin: 0 auto; padding: var(--s2) 0 var(--s5); }

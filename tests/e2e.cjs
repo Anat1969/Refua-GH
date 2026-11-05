@@ -9,6 +9,9 @@ const BASE = process.env.BASE || 'http://localhost:8765/';
 const SHOTS = process.env.SHOTS || path.join(__dirname, 'shots');
 fs.mkdirSync(SHOTS, { recursive: true });
 const AIMENU = fs.readFileSync(path.join(__dirname, 'ai-menu.local.js'), 'utf8');
+// The Arc and Bina bridge: a local copy when the sister repo sits next to this one, otherwise an empty stub.
+const BRIDGE_JS = process.env.BRIDGE_JS || path.join(__dirname, '..', '..', 'ArcAndBina-GH', 'public', 'bridge.js');
+const BRIDGE = fs.existsSync(BRIDGE_JS) ? fs.readFileSync(BRIDGE_JS, 'utf8') : '';
 // Three.js: from a local copy when THREE_LOCAL points to one (offline sandboxes), otherwise from cdnjs.
 const THREE_LOCAL = process.env.THREE_LOCAL && fs.existsSync(process.env.THREE_LOCAL) ? fs.readFileSync(process.env.THREE_LOCAL, 'utf8') : null;
 async function routeThree(page, mode = 'ok') {
@@ -36,6 +39,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/ai-menu.js', (r) => r.fulfill({ body: AIMENU, contentType: 'text/javascript' }));
     await page.route('**/fonts.g*/**', (r) => r.continue());
+    await page.route('**/bridge.js', (r) => (BRIDGE ? r.fulfill({ body: BRIDGE, contentType: 'text/javascript' }) : r.fulfill({ body: '', contentType: 'text/javascript' })));
     await page.goto(BASE, { waitUntil: 'networkidle' });
     await page.waitForSelector('.panel h2');
 
@@ -483,20 +487,20 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       const seq = await page.evaluate(async () => (await import('./js/data.js')).TIMELINE.every((e, i, a) => !i || a[i - 1].year <= e.year));
       ok(seq, 'timeline: moments in time order');
       await page.click('#map-figure .evp[data-ev="8"] .ev-badge', { force: true });
-      await page.waitForFunction(() => location.hash.includes('e=8') && document.querySelector('.map-svg .big-year').textContent === '1854' && document.querySelector('.map-svg .pl-he').textContent === 'לונדון');
+      await page.waitForFunction(() => location.hash.includes('e=snow') && document.querySelector('.map-svg .big-year').textContent === '1854' && document.querySelector('.map-svg .pl-he').textContent === 'לונדון');
       ok(true, 'timeline: a numbered point shows its year large and its place in Hebrew');
       ok(await page.evaluate(() => document.querySelectorAll('.leg.past').length === 8), 'timeline: the chain is drawn in ink up to the current moment');
       await page.click('#ev-next');
-      await page.waitForFunction(() => location.hash.includes('e=9'));
+      await page.waitForFunction(() => location.hash.includes('e=koch'));
       await page.click('#ev-prev');
-      await page.waitForFunction(() => location.hash.includes('e=8'));
+      await page.waitForFunction(() => location.hash.includes('e=snow'));
       await page.keyboard.press('ArrowLeft');
-      await page.waitForFunction(() => location.hash.includes('e=9'));
+      await page.waitForFunction(() => location.hash.includes('e=koch'));
       await page.click('#year-track [data-ev="0"]');
       await page.waitForFunction(() => !location.hash.includes('e=') && document.querySelector('.map-svg .big-era').textContent.length > 0);
       ok(true, 'timeline: next, previous, arrows and the year track; BCE shown apart from the number');
       await page.click('#ev-play');
-      await page.waitForFunction(() => location.hash.includes('e=1'), null, { timeout: 5000 });
+      await page.waitForFunction(() => location.hash.includes('e=galen'), null, { timeout: 5000 });
       await page.click('#ev-play');
       ok(await page.getAttribute('#ev-play', 'aria-pressed') === 'false', 'timeline: play moves on, and stops');
       await page.goto(BASE + '#s=cardio&v=history&e=8');
@@ -614,6 +618,39 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     await cp.screenshot({ path: path.join(SHOTS, `creations-${tg}.png`) });
     ok(cerr.length === 0, `${tg} creations: no JS errors ${cerr.join(' | ')}`);
     await cc.close();
+  }
+
+  // Stable moment ids, old position links, and the bridge from Arc and Bina (query before the hash)
+  {
+    const bc = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await bc.addInitScript(() => { try { localStorage.setItem('refua.mode', '2d'); } catch {} });
+    const bp = await bc.newPage();
+    const berr = [];
+    bp.on('pageerror', (e) => berr.push(e.message));
+    await bp.route('**/ai-menu.js', (r) => r.fulfill({ body: AIMENU, contentType: 'text/javascript' }));
+    await bp.route('**/bridge.js', (r) => r.fulfill({ body: BRIDGE, contentType: 'text/javascript' }));
+    const ids = await bp.goto(BASE).then(() => bp.evaluate(async () => (await import('./js/data.js')).TIMELINE.map((e) => e.id)));
+    ok(ids.every((id) => /^[a-z][a-z0-9-]*$/.test(id)) && new Set(ids).size === ids.length, 'timeline: every moment has a unique stable id');
+    const fleming = '#s=respiratory&v=history&e=fleming';
+    const q = '?ab_q=' + encodeURIComponent('איך עובש שינה את הרפואה, ומה הוא ישנה בבנייה?') + '&ab_back=' + encodeURIComponent('https://arc-and-bina.vercel.app/#/client/fungus');
+    await bp.goto(BASE + q + fleming);
+    await bp.waitForSelector('.map-svg .big-year');
+    ok(await bp.evaluate(() => document.querySelector('.map-svg .big-year').textContent === '1928' && /פלמינג/.test(document.querySelector('.panel').textContent)), 'bridge: query before the hash, e=fleming opens Fleming 1928');
+    if (BRIDGE) {
+      await bp.waitForSelector('#ab-bridge');
+      ok(/עובש/.test(await bp.textContent('#ab-bridge')) && (await bp.getAttribute('#ab-bridge a', 'href')).startsWith('https://arc-and-bina.vercel.app/'), 'bridge: the question bar and the way back');
+      await bp.waitForFunction(() => document.querySelector('.foot').getBoundingClientRect().bottom <= document.getElementById('ab-bridge').getBoundingClientRect().top + 1);
+      ok(true, 'bridge: the declaration and emergency line stay above the bar');
+      await bp.screenshot({ path: path.join(SHOTS, 'bridge-fleming.png') });
+    }
+    await bp.goto(BASE + '#s=respiratory&v=history&e=11');
+    await bp.waitForFunction(() => location.hash.includes('e=fleming') && document.querySelector('.map-svg .big-year')?.textContent === '1928');
+    ok(true, 'old link e=11 still opens Fleming, and the address turns into e=fleming');
+    await bp.click('#ev-next');
+    await bp.waitForFunction(() => location.hash.includes('e=who'));
+    ok(true, 'moving on writes the stable id into the address');
+    ok(berr.length === 0, `bridge: no JS errors ${berr.join(' | ')}`);
+    await bc.close();
   }
 
   // Reduced motion
