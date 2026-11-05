@@ -617,6 +617,12 @@ function prefMode() {
 function savePrefMode(v) { try { localStorage.setItem(MODE_KEY, v); } catch { /* private mode */ } }
 
 // ---------- State in the URL ----------
+// A moment in the hash: its stable id (e=fleming), or its position, for links made before ids (e=11).
+function eventIndex(raw) {
+  const byId = TIMELINE.findIndex((x) => x.id === raw);
+  if (byId >= 0) return byId;
+  return Math.min(Math.max(parseInt(raw, 10) || 0, 0), TIMELINE.length - 1);
+}
 function readState() {
   const p = new URLSearchParams(location.hash.slice(1));
   const s = SYSTEMS.find((x) => x.id === p.get('s')) || SYSTEMS.find((x) => x.id === 'cardio');
@@ -630,7 +636,7 @@ function readState() {
   const pm = p.get('m');
   const m = !atlasFailed && (pm === '3d' || (pm !== '2d' && prefMode() === '3d')) ? '3d' : '2d';
   const f = SYSTEMS.some((x) => x.id === p.get('f')) || GROUPS[p.get('f')] ? p.get('f') : '';
-  const e = Math.min(Math.max(parseInt(p.get('e'), 10) || 0, 0), TIMELINE.length - 1);
+  const e = eventIndex(p.get('e'));
   const h = p.get('h') === 'traditions' ? 'traditions' : 'timeline';
   const l = [1, 2, 3].includes(parseInt(p.get('l'), 10)) ? parseInt(p.get('l'), 10) : 1;
   return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m, f, e, h, l };
@@ -648,7 +654,7 @@ function go(s, v = 'system', extra = {}, replace = false) {
   if (extra.a) prm.set('a', extra.a);
   if ((v === 'diseases' || v === 'disease') && extra.f) prm.set('f', extra.f);
   if (v === 'disease' && extra.d) prm.set('d', extra.d);
-  if (v === 'history') { if (extra.e) prm.set('e', String(extra.e)); if (extra.h === 'traditions') prm.set('h', 'traditions'); }
+  if (v === 'history') { if (extra.e) prm.set('e', TIMELINE[extra.e].id); if (extra.h === 'traditions') prm.set('h', 'traditions'); }
   if (v === 'deep') {
     if (extra.t && extra.t !== 'process') prm.set('t', extra.t);
     if (extra.k) prm.set('k', String(extra.k));
@@ -1079,6 +1085,19 @@ function boot() {
     if (d) go(SYSTEMS[(SYSTEMS.indexOf(s) + d + SYSTEMS.length) % SYSTEMS.length]);
   });
 
+  // The bridge bar from Arc and Bina (bridge.js) sits fixed at the bottom: the shell ends above it,
+  // so the quiet declaration and the emergency numbers stay in view. Closing the bar gives the room back.
+  const abBar = document.getElementById('ab-bridge');
+  if (abBar && 'ResizeObserver' in window) {
+    new ResizeObserver(() => document.documentElement.style.setProperty('--ab-h', `${abBar.isConnected ? abBar.offsetHeight : 0}px`)).observe(abBar);
+  }
+  // An old link by position (e=11) becomes the stable id in the address, so a copied link keeps working.
+  const hp = new URLSearchParams(location.hash.slice(1));
+  if (/^\d+$/.test(hp.get('e') || '')) {
+    const i = eventIndex(hp.get('e'));
+    if (i) hp.set('e', TIMELINE[i].id); else hp.delete('e');
+    history.replaceState(null, '', location.pathname + location.search + '#' + hp.toString());
+  }
   addEventListener('hashchange', render);
   render();
 
