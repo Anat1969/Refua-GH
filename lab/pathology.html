@@ -51,6 +51,14 @@ input[type=range] { accent-color: var(--ink); direction: ltr; }
 
 .panel { border-inline-start: 1px solid var(--hair); overflow: auto; padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 16px; }
 .label { font-size: 12px; color: var(--graphite); letter-spacing: .04em; font-weight: 500; margin: 0 0 6px; }
+.case { background: var(--plate); padding: 12px 14px; }
+.case h2 { margin: 2px 0 0; font-family: var(--display); font-size: 26px; font-weight: 900; line-height: 1.1; }
+.case .hl { margin: 6px 0 0; font-size: 15.5px; line-height: 1.5; }
+.case ol { list-style: none; margin: 10px 0 0; padding: 0; }
+.case li { display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 8px; padding: 6px 4px; cursor: pointer; border-top: 1px solid rgba(22,32,43,.1); font-size: 14px; line-height: 1.5; }
+.case li:hover, .case li.on { background: rgba(255,255,255,.7); }
+.case li i { font-style: normal; font-weight: 700; font-size: 12.5px; padding-top: 1px; }
+.case .consent { margin: 8px 0 0; font-size: 12px; color: var(--graphite); }
 .demo { font-size: 12.5px; background: var(--marker); padding: 5px 9px; margin: 0; }
 .glance { border-top: 2px solid var(--ink); padding-top: 10px; }
 .glance .big { font-family: var(--display); font-weight: 900; font-size: 54px; line-height: 1; direction: ltr; text-align: right; }
@@ -133,6 +141,7 @@ ol.q { margin: 10px 0 0; padding-inline-start: 20px; font-size: 14.5px; line-hei
   </section>
 
   <aside class="panel" aria-label="קריאת הדוח">
+    <section class="case" id="case" hidden></section>
     <p class="demo" id="demo" hidden>דוגמה להמחשה. הנתונים כאן אינם של אף אחת. את נתוני הדוח מזינים למטה.</p>
     <section class="glance" id="glance" aria-live="polite"></section>
     <ol class="find" id="find"></ol>
@@ -180,7 +189,7 @@ ol.q { margin: 10px 0 0; padding-inline-start: 20px; font-size: 14.5px; line-hei
       <p class="note" id="copied" hidden>הקישור הועתק. מי שמחזיקה בו רואה את הנתונים.</p>
     </details>
 
-    <p class="decl">האפליקציה לא מאבחנת ולא מטפלת. היא מלמדת לקרוא דוח, ולא מסיקה ממנו. חירום: מד"א <a href="tel:101">101</a>. <a href="../#s=reproductive">חזרה למערכת הרבייה והשד</a></p>
+    <p class="decl">האפליקציה לא מאבחנת ולא מטפלת. היא מלמדת לקרוא דוח, ולא מסיקה ממנו. חירום: מד"א <a href="tel:101">101</a>. <a href="../#s=reproductive&v=disease&d=breast-cancer&f=cancer">חזרה לכרטיס סרטן השד</a></p>
   </aside>
 </div>
 
@@ -189,11 +198,12 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/RoomEnvironment.js';
+import { CASES } from '../js/case.js';
 
 // The report is never stored in the repository: it lives in the URL fragment (never sent to a server) and in localStorage.
 // The example below is invented, for illustration only.
 const EXAMPLE = {
-  side: 'R', clock: '10',
+  side: 'R', clock: '10', near: 'far',
   ml: 40, si: 38, ap: 30,
   inkLat: 'orange', inkMed: 'green', inkSup: 'blue', inkInf: 'red', inkAnt: 'yellow', inkPost: 'black',
   idc: 9, grade: '1', dcis: 14, lvi: 'no',
@@ -206,7 +216,7 @@ const EXAMPLE = {
 };
 const FIELDS = [
   ['h', 'הניתוח'],
-  ['side', 'צד', { L: 'שמאל', R: 'ימין' }], ['clock', 'מיקום בשד, לפי שעון', { '': 'לא נכתב בדוח', 12: '12', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10', 11: '11' }],
+  ['side', 'צד', { L: 'שמאל', R: 'ימין' }], ['near', 'מרחק מהפטמה', { '': 'לא נכתב', retro: 'מאחורי העטרה', far: 'רחוק מהפטמה' }], ['clock', 'מיקום בשד, לפי שעון', { '': 'לא נכתב בדוח', 12: '12', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10', 11: '11' }],
   ['h', 'מידות הדגימה'],
   ['ml', 'לטרלי עד מדיאלי'], ['si', 'עליון עד תחתון'], ['ap', 'קדמי עד אחורי'],
   ['h', 'צבע הדיו בכל צד'],
@@ -244,7 +254,11 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 // --- state: fragment first, then this device, then the example
 const enc = (o) => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const dec = (s) => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0))));
+let theCase = null;
 function load() {
+  theCase = null;
+  const cid = new URLSearchParams(location.search).get('case'); const c = CASES.find((x) => x.id === cid);
+  if (c && !/r=[\w-]+/.test(location.hash)) { theCase = c; return { ...EXAMPLE, ...c.report, mine: true }; }
   try { const m = location.hash.match(/r=([\w-]+)/); if (m) return { ...EXAMPLE, ...dec(m[1]), mine: true }; } catch { /* a broken link falls back */ }
   try { const s = localStorage.getItem(KEY); if (s) return { ...EXAMPLE, ...JSON.parse(s), mine: true }; } catch { /* private mode */ }
   return { ...EXAMPLE };
@@ -362,7 +376,8 @@ function buildFindings() {
   }
   // 1 cm scale bar under the specimen
   const b0 = new THREE.Vector3(-5, -half.y, -half.z - 9); const b1 = new THREE.Vector3(5, -half.y, -half.z - 9);
-  spec.add(line(b0, b1), line(b0.clone().setZ(b0.z - 1.5), b0.clone().setZ(b0.z + 1.5)), line(b1.clone().setZ(b1.z - 1.5), b1.clone().setZ(b1.z + 1.5)));
+  const bar = new THREE.Group(); bar.add(line(b0, b1), line(b0.clone().setZ(b0.z - 1.5), b0.clone().setZ(b0.z + 1.5)), line(b1.clone().setZ(b1.z - 1.5), b1.clone().setZ(b1.z + 1.5)));
+  spec.add(bar); const tableOnly = [bar]; // shown beside the specimen on the table, not inside the body
   tag('1 ס״מ', new THREE.Vector3(0, -half.y, -half.z - 14), 'dirn v-spec');
   anchors.spec = { c: new THREE.Vector3(), r: Math.max(half.x, half.y, half.z) + 14 };
 
@@ -385,7 +400,7 @@ function buildFindings() {
       const duct = ellipsoid(0.9, 0.9, 0.9, new THREE.MeshStandardMaterial({ color: NAVY, roughness: 0.5, clippingPlanes: [cut] }), 20);
       duct.position.set((i - (nd - 1) / 2) * 2.4, 0, Math.max(-t + 1, t - (mg ?? t) - 0.9)); piece.add(duct);
     }
-    spec.add(piece);
+    spec.add(piece); tableOnly.push(piece);
     const tip = piece.position.clone().addScaledVector(d, t + 6);
     tag(`<b>הרחבת שוליים</b>${nd ? ` · ${nd} צינורות עם DCIS` : ''}${mm(R.extMargin) ? ` · ${mm(R.extMargin)} מהשוליים החדשים` : ''}`, tip, 'v-spec v-ext');
     anchors.ext = { c: piece.position.clone(), r: Math.max(a, b) + 10 };
@@ -402,7 +417,7 @@ function buildFindings() {
     if (num(met)) { const m = ellipsoid(num(met) / 2, Math.min(num(met), num(t) || num(met)) / 2 * 0.9, num(met) / 2, new THREE.MeshStandardMaterial({ color: INK, roughness: 0.5 }), 28); m.position.x = num(a) * 0.12; g.add(m); }
     g.userData = { i, met: num(met), r: num(a) / 2 }; list.push(g); nodes.add(g);
   });
-  findG.userData = { spec, nodes, list, tc, half };
+  findG.userData = { spec, nodes, list, tc, half, tableOnly };
   layout();
 }
 
@@ -418,8 +433,9 @@ function tintSide() {
 }
 // The same findings, in two places: inside the body at true scale, or laid out on the table and enlarged by the camera.
 function layout() {
-  const { spec, nodes, list, half } = findG.userData; const s = R.side === 'R' ? -1 : 1;
+  const { spec, nodes, list, half, tableOnly } = findG.userData; const s = R.side === 'R' ? -1 : 1;
   const inBody = view === 'body';
+  tableOnly.forEach((o) => { o.visible = !inBody; });
   tags.forEach((t) => { if (t.body) { t.el.remove(); } }); tags = tags.filter((t) => !t.body);
   if (inBody && nipple) {
     const nip = new THREE.Vector3(s * Math.abs(nipple.x), nipple.y, nipple.z);
@@ -427,10 +443,11 @@ function layout() {
     spec.visible = !!h;
     if (h) {
       const a = (h % 12) / 12 * Math.PI * 2; // seen from the front: 12 is up, 3 is towards the patient's left
-      spec.position.set(nip.x + Math.sin(a) * 42, nip.y + 38, nip.z + Math.cos(a) * 42);
+      const rad = R.near === 'retro' ? 14 : 42; // behind the areola, or out in the breast
+      spec.position.set(nip.x + Math.sin(a) * rad, nip.y + half.y + 5, nip.z + Math.cos(a) * rad);
     }
     const top = new THREE.Vector3(nip.x, nip.y - 6, nip.z + 62);
-    const t1 = tag(`<b>כריתה חלקית, שד ${R.side === 'R' ? 'ימין' : 'שמאל'}</b><small>${h ? `אזור שעה ${h}, מיקום מקורב` : 'המיקום בתוך השד לא נכתב בדוח'}</small>`, top, 'pin'); tags[tags.length - 1].body = true; t1.dataset.pin = 'breast';
+    const t1 = tag(`<b>כריתה חלקית, שד ${R.side === 'R' ? 'ימין' : 'שמאל'}</b><small>${h ? `שעה ${h}${R.near === 'retro' ? ', מאחורי העטרה' : ''} · מיקום מקורב` : 'המיקום בתוך השד לא נכתב בדוח'}</small>`, top, 'pin'); tags[tags.length - 1].body = true; t1.dataset.pin = 'breast';
     // Sentinel nodes sit in the armpit; the exact spot is not in the report, so the place is representative.
     const axl = new THREE.Vector3(s * 150, -78, 1322);
     list.forEach((g, i) => { g.position.set(axl.x + s * i * 9, axl.y + i * 4, axl.z + i * 12); g.rotation.set(0, 0.5 * s, 0); });
@@ -482,7 +499,17 @@ function nearest() {
   for (const [k, he, gF, dF] of DIRS) for (const [f, what] of [[dF, 'DCIS'], [gF, 'הגוש']]) { const m = num(R[f]); if (m !== null && (!best || m < best.m)) best = { k, he, m, what, raw: R[f] }; }
   return best;
 }
+const boldMd = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+function renderCase() {
+  const el = document.getElementById('case'); el.hidden = !theCase; if (!theCase) return;
+  const c = theCase;
+  el.innerHTML = `<p class="label">מקרה לדוגמה · סרטן השד</p><h2>${esc(c.name_he)}</h2><p class="hl">${boldMd(c.headline_he)}</p>
+    <ol>${c.steps.map((st) => `<li data-view="${st.view}" tabindex="0"><i>${esc(st.k)}</i><span>${boldMd(st.text_he)}</span></li>`).join('')}</ol>
+    <p class="consent">${esc(c.consent_he)} ${esc(c.source_he)}</p>`;
+  document.title = `${c.name_he}: מקרה לדוגמה | רפואה`;
+}
 function renderPanel() {
+  renderCase();
   document.getElementById('demo').hidden = !!R.mine;
   const near = nearest(); const sideHe = R.side === 'R' ? 'ימין' : 'שמאל';
   document.getElementById('glance').innerHTML = near
@@ -521,6 +548,7 @@ function buildForm() {
   }).join('');
   f.addEventListener('input', (e) => {
     const el = e.target; if (!el.name) return;
+    theCase = null;
     R[el.name] = el.type === 'number' ? (el.value === '' ? 0 : +el.value) : el.value; R.mine = true;
     persist(); renderPanel(); buildFindings(); if (el.name === 'side') { tintSide(); frame(view); }
   });
@@ -529,6 +557,8 @@ function buildForm() {
 // --- wiring
 document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => frame(b.dataset.view)));
 document.getElementById('find').addEventListener('click', (e) => { const li = e.target.closest('li'); if (li) frame(li.dataset.view); });
+document.getElementById('case').addEventListener('click', (e) => { const li = e.target.closest('li'); if (!li) return; frame(li.dataset.view); document.querySelectorAll('.case li').forEach((x) => x.classList.toggle('on', x === li)); });
+document.getElementById('case').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.closest('li')?.click(); });
 document.getElementById('find').addEventListener('keydown', (e) => { if (e.key === 'Enter') { const li = e.target.closest('li'); if (li) frame(li.dataset.view); } });
 document.getElementById('cut').addEventListener('input', (e) => setCut(+e.target.value));
 document.getElementById('copy').addEventListener('click', async () => {

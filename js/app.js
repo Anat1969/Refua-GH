@@ -1,5 +1,6 @@
 import { SYSTEMS, SOURCES, LAYERS, EMERGENCY, REDLIST, REDLIST_ACTION, KEYWORDS, EMERGENCY_NUMBERS, PROFILE_ITEMS, DEEP, DISEASES, GROUPS, TIMELINE, TRADITIONS, HOME, NUTRITION_APP, nutritionHref, nutritionFoodHref, IMAGES, WONDERS, COUNTRIES, FLAG_URL, ANATOMY3D, DISEASE3D } from './data.js';
 import { historySVG, setEvent } from './history.js';
+import { CASES, casesFor } from './case.js';
 import { detect, textMatches, normalize } from './match.js';
 import { bodySVG, sheetSVG } from './body.js';
 import { circulationSVG } from './circulation.js';
@@ -373,6 +374,15 @@ function diseasesView(f) {
   <p class="fine">לפי גיליונות העובדות של ארגון הבריאות העולמי (WHO). שלוש הקווים בכל כרטיס: אילו שכבות יש בו.</p>`;
 }
 
+// An example case: one person's path, by her own request. It links to the 3D reading of her report.
+const caseHref = (c) => `lab/pathology.html?case=${c.id}`;
+const caseGo = (c) => `<a class="to-3d case-go press-soft" href="${caseHref(c)}"><b>מקרה לדוגמה: ${esc(c.name_he)}</b><span>${esc(c.tile_he)}</span></a>`;
+const caseBlock = (c) => `<section class="block case-block rise" aria-labelledby="h-case-${c.id}"><h3 id="h-case-${c.id}"><span class="label">מקרה לדוגמה</span>${esc(c.name_he)}</h3>
+  <p class="case-hl">${rich(c.headline_he)}</p>
+  <ol class="case-steps">${c.steps.map((st) => `<li><b>${esc(st.k)}</b><span>${rich(st.text_he)}</span></li>`).join('')}</ol>
+  <p class="imeta"><span class="ev">${esc(c.consent_he)} ${esc(c.source_he)}</span></p>
+  ${caseGo(c)}</section>`;
+
 function diseaseView(id, f, l) {
   const d = DISEASES.find((x) => x.id === id) || DISEASES[0];
   const list = diseasesIn(f);
@@ -399,6 +409,7 @@ function diseaseView(id, f, l) {
     <section class="glance rise">
       <p class="case-headline">${rich(d.insight)}</p>
       ${DISEASE3D[d.id] && readState().m !== '3d' ? `<button class="to-3d press-soft" data-mode-go="3d"><b>${d.name_he}, בגוף אמיתי</b><span>${DISEASE3D[d.id].map((pid) => ANATOMY3D[d.system].parts.find((p) => p.id === pid)?.he).filter(Boolean).join(', ')}: מוארים במודל התלת־ממדי.</span></button>` : ''}
+      ${casesFor(d.id).map(caseGo).join('')}
       ${known[0] ? item(known[0]) : ''}
       ${groupOf(d.id) ? `<button class="linkish" data-group-go="${groupOf(d.id)}">כל סוגי ה${GROUPS[groupOf(d.id)].name_he}, והתמונה הכוללת</button>` : ''}
       ${seeAlso(1)}
@@ -407,6 +418,7 @@ function diseaseView(id, f, l) {
   if (l === 2) {
     return `${head}
     <section class="block rise" aria-labelledby="h-dz-l"><h3 id="h-dz-l"><span class="label">המנגנון</span>מה ידוע, מה נאמר, מה מאמינים</h3>${d.items.map(item).join('')}</section>
+    ${casesFor(d.id).map(caseBlock).join('')}
     <p class="quiet-care"><span class="label">ומתי פונים</span>${rich(d.action.sign_he)}: ${rich(d.action.go_he)}. <span class="ev">${esc(d.action.question_he)}</span></p>
     ${seeAlso(2)}`;
   }
@@ -453,7 +465,15 @@ function homeLead() {
       <li><button class="numcell press-soft" data-view-go="history">${n(TIMELINE.length)}<span>גילויים</span></button></li>
       <li><button class="numcell press-soft" data-view-go="sources">${n(Object.keys(SOURCES).length)}<span>מקורות</span></button></li>
     </ul>
-    <div class="home-demo" data-aoa-demo="large" aria-label="סרטון הדגמה"></div>
+    <div class="home-feature">
+      <div class="home-demo" data-aoa-demo="large" aria-label="סרטון הדגמה"></div>
+      ${CASES.slice(0, 1).map((c) => `<a class="home-case press-soft" href="${caseHref(c)}">
+        <img src="${c.image}" alt="" loading="lazy">
+        <span class="label">מקרה לדוגמה · סרטן השד</span>
+        <b>${esc(c.name_he)}: הדוח הפתולוגי, בתלת־ממד</b>
+        <span class="hc-line">${esc(c.tile_he)}</span>
+      </a>`).join('')}
+    </div>
     <div id="quiz-box"></div>
     <p class="inspo">בהשראת <b>הלל הזקן</b>, ו<b>ארונות הפלאות</b> של אירופה, <span class="num">1600</span> לערך: כל פריט מעורר שאלה.</p>`;
 }
