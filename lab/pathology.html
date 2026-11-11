@@ -284,6 +284,9 @@ scene.environmentIntensity = 0.9;
 const camera = new THREE.PerspectiveCamera(30, 1, 1, 8000);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = 0.08;
+// Draw only when something moved: a still stage costs nothing, on a phone and in a recording.
+let dirty = 3; const request = () => { dirty = 3; };
+controls.addEventListener('change', request);
 const key = new THREE.DirectionalLight('#fff4ea', 1.8); key.position.set(-1, 1.2, 1.4);
 scene.add(key, new THREE.HemisphereLight('#ffffff', '#cfc8ba', 0.7));
 
@@ -424,6 +427,7 @@ function buildFindings() {
 
 // The operated breast is tinted, so the side reads before any label.
 function tintSide() {
+  request();
   const s = R.side === 'R' ? -1 : 1; const on = new THREE.Color('#bcd0e6'); const off = new THREE.Color(PORCELAIN);
   for (const o of bodyMeshes) {
     if (o.name === 'skin_f') continue;
@@ -434,6 +438,7 @@ function tintSide() {
 }
 // The same findings, in two places: inside the body at true scale, or laid out on the table and enlarged by the camera.
 function layout() {
+  request();
   const { spec, nodes, list, half, tableOnly } = findG.userData; const s = R.side === 'R' ? -1 : 1;
   const inBody = view === 'body';
   tableOnly.forEach((o) => { o.visible = !inBody; });
@@ -490,8 +495,10 @@ function frame(v, instant) {
   camera.near = dist / 60; camera.far = dist * 20; camera.updateProjectionMatrix();
   setCut(0); document.getElementById('cut').value = 0;
   if (instant) controls.update();
+  request();
 }
 function setCut(pct) {
+  request();
   if (!pct || view === 'body') { cut.constant = 1e6; return; }
   const h = (findG.userData.half?.y || 20) + 2; // world z is the body's front: cut from the front to the back
   cut.constant = h - (2 * h) * (pct / 100);
@@ -594,9 +601,9 @@ function placeTags() {
   }
   for (const t of tags) if (!t.el.hidden) { t.el.style.left = `${t.x}px`; t.el.style.top = `${t.y}px`; }
 }
-function resize() { const r = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+function resize() { const r = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); request(); }
 new ResizeObserver(resize).observe(stage); resize();
-renderer.setAnimationLoop(() => { controls.update(); scene.updateMatrixWorld(); placeTags(); renderer.render(scene, camera); });
+renderer.setAnimationLoop(() => { controls.update(); if (dirty <= 0) return; dirty--; scene.updateMatrixWorld(); placeTags(); renderer.render(scene, camera); });
 
 buildForm(); renderPanel(); buildFindings(); frame('spec', true);
 
