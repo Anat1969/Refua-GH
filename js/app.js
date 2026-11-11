@@ -451,6 +451,7 @@ let quizState = { answers: {} };
 function homeLead() {
   const n = (x) => `<span class="num">${x}</span>`;
   return `
+    <div class="home-text">
     <p class="label">על רגל אחת</p>
     <blockquote class="hillel">
       <p class="h-ar">„${HOME.hillel_he}”</p>
@@ -465,8 +466,9 @@ function homeLead() {
       <li><button class="numcell press-soft" data-view-go="history">${n(TIMELINE.length)}<span>גילויים</span></button></li>
       <li><button class="numcell press-soft" data-view-go="sources">${n(Object.keys(SOURCES).length)}<span>מקורות</span></button></li>
     </ul>
+    </div>
     <div class="home-feature">
-      <div class="home-demo" data-aoa-demo="large" aria-label="סרטון הדגמה"></div>
+      <div class="home-demo" data-aoa-demo="hero" aria-label="סרטון הדגמה"></div>
       ${CASES.slice(0, 1).map((c) => `<a class="home-case press-soft" href="${caseHref(c)}">
         <img src="${c.image}" alt="" loading="lazy">
         <span class="label">מקרה לדוגמה · סרטן השד</span>

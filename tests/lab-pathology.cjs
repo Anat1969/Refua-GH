@@ -46,7 +46,7 @@ const ok = (name, cond) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}`); i
   await p3.goto(`${BASE}/lab/pathology.html?case=anat`);
   await p3.waitForFunction(() => document.body.dataset.ready === '1', null, { timeout: 90000 });
   ok('the case card shows its name and seven steps', (await p3.locator('#case h2').innerText()).length > 3 && (await p3.locator('#case li').count()) === 7);
-  ok('the case places the specimen in the breast', (await p3.locator('.tag.pin[data-pin="breast"]').innerText()).includes('שעה 8'));
+  ok('the case places the specimen in the breast', (await p3.locator('.tag.pin[data-pin="breast"]').innerText()).includes('שעה 8, חיצוני־תחתון'));
   ok('a case step moves the stage', await (async () => { await p3.locator('#case li[data-view="nodes"]').click(); return (await p3.locator('button[data-view="nodes"]').getAttribute('aria-pressed')) === 'true'; })());
   await p3.goto(`${BASE}/#s=reproductive&v=disease&d=breast-cancer&f=cancer`);
   await p3.waitForSelector('a.case-go');

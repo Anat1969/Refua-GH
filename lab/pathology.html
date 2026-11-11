@@ -22,7 +22,7 @@
 [hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; }
 body { font-family: var(--sans); color: var(--ink); background: var(--paper); direction: rtl; }
-.lab { display: grid; grid-template-columns: minmax(0, 1fr) 400px; height: 100vh; }
+.lab { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); height: 100vh; }
 .stage { position: relative; min-height: 0; overflow: hidden; direction: ltr; background: radial-gradient(120% 90% at 50% 35%, #ffffff 0%, #f7f5f0 70%, #efebe2 100%); }
 .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
 .stage canvas:active { cursor: grabbing; }
@@ -203,7 +203,7 @@ import { CASES } from '../js/case.js';
 // The report is never stored in the repository: it lives in the URL fragment (never sent to a server) and in localStorage.
 // The example below is invented, for illustration only.
 const EXAMPLE = {
-  side: 'R', clock: '10', near: 'far',
+  side: 'R', clock: '10', quad: '', near: 'far',
   ml: 40, si: 38, ap: 30,
   inkLat: 'orange', inkMed: 'green', inkSup: 'blue', inkInf: 'red', inkAnt: 'yellow', inkPost: 'black',
   idc: 9, grade: '1', dcis: 14, lvi: 'no',
@@ -216,7 +216,7 @@ const EXAMPLE = {
 };
 const FIELDS = [
   ['h', 'הניתוח'],
-  ['side', 'צד', { L: 'שמאל', R: 'ימין' }], ['near', 'מרחק מהפטמה', { '': 'לא נכתב', retro: 'מאחורי העטרה', far: 'רחוק מהפטמה' }], ['clock', 'מיקום בשד, לפי שעון', { '': 'לא נכתב בדוח', 12: '12', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10', 11: '11' }],
+  ['side', 'צד', { L: 'שמאל', R: 'ימין' }], ['quad', 'רבע בשד', { '': 'לא נכתב', uo: 'חיצוני־עליון', lo: 'חיצוני־תחתון', ui: 'פנימי־עליון', li: 'פנימי־תחתון' }], ['near', 'מרחק מהפטמה', { '': 'לא נכתב', retro: 'מאחורי העטרה', far: 'רחוק מהפטמה' }], ['clock', 'מיקום בשד, לפי שעון', { '': 'לא נכתב בדוח', 12: '12', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10', 11: '11' }],
   ['h', 'מידות הדגימה'],
   ['ml', 'לטרלי עד מדיאלי'], ['si', 'עליון עד תחתון'], ['ap', 'קדמי עד אחורי'],
   ['h', 'צבע הדיו בכל צד'],
@@ -243,6 +243,7 @@ const DIRS = [ // key, Hebrew, gross field, DCIS field, ink field
   ['post', 'אחורי', 'gPost', 'dPost', 'inkPost'], ['lat', 'לטרלי', 'gLat', 'dLat', 'inkLat'], ['med', 'מדיאלי', 'gMed', 'dMed', 'inkMed'],
 ];
 const INK = '#16202b', NAVY = '#1f4e79', PORCELAIN = '#fbf8f2';
+const QUADS = { uo: 'חיצוני־עליון', lo: 'חיצוני־תחתון', ui: 'פנימי־עליון', li: 'פנימי־תחתון' };
 const KEY = 'refua.lab.pathology';
 const num = (v) => { const n = parseFloat(String(v ?? '').replace(/[<>≤~\s]/g, '').replace(',', '.')); return Number.isFinite(n) ? n : null; };
 const lt = (v) => /[<≤]/.test(String(v ?? ''));
@@ -444,10 +445,13 @@ function layout() {
     if (h) {
       const a = (h % 12) / 12 * Math.PI * 2; // seen from the front: 12 is up, 3 is towards the patient's left
       const rad = R.near === 'retro' ? 14 : 42; // behind the areola, or out in the breast
-      spec.position.set(nip.x + Math.sin(a) * rad, nip.y + half.y + 5, nip.z + Math.cos(a) * rad);
+      // The quadrant, when written, decides the side: reports do not always count the clock from the same side.
+      let dx = Math.sin(a) * rad; const out = R.quad && R.quad[1] === 'o', inn = R.quad && R.quad[1] === 'i';
+      if ((out && dx * s < 0) || (inn && dx * s > 0)) dx = -dx;
+      spec.position.set(nip.x + dx, nip.y + half.y + 5, nip.z + Math.cos(a) * rad);
     }
     const top = new THREE.Vector3(nip.x, nip.y - 6, nip.z + 62);
-    const t1 = tag(`<b>כריתה חלקית, שד ${R.side === 'R' ? 'ימין' : 'שמאל'}</b><small>${h ? `שעה ${h}${R.near === 'retro' ? ', מאחורי העטרה' : ''} · מיקום מקורב` : 'המיקום בתוך השד לא נכתב בדוח'}</small>`, top, 'pin'); tags[tags.length - 1].body = true; t1.dataset.pin = 'breast';
+    const t1 = tag(`<b>כריתה חלקית, שד ${R.side === 'R' ? 'ימין' : 'שמאל'}</b><small>${h ? `שעה ${h}${QUADS[R.quad] ? `, ${QUADS[R.quad]}` : ''}${R.near === 'retro' ? ', מאחורי העטרה' : ''} · מיקום מקורב` : 'המיקום בתוך השד לא נכתב בדוח'}</small>`, top, 'pin'); tags[tags.length - 1].body = true; t1.dataset.pin = 'breast';
     // Sentinel nodes sit in the armpit; the exact spot is not in the report, so the place is representative.
     const axl = new THREE.Vector3(s * 150, -78, 1322);
     list.forEach((g, i) => { g.position.set(axl.x + s * i * 9, axl.y + i * 4, axl.z + i * 12); g.rotation.set(0, 0.5 * s, 0); });
