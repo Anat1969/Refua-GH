@@ -1,6 +1,6 @@
 // Network first, for everything: an update always reaches the screen. The cache is the offline copy.
-const CACHE = 'refua-v10';
-const ASSETS = ['./', 'index.html', 'css/app.css', 'js/app.js', 'js/data.js', 'js/body.js', 'js/match.js', 'js/circulation.js', 'js/body3d.js', 'js/history.js', 'js/map-data.js', 'img/vesalius-fabrica.jpg', 'img/harvey-veins.jpg', 'img/snow-cholera-map.jpg', 'icons/icon.svg', 'manifest.webmanifest'];
+const CACHE = 'refua-v11';
+const ASSETS = ['./', 'index.html', 'css/app.css', 'js/app.js', 'js/data.js', 'js/case.js', 'js/body.js', 'js/match.js', 'js/circulation.js', 'js/body3d.js', 'js/history.js', 'js/map-data.js', 'img/vesalius-fabrica.jpg', 'img/harvey-veins.jpg', 'img/snow-cholera-map.jpg', 'icons/icon.svg', 'manifest.webmanifest'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS))); self.skipWaiting(); });
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))));

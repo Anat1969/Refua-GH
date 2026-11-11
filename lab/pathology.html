@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מעבדה: דוח פתולוגי בתלת־ממד | רפואה</title>
+<meta name="description" content="פיילוט: קוראים דוח פתולוגי של כריתה חלקית בשד ושל בלוטות זקיף, ורואים אותו בתלת־ממד: הדגימה, צבעי הדיו, המרחקים לשוליים והבלוטות.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #ffffff; --ink: #16202b; --graphite: #4f5965; --hair: #e5e8ec; --mist: #f5f6f8;
+  --known: #1f4e79; --marker: #fff0a0; --plate: #f6f1e7;
+  --sans: 'IBM Plex Sans Hebrew', 'Segoe UI', Arial, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --display: 'Frank Ruhl Libre', 'IBM Plex Sans Hebrew', serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; }
+body { font-family: var(--sans); color: var(--ink); background: var(--paper); direction: rtl; }
+.lab { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); height: 100vh; }
+.stage { position: relative; min-height: 0; overflow: hidden; direction: ltr; background: radial-gradient(120% 90% at 50% 35%, #ffffff 0%, #f7f5f0 70%, #efebe2 100%); }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.stage canvas:active { cursor: grabbing; }
+.hud { position: absolute; inset-inline: 16px; top: 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; pointer-events: none; direction: rtl; }
+.hud > * { pointer-events: auto; }
+.brand .k { font-size: 12px; letter-spacing: .06em; color: var(--graphite); }
+.brand h1 { margin: 2px 0 0; font-family: var(--display); font-weight: 900; font-size: clamp(24px, 2.3vw, 36px); line-height: 1.05; }
+.brand p { margin: 4px 0 0; font-size: 13px; color: var(--graphite); }
+.views { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.btn { font: inherit; font-size: 13.5px; padding: 7px 13px; border: 0; background: #fff; color: var(--ink); cursor: pointer; border-radius: 0; box-shadow: 0 1px 0 var(--hair), 0 2px 10px rgba(22,32,43,.08); transition: transform .15s, background .15s; }
+.btn:hover { transform: translateY(-1px); background: var(--mist); }
+.btn[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.tag { position: absolute; pointer-events: none; direction: rtl; transform: translate(-50%, -50%); font-size: 12.5px; line-height: 1.25; padding: 3px 7px; background: rgba(255,255,255,.92); color: var(--ink); white-space: nowrap; box-shadow: 0 1px 6px rgba(22,32,43,.12); }
+.tag b { font-weight: 700; }
+.n { font-family: var(--mono); font-size: .92em; direction: ltr; unicode-bidi: isolate; }
+.tag.near { background: var(--marker); }
+.tag.dirn { background: none; box-shadow: none; color: var(--graphite); font-size: 12px; letter-spacing: .04em; }
+.tag.pin { transform: translate(-50%, -100%); text-align: center; padding: 5px 9px; }
+.tag.pin::after { content: ''; position: absolute; left: 50%; top: 100%; width: 1px; height: 26px; background: var(--ink); }
+.tag.pin small { display: block; color: var(--graphite); font-size: 11.5px; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--graphite); font-size: 14px; direction: rtl; }
+.foot { position: absolute; inset-inline: 16px; bottom: 10px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--graphite); direction: rtl; }
+.foot a { color: inherit; }
+.cutbar { position: absolute; inset-inline-start: 16px; bottom: 44px; direction: rtl; display: flex; align-items: center; gap: 8px; font-size: 13px; background: rgba(255,255,255,.9); padding: 6px 10px; box-shadow: 0 1px 6px rgba(22,32,43,.1); }
+input[type=range] { accent-color: var(--ink); direction: ltr; }
+
+.panel { border-inline-start: 1px solid var(--hair); overflow: auto; padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+.label { font-size: 12px; color: var(--graphite); letter-spacing: .04em; font-weight: 500; margin: 0 0 6px; }
+.case { background: var(--plate); padding: 12px 14px; }
+.case h2 { margin: 2px 0 0; font-family: var(--display); font-size: 26px; font-weight: 900; line-height: 1.1; }
+.case .hl { margin: 6px 0 0; font-size: 15.5px; line-height: 1.5; }
+.case ol { list-style: none; margin: 10px 0 0; padding: 0; }
+.case li { display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 8px; padding: 6px 4px; cursor: pointer; border-top: 1px solid rgba(22,32,43,.1); font-size: 14px; line-height: 1.5; }
+.case li:hover, .case li.on { background: rgba(255,255,255,.7); }
+.case li i { font-style: normal; font-weight: 700; font-size: 12.5px; padding-top: 1px; }
+.case .consent { margin: 8px 0 0; font-size: 12px; color: var(--graphite); }
+.demo { font-size: 12.5px; background: var(--marker); padding: 5px 9px; margin: 0; }
+.glance { border-top: 2px solid var(--ink); padding-top: 10px; }
+.glance .big { font-family: var(--display); font-weight: 900; font-size: 54px; line-height: 1; direction: ltr; text-align: right; }
+.glance .big small { font-family: var(--sans); font-size: 17px; font-weight: 500; }
+.glance p { margin: 6px 0 0; font-size: 15.5px; line-height: 1.5; }
+mark { background: var(--marker); color: inherit; padding: 0 2px; }
+.find { list-style: none; margin: 0; padding: 0; counter-reset: f; }
+.find li { counter-increment: f; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 4px 8px; padding: 9px 6px; cursor: pointer; border-bottom: 1px solid var(--hair); }
+.find li::before { grid-row: 1 / span 2; content: '0' counter(f); font-family: var(--mono); font-size: 12px; color: var(--graphite); padding-top: 3px; }
+.find li:hover, .find li.on { background: var(--mist); }
+.find h3 { grid-column: 2; margin: 0; font-size: 15.5px; font-weight: 700; }
+.find h3 .en { font-weight: 400; font-size: 12px; color: var(--graphite); direction: ltr; unicode-bidi: isolate; margin-inline-start: 6px; }
+.find p { grid-column: 2; margin: 2px 0 0; font-size: 14px; line-height: 1.5; color: var(--graphite); }
+.find p b { color: var(--ink); }
+.sw { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-inline-end: 5px; vertical-align: -1px; box-shadow: 0 0 0 1px rgba(0,0,0,.18); }
+table.mg { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+table.mg th { text-align: right; font-weight: 500; font-size: 12px; color: var(--graphite); padding: 3px 4px; }
+table.mg td { padding: 5px 4px; border-top: 1px solid var(--hair); }
+table.mg td.d { white-space: nowrap; }
+table.mg tr.near td { background: var(--marker); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 13px; background: var(--mist); padding: 4px 9px; }
+.chip b { font-family: var(--mono); font-weight: 500; direction: ltr; unicode-bidi: isolate; }
+details { border-top: 1px solid var(--hair); padding-top: 10px; }
+summary { cursor: pointer; font-weight: 700; font-size: 15px; }
+dl { margin: 10px 0 0; }
+dt { font-weight: 700; font-size: 14.5px; margin-top: 9px; }
+dt span { font-weight: 400; font-size: 12px; color: var(--graphite); direction: ltr; unicode-bidi: isolate; margin-inline-start: 6px; }
+dd { margin: 2px 0 0; font-size: 14px; line-height: 1.55; color: var(--graphite); }
+.srcline { font-size: 12px; color: var(--graphite); margin: 10px 0 0; }
+.srcline .layer { color: var(--known); font-weight: 600; }
+ol.q { margin: 10px 0 0; padding-inline-start: 20px; font-size: 14.5px; line-height: 1.55; }
+.form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; margin-top: 10px; }
+.form h4 { grid-column: 1 / -1; margin: 8px 0 0; font-size: 12px; color: var(--graphite); font-weight: 500; letter-spacing: .04em; }
+.form label { display: grid; gap: 2px; font-size: 12.5px; color: var(--graphite); }
+.form input, .form select { font: inherit; font-size: 14px; padding: 6px 8px; border: 0; background: var(--mist); color: var(--ink); border-radius: 0; width: 100%; direction: rtl; }
+.form input:focus, .form select:focus { outline: 2px solid var(--ink); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.note { font-size: 12.5px; color: var(--graphite); line-height: 1.5; margin: 8px 0 0; }
+.decl { font-size: 12.5px; color: var(--graphite); line-height: 1.55; border-top: 1px solid var(--hair); padding-top: 10px; margin: 0; }
+.decl a { color: inherit; }
+@media (max-width: 900px) {
+  .lab { grid-template-columns: minmax(0, 1fr); grid-template-rows: 64vh auto; height: auto; }
+  .panel { border-inline-start: 0; border-top: 1px solid var(--hair); }
+  .brand p { display: none; }
+  .hud { flex-direction: column; gap: 6px; }
+  .views { justify-content: flex-start; }
+  .tag { font-size: 11px; padding: 2px 5px; }
+}
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.170.0/three.module.min.js",
+  "three/addons/": "../js/vendor/"
+} }
+</script>
+</head>
+<body>
+<div class="lab">
+  <section class="stage" id="stage" aria-label="הדוח בתלת־ממד">
+    <div class="hud">
+      <div class="brand">
+        <div class="k">מעבדה · פיילוט</div>
+        <h1>הדוח הפתולוגי, בתלת־ממד</h1>
+        <p>גוררים לסובב. גלגלת לקרב. המידות לפי הדוח, בקנה מידה אחד.</p>
+      </div>
+      <div class="views" role="group" aria-label="מבט">
+        <button class="btn" data-view="body">בגוף</button>
+        <button class="btn" data-view="spec">הדגימה</button>
+        <button class="btn" data-view="nodes">הבלוטות</button>
+        <button class="btn" data-view="ext" id="v-ext">ההרחבה</button>
+      </div>
+    </div>
+    <div class="loading" id="loading">טוען את הגוף…</div>
+    <div id="tags"></div>
+    <label class="cutbar" id="cutbar"><span>חתך מלפנים לאחור</span><input type="range" id="cut" min="0" max="100" value="0" aria-label="עומק החתך"></label>
+    <p class="foot">
+      <span>מודל הגוף: <a href="https://humanatlas.io" target="_blank" rel="noopener">Human Reference Atlas</a>, NIH, ברישיון CC BY 4.0. הדגימה, הגידול והבלוטות מצוירים כאליפסואידים לפי המידות בדוח.</span>
+    </p>
+  </section>
+
+  <aside class="panel" aria-label="קריאת הדוח">
+    <section class="case" id="case" hidden></section>
+    <p class="demo" id="demo" hidden>דוגמה להמחשה. הנתונים כאן אינם של אף אחת. את נתוני הדוח מזינים למטה.</p>
+    <section class="glance" id="glance" aria-live="polite"></section>
+    <ol class="find" id="find"></ol>
+    <div>
+      <p class="label">השוליים: צבע הדיו והמרחק, כפי שנכתב</p>
+      <table class="mg" id="mg"></table>
+      <p class="note">הפתולוג צובע כל צד של הדגימה בדיו בצבע אחר. כך, גם אחרי החיתוך, ידוע לאיזה כיוון בגוף פנה כל צד.</p>
+    </div>
+    <div>
+      <p class="label">סמנים בתאי הגידול, כפי שנכתב</p>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <details>
+      <summary>המונחים שבדוח</summary>
+      <dl>
+        <dt>כריתה חלקית <span>Lumpectomy</span></dt><dd>ניתוח שמוציא את הגידול עם שכבה של רקמת שד סביבו, ומשאיר את השד.</dd>
+        <dt>קרצינומה פולשנית של הצינורות <span>Invasive ductal carcinoma, IDC</span></dt><dd>סרטן שהתחיל בתאים של צינור חלב, ופרץ את דופן הצינור אל רקמת השד שסביבו.</dd>
+        <dt>קרצינומה תוך־צינורית <span>Ductal carcinoma in situ, DCIS</span></dt><dd>תאים לא תקינים בתוך צינור החלב, שלא פרצו את הדופן שלו.</dd>
+        <dt>שוליים <span>Surgical margin</span></dt><dd>שפת הרקמה שהוצאה בניתוח. הפתולוג מודד את המרחק בין הגידול לבין השפה הצבועה בדיו.</dd>
+        <dt>בלוטת זקיף <span>Sentinel lymph node</span></dt><dd>בלוטת הלימפה הראשונה שאליה מתנקז נוזל הלימפה מאזור הגידול. בשד היא לרוב בבית השחי.</dd>
+        <dt>דרגה <span>Grade</span></dt><dd>עד כמה תאי הגידול נראים במיקרוסקופ שונים מתאים רגילים, בסולם של 1 עד 3.</dd>
+        <dt>חדירה לכלי לימפה ודם <span>Lymphovascular invasion</span></dt><dd>תאי גידול שנראו בתוך כלי לימפה או כלי דם קטנים.</dd>
+        <dt>קולטני הורמונים <span>ER, PR</span></dt><dd>חלבונים בתאי הגידול שנקשרים לאסטרוגן ולפרוגסטרון.</dd>
+        <dt><span style="margin:0">HER2</span></dt><dd>חלבון על פני התא, שמעורב בגדילה שלו. הבדיקה מודדת כמה ממנו יש על תאי הגידול.</dd>
+        <dt><span style="margin:0">Ki-67</span></dt><dd>סמן של תאים שנמצאים בחלוקה. האחוז אומר איזה חלק מתאי הגידול מתחלק.</dd>
+      </dl>
+      <p class="srcline"><span class="layer">ידוע</span> · המקור: <a href="https://www.cancer.gov/publications/dictionaries/cancer-terms" target="_blank" rel="noopener" dir="ltr">NCI Dictionary of Cancer Terms</a>, המכון הלאומי לסרטן, ארצות הברית.</p>
+    </details>
+
+    <details>
+      <summary>שאלות לרופאה או לרופא</summary>
+      <ol class="q" id="questions"></ol>
+      <p class="note">ההדמיה מציירת את מה שכתוב בדוח. את המשמעות של כל מספר מסבירים הרופאים שמכירים את התמונה כולה.</p>
+    </details>
+
+    <details id="edit">
+      <summary>נתוני הדוח</summary>
+      <p class="note">הנתונים נשארים במכשיר הזה ובקישור האישי בלבד. הם לא נשלחים לשרת ולא נשמרים באפליקציה. המידות במילימטרים.</p>
+      <div class="form" id="form"></div>
+      <div class="row">
+        <button class="btn" id="copy">העתקת קישור אישי</button>
+        <button class="btn" id="reset">חזרה לדוגמה</button>
+      </div>
+      <p class="note" id="copied" hidden>הקישור הועתק. מי שמחזיקה בו רואה את הנתונים.</p>
+    </details>
+
+    <p class="decl">האפליקציה לא מאבחנת ולא מטפלת. היא מלמדת לקרוא דוח, ולא מסיקה ממנו. חירום: מד"א <a href="tel:101">101</a>. <a href="../#s=reproductive&v=disease&d=breast-cancer&f=cancer">חזרה לכרטיס סרטן השד</a></p>
+  </aside>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/RoomEnvironment.js';
+import { CASES } from '../js/case.js';
+
+// The report is never stored in the repository: it lives in the URL fragment (never sent to a server) and in localStorage.
+// The example below is invented, for illustration only.
+const EXAMPLE = {
+  side: 'R', clock: '10', quad: '', near: 'far',
+  ml: 40, si: 38, ap: 30,
+  inkLat: 'orange', inkMed: 'green', inkSup: 'blue', inkInf: 'red', inkAnt: 'yellow', inkPost: 'black',
+  idc: 9, grade: '1', dcis: 14, lvi: 'no',
+  gSup: 12, gInf: 14, gAnt: 8, gPost: 9, gLat: 15, gMed: 13,
+  dSup: '', dInf: '', dAnt: '5', dPost: '', dLat: '', dMed: '4',
+  er: '+3', pr: '+2', her2: '+1', ki67: '8',
+  n1a: 11, n1b: 7, n1c: 5, n1met: 0,
+  n2a: 0, n2b: 0, n2c: 0, n2met: 0,
+  ext: 'no', extWhere: '', extA: 0, extB: 0, extC: 0, extDucts: 0, extMargin: '',
+};
+const FIELDS = [
+  ['h', 'הניתוח'],
+  ['side', 'צד', { L: 'שמאל', R: 'ימין' }], ['quad', 'רבע בשד', { '': 'לא נכתב', uo: 'חיצוני־עליון', lo: 'חיצוני־תחתון', ui: 'פנימי־עליון', li: 'פנימי־תחתון' }], ['near', 'מרחק מהפטמה', { '': 'לא נכתב', retro: 'מאחורי העטרה', far: 'רחוק מהפטמה' }], ['clock', 'מיקום בשד, לפי שעון', { '': 'לא נכתב בדוח', 12: '12', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10', 11: '11' }],
+  ['h', 'מידות הדגימה'],
+  ['ml', 'לטרלי עד מדיאלי'], ['si', 'עליון עד תחתון'], ['ap', 'קדמי עד אחורי'],
+  ['h', 'צבע הדיו בכל צד'],
+  ['inkLat', 'לטרלי', 'ink'], ['inkMed', 'מדיאלי', 'ink'], ['inkSup', 'עליון', 'ink'], ['inkInf', 'תחתון', 'ink'], ['inkAnt', 'קדמי', 'ink'], ['inkPost', 'אחורי', 'ink'],
+  ['h', 'הגידול'],
+  ['idc', 'קוטר הגידול הפולשני'], ['dcis', 'קוטר עם ה-DCIS שסביבו'], ['grade', 'דרגה', { 1: '1', 2: '2', 3: '3' }], ['lvi', 'חדירה לכלי לימפה ודם', { yes: 'נראתה', no: 'לא נראתה', '': 'לא נכתב' }],
+  ['h', 'מרחק הגוש מהשוליים, בבדיקה בעין'],
+  ['gSup', 'עליון'], ['gInf', 'תחתון'], ['gAnt', 'קדמי'], ['gPost', 'אחורי'], ['gLat', 'לטרלי'], ['gMed', 'מדיאלי'],
+  ['h', 'מרחק ה-DCIS מהשוליים, במיקרוסקופ (אפשר "<2")'],
+  ['dSup', 'עליון', 't'], ['dInf', 'תחתון', 't'], ['dAnt', 'קדמי', 't'], ['dPost', 'אחורי', 't'], ['dLat', 'לטרלי', 't'], ['dMed', 'מדיאלי', 't'],
+  ['h', 'סמנים'],
+  ['er', 'ER', 't'], ['pr', 'PR', 't'], ['her2', 'HER2', 't'], ['ki67', 'Ki-67, באחוזים', 't'],
+  ['h', 'בלוטת זקיף 1'],
+  ['n1a', 'אורך'], ['n1b', 'רוחב'], ['n1c', 'עובי'], ['n1met', 'קוטר גרורה (0: אין)'],
+  ['h', 'בלוטת זקיף 2 (0: אין בלוטה שנייה)'],
+  ['n2a', 'אורך'], ['n2b', 'רוחב'], ['n2c', 'עובי'], ['n2met', 'קוטר גרורה (0: אין)'],
+  ['h', 'הרחבת שוליים'],
+  ['ext', 'נשלחה הרחבה', { yes: 'כן', no: 'לא' }], ['extWhere', 'הכיוון', { '': 'לא נכתב', 'inf-med': 'תחתון־מדיאלי', 'inf-lat': 'תחתון־לטרלי', 'sup-med': 'עליון־מדיאלי', 'sup-lat': 'עליון־לטרלי', sup: 'עליון', inf: 'תחתון', med: 'מדיאלי', lat: 'לטרלי' }],
+  ['extA', 'אורך'], ['extB', 'רוחב'], ['extC', 'עובי'], ['extDucts', 'צינורות עם DCIS'], ['extMargin', 'מרחק מהשוליים החדשים', 't'],
+];
+const INKS = { black: ['שחור', '#1b1b1b'], yellow: ['צהוב', '#e8c21a'], green: ['ירוק', '#2e8b4a'], red: ['אדום', '#c8322b'], blue: ['כחול', '#2a55b8'], orange: ['כתום', '#e07b1f'], '': ['לא נכתב', '#d9d4c8'] };
+const DIRS = [ // key, Hebrew, gross field, DCIS field, ink field
+  ['sup', 'עליון', 'gSup', 'dSup', 'inkSup'], ['inf', 'תחתון', 'gInf', 'dInf', 'inkInf'], ['ant', 'קדמי', 'gAnt', 'dAnt', 'inkAnt'],
+  ['post', 'אחורי', 'gPost', 'dPost', 'inkPost'], ['lat', 'לטרלי', 'gLat', 'dLat', 'inkLat'], ['med', 'מדיאלי', 'gMed', 'dMed', 'inkMed'],
+];
+const INK = '#16202b', NAVY = '#1f4e79', PORCELAIN = '#fbf8f2';
+const QUADS = { uo: 'חיצוני־עליון', lo: 'חיצוני־תחתון', ui: 'פנימי־עליון', li: 'פנימי־תחתון' };
+const KEY = 'refua.lab.pathology';
+const num = (v) => { const n = parseFloat(String(v ?? '').replace(/[<>≤~\s]/g, '').replace(',', '.')); return Number.isFinite(n) ? n : null; };
+const lt = (v) => /[<≤]/.test(String(v ?? ''));
+const has = (v) => num(v) !== null;
+const mmText = (v) => (has(v) ? `${lt(v) ? 'פחות מ-' : ''}${num(v)} מ״מ` : '');
+const mm = (v) => (has(v) ? `${lt(v) ? 'פחות מ-' : ''}<span class="n">${num(v)}</span> מ״מ` : '');
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// --- state: fragment first, then this device, then the example
+const enc = (o) => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const dec = (s) => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0))));
+let theCase = null;
+function load() {
+  theCase = null;
+  const cid = new URLSearchParams(location.search).get('case'); const c = CASES.find((x) => x.id === cid);
+  if (c && !/r=[\w-]+/.test(location.hash)) { theCase = c; return { ...EXAMPLE, ...c.report, mine: true }; }
+  try { const m = location.hash.match(/r=([\w-]+)/); if (m) return { ...EXAMPLE, ...dec(m[1]), mine: true }; } catch { /* a broken link falls back */ }
+  try { const s = localStorage.getItem(KEY); if (s) return { ...EXAMPLE, ...JSON.parse(s), mine: true }; } catch { /* private mode */ }
+  return { ...EXAMPLE };
+}
+let R = load();
+function persist() {
+  const { mine, ...data } = R;
+  try { localStorage.setItem(KEY, JSON.stringify(data)); } catch { /* private mode */ }
+  history.replaceState(null, '', `#r=${enc(data)}`);
+}
+
+// --- three
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.localClippingEnabled = true;
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.9;
+const camera = new THREE.PerspectiveCamera(30, 1, 1, 8000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+// Draw only when something moved: a still stage costs nothing, on a phone and in a recording.
+let dirty = 3; const request = () => { dirty = 3; };
+controls.addEventListener('change', request);
+const key = new THREE.DirectionalLight('#fff4ea', 1.8); key.position.set(-1, 1.2, 1.4);
+scene.add(key, new THREE.HemisphereLight('#ffffff', '#cfc8ba', 0.7));
+
+// Body frame, as in BodyParts3D and the atlas: millimetres, +x the patient's left, -y the front, +z up.
+const world = new THREE.Group(); world.rotation.x = -Math.PI / 2; scene.add(world);
+const bodyG = new THREE.Group(); const findG = new THREE.Group(); world.add(bodyG, findG);
+const cut = new THREE.Plane(new THREE.Vector3(0, 0, -1), 1e6);
+const tagsEl = document.getElementById('tags');
+const bodyMeshes = [];
+let tags = []; let view = 'body'; let anchors = {}; let breastBox = null; let nipple = null;
+
+function outlineMat(w) {
+  return new THREE.ShaderMaterial({
+    uniforms: { w: { value: w }, ink: { value: new THREE.Color(INK) } },
+    vertexShader: 'uniform float w; void main(){ gl_Position = projectionMatrix * modelViewMatrix * vec4(position + normal * w, 1.0); }',
+    fragmentShader: 'uniform vec3 ink; void main(){ gl_FragColor = vec4(ink, 1.0); }',
+    side: THREE.BackSide,
+  });
+}
+function tag(html, pos, cls = '') {
+  const el = document.createElement('div'); el.className = `tag ${cls}`; el.innerHTML = html; tagsEl.appendChild(el);
+  tags.push({ el, pos }); return el;
+}
+function ellipsoid(a, b, c, mat, seg = 48) {
+  const g = new THREE.SphereGeometry(1, seg, Math.round(seg * 0.66)); g.scale(a, b, c); g.computeVertexNormals();
+  return new THREE.Mesh(g, mat);
+}
+function line(p, q, color = INK) {
+  return new THREE.Line(new THREE.BufferGeometry().setFromPoints([p, q]), new THREE.LineBasicMaterial({ color, clippingPlanes: [cut] }));
+}
+
+// Unit vectors of the six directions, in the body frame. Lateral depends on the side.
+function axes() {
+  const s = R.side === 'R' ? -1 : 1;
+  return { sup: new THREE.Vector3(0, 0, 1), inf: new THREE.Vector3(0, 0, -1), ant: new THREE.Vector3(0, -1, 0), post: new THREE.Vector3(0, 1, 0), lat: new THREE.Vector3(s, 0, 0), med: new THREE.Vector3(-s, 0, 0) };
+}
+
+function buildFindings() {
+  findG.clear(); tags.forEach((t) => t.el.remove()); tags = []; anchors = {};
+  const ax = axes(); const s = R.side === 'R' ? -1 : 1;
+  const half = new THREE.Vector3(R.ml / 2, R.ap / 2, R.si / 2);
+
+  // --- the specimen: an ellipsoid with the measured dimensions, each side washed in its ink colour
+  const spec = new THREE.Group(); findG.add(spec);
+  const geo = new THREE.SphereGeometry(1, 72, 48); geo.scale(half.x, half.y, half.z); geo.computeVertexNormals();
+  const col = []; const n = geo.attributes.normal; const v = new THREE.Vector3(); const c = new THREE.Color(); const acc = new THREE.Color();
+  for (let i = 0; i < n.count; i++) {
+    v.fromBufferAttribute(n, i); acc.setRGB(0, 0, 0); let sum = 0;
+    for (const [k, , , , inkF] of DIRS) { const w = Math.max(0, v.dot(ax[k])) ** 6; c.set(INKS[R[inkF]]?.[1] || INKS[''][1]); acc.r += c.r * w; acc.g += c.g * w; acc.b += c.b * w; sum += w; }
+    col.push(acc.r / sum, acc.g / sum, acc.b / sum);
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  // The far wall is strong and the near wall faint: the eye looks into the specimen, and still reads the ink on each side.
+  const wall = (side, opacity, order) => { const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, transparent: true, opacity, depthWrite: false, side, clippingPlanes: [cut] })); m.renderOrder = order; spec.add(m); };
+  wall(THREE.BackSide, 0.62, 1); wall(THREE.FrontSide, 0.2, 4);
+
+  // --- the tumour: placed between the margins, by the distances measured by eye
+  const pos = (plus, minus, h) => ((h - (num(R[plus]) ?? h)) + (-h + (num(R[minus]) ?? h))) / 2; // midpoint of what is left between two margins
+  const tc = new THREE.Vector3(s * pos('gLat', 'gMed', half.x), -pos('gAnt', 'gPost', half.y), pos('gSup', 'gInf', half.z));
+  const reach = (k) => { // distance from the tumour centre to the specimen surface, along one direction
+    const d = ax[k]; const A = (d.x / half.x) ** 2 + (d.y / half.y) ** 2 + (d.z / half.z) ** 2;
+    const B = 2 * (tc.x * d.x / half.x ** 2 + tc.y * d.y / half.y ** 2 + tc.z * d.z / half.z ** 2);
+    const C = (tc.x / half.x) ** 2 + (tc.y / half.y) ** 2 + (tc.z / half.z) ** 2 - 1;
+    return (-B + Math.sqrt(Math.max(0, B * B - 4 * A * C))) / (2 * A);
+  };
+  const idcR = (num(R.idc) || 1) / 2;
+  const idc = ellipsoid(idcR, idcR, idcR, new THREE.MeshStandardMaterial({ color: INK, roughness: 0.5, clippingPlanes: [cut] }), 40);
+  idc.position.copy(tc); spec.add(idc);
+
+  // --- the DCIS around it: reaches each margin up to the distance written; where nothing is written it stays inside
+  const dR = (num(R.dcis) || num(R.idc) || 2) / 2;
+  const ext = {}; for (const [k, , , dF] of DIRS) { const m = num(R[dF]); const r = reach(k); ext[k] = Math.max(idcR + 0.5, m !== null ? r - (lt(R[dF]) ? m * 0.75 : m) : Math.min(dR, r - 2.5)); }
+  const hg = new THREE.SphereGeometry(1, 48, 32); const p = hg.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    v.fromBufferAttribute(p, i);
+    const lx = v.dot(ax.lat) > 0 ? ext.lat : ext.med; const ly = v.y < 0 ? ext.ant : ext.post; const lz = v.z > 0 ? ext.sup : ext.inf;
+    p.setXYZ(i, v.x * lx, v.y * ly, v.z * lz);
+  }
+  hg.computeVertexNormals();
+  const halo = new THREE.Mesh(hg, new THREE.MeshStandardMaterial({ color: NAVY, roughness: 0.6, transparent: true, opacity: 0.3, depthWrite: false, clippingPlanes: [cut] }));
+  halo.position.copy(tc); halo.renderOrder = 2; spec.add(halo);
+
+  // --- six rulers, from the tumour to each inked side
+  const near = nearest();
+  for (const [k, he, gF, dF] of DIRS) {
+    const end = tc.clone().addScaledVector(ax[k], reach(k));
+    spec.add(line(tc.clone().addScaledVector(ax[k], idcR), end));
+    const g = mm(R[gF]); const d = mm(R[dF]);
+    const html = `<b>${he}</b>${g ? ` · גוש ${g}` : ''}${d ? ` · DCIS ${d}` : ''}`;
+    tag(html, end.clone().addScaledVector(ax[k], 9), `v-spec ${near && near.k === k ? 'near' : ''}`).dataset.dir = k;
+  }
+  // 1 cm scale bar under the specimen
+  const b0 = new THREE.Vector3(-5, -half.y, -half.z - 9); const b1 = new THREE.Vector3(5, -half.y, -half.z - 9);
+  const bar = new THREE.Group(); bar.add(line(b0, b1), line(b0.clone().setZ(b0.z - 1.5), b0.clone().setZ(b0.z + 1.5)), line(b1.clone().setZ(b1.z - 1.5), b1.clone().setZ(b1.z + 1.5)));
+  spec.add(bar); const tableOnly = [bar]; // shown beside the specimen on the table, not inside the body
+  tag('1 ס״מ', new THREE.Vector3(0, -half.y, -half.z - 14), 'dirn v-spec');
+  anchors.spec = { c: new THREE.Vector3(), r: Math.max(half.x, half.y, half.z) + 14 };
+
+  // --- the widened margin: a separate piece, next to the side it came from
+  if (R.ext === 'yes' && num(R.extA)) {
+    const parts = (R.extWhere || 'inf').split('-'); const d = new THREE.Vector3(); parts.forEach((k) => d.add(ax[k])); d.normalize();
+    const a = num(R.extA) / 2, b = (num(R.extB) || 10) / 2, t = (num(R.extC) || 6) / 2;
+    const edge = (() => { const A = (d.x / half.x) ** 2 + (d.z / half.z) ** 2; return 1 / Math.sqrt(A); })();
+    const piece = new THREE.Group(); piece.position.copy(d).multiplyScalar(edge + t + 14);
+    // thickness along d, length along the tangent in the coronal plane, width from front to back
+    const tan = new THREE.Vector3(-d.z, 0, d.x); const m4 = new THREE.Matrix4().makeBasis(tan, new THREE.Vector3(0, 1, 0), d); piece.quaternion.setFromRotationMatrix(m4);
+    const pg = new THREE.SphereGeometry(1, 48, 32); pg.scale(a, b, t); pg.computeVertexNormals();
+    const pc = []; const pn = pg.attributes.normal; const newInk = new THREE.Color(INKS.black[1]); const fat = new THREE.Color('#e9d9a8');
+    for (let i = 0; i < pn.count; i++) { const w = Math.max(0, pn.getZ(i)) ** 3; c.copy(fat).lerp(newInk, w); pc.push(c.r, c.g, c.b); }
+    pg.setAttribute('color', new THREE.Float32BufferAttribute(pc, 3));
+    const pm = new THREE.Mesh(pg, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide, clippingPlanes: [cut] }));
+    pm.renderOrder = 3; piece.add(pm);
+    const nd = Math.min(8, Math.max(0, Math.round(num(R.extDucts) || 0))); const mg = num(R.extMargin);
+    for (let i = 0; i < nd; i++) {
+      const duct = ellipsoid(0.9, 0.9, 0.9, new THREE.MeshStandardMaterial({ color: NAVY, roughness: 0.5, clippingPlanes: [cut] }), 20);
+      duct.position.set((i - (nd - 1) / 2) * 2.4, 0, Math.max(-t + 1, t - (mg ?? t) - 0.9)); piece.add(duct);
+    }
+    spec.add(piece); tableOnly.push(piece);
+    const tip = piece.position.clone().addScaledVector(d, t + 6);
+    tag(`<b>הרחבת שוליים</b>${nd ? ` · ${nd} צינורות עם DCIS` : ''}${mm(R.extMargin) ? ` · ${mm(R.extMargin)} מהשוליים החדשים` : ''}`, tip, 'v-spec v-ext');
+    anchors.ext = { c: piece.position.clone(), r: Math.max(a, b) + 10 };
+  }
+
+  // --- the sentinel nodes, at their measured size
+  const nodes = new THREE.Group(); findG.add(nodes); const list = [];
+  [[R.n1a, R.n1b, R.n1c, R.n1met], [R.n2a, R.n2b, R.n2c, R.n2met]].forEach(([a, b, t, met], i) => {
+    if (!num(a)) return;
+    const g = new THREE.Group();
+    const bodyMesh = ellipsoid(num(a) / 2, (num(t) || num(a) * 0.5) / 2, (num(b) || num(a) * 0.7) / 2, new THREE.MeshStandardMaterial({ color: '#e7dcc8', roughness: 0.7, transparent: true, opacity: 0.45, depthWrite: false }), 40);
+    bodyMesh.renderOrder = 3; g.add(bodyMesh);
+    const ol = new THREE.Mesh(bodyMesh.geometry, outlineMat(0.18)); g.add(ol);
+    if (num(met)) { const m = ellipsoid(num(met) / 2, Math.min(num(met), num(t) || num(met)) / 2 * 0.9, num(met) / 2, new THREE.MeshStandardMaterial({ color: INK, roughness: 0.5 }), 28); m.position.x = num(a) * 0.12; g.add(m); }
+    g.userData = { i, met: num(met), r: num(a) / 2 }; list.push(g); nodes.add(g);
+  });
+  findG.userData = { spec, nodes, list, tc, half, tableOnly };
+  layout();
+}
+
+// The operated breast is tinted, so the side reads before any label.
+function tintSide() {
+  request();
+  const s = R.side === 'R' ? -1 : 1; const on = new THREE.Color('#bcd0e6'); const off = new THREE.Color(PORCELAIN);
+  for (const o of bodyMeshes) {
+    if (o.name === 'skin_f') continue;
+    const p = o.geometry.attributes.position; const col = new Float32Array(p.count * 3);
+    for (let i = 0; i < p.count; i++) { const c = p.getX(i) * s > 0 ? on : off; col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
+    o.geometry.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  }
+}
+// The same findings, in two places: inside the body at true scale, or laid out on the table and enlarged by the camera.
+function layout() {
+  request();
+  const { spec, nodes, list, half, tableOnly } = findG.userData; const s = R.side === 'R' ? -1 : 1;
+  const inBody = view === 'body';
+  tableOnly.forEach((o) => { o.visible = !inBody; });
+  tags.forEach((t) => { if (t.body) { t.el.remove(); } }); tags = tags.filter((t) => !t.body);
+  if (inBody && nipple) {
+    const nip = new THREE.Vector3(s * Math.abs(nipple.x), nipple.y, nipple.z);
+    const h = parseInt(R.clock, 10);
+    spec.visible = !!h;
+    if (h) {
+      const a = (h % 12) / 12 * Math.PI * 2; // seen from the front: 12 is up, 3 is towards the patient's left
+      const rad = R.near === 'retro' ? 14 : 42; // behind the areola, or out in the breast
+      // The quadrant, when written, decides the side: reports do not always count the clock from the same side.
+      let dx = Math.sin(a) * rad; const out = R.quad && R.quad[1] === 'o', inn = R.quad && R.quad[1] === 'i';
+      if ((out && dx * s < 0) || (inn && dx * s > 0)) dx = -dx;
+      spec.position.set(nip.x + dx, nip.y + half.y + 5, nip.z + Math.cos(a) * rad);
+    }
+    const top = new THREE.Vector3(nip.x, nip.y - 6, nip.z + 62);
+    const t1 = tag(`<b>כריתה חלקית, שד ${R.side === 'R' ? 'ימין' : 'שמאל'}</b><small>${h ? `שעה ${h}${QUADS[R.quad] ? `, ${QUADS[R.quad]}` : ''}${R.near === 'retro' ? ', מאחורי העטרה' : ''} · מיקום מקורב` : 'המיקום בתוך השד לא נכתב בדוח'}</small>`, top, 'pin'); tags[tags.length - 1].body = true; t1.dataset.pin = 'breast';
+    // Sentinel nodes sit in the armpit; the exact spot is not in the report, so the place is representative.
+    const axl = new THREE.Vector3(s * 150, -78, 1322);
+    list.forEach((g, i) => { g.position.set(axl.x + s * i * 9, axl.y + i * 4, axl.z + i * 12); g.rotation.set(0, 0.5 * s, 0); });
+    if (list.length) { const t2 = tag(`<b>${list.length === 1 ? 'בלוטת זקיף' : `${list.length} בלוטות זקיף`}, בית השחי</b><small>מיקום מייצג</small>`, new THREE.Vector3(axl.x + s * 6, axl.y - 8, axl.z + 24), 'pin'); tags[tags.length - 1].body = true; t2.dataset.pin = 'axilla'; }
+  } else {
+    spec.visible = true; spec.position.set(0, 0, 0);
+    const base = new THREE.Vector3(s * (half.x + 26), 0, half.z + 4);
+    list.forEach((g, i) => { g.position.set(base.x + s * i * 16, 0, base.z - i * 2); g.rotation.set(0, 0, 0); });
+    list.forEach((g, i) => {
+      const { met } = g.userData;
+      tag(`<b>זקיף ${i + 1}</b> · ${met ? `גרורה <span class="n">${met}</span> מ״מ` : 'בלי גרורה'}`, g.position.clone().add(new THREE.Vector3(0, 0, g.userData.r + 7)), 'v-nodes v-spec'); tags[tags.length - 1].body = true;
+    });
+    if (list.length) anchors.nodes = { c: list.reduce((a, g) => a.add(g.position), new THREE.Vector3()).multiplyScalar(1 / list.length), r: 16 };
+  }
+  bodyG.visible = inBody;
+  tags.forEach((t) => { const c = t.el.classList; t.el.hidden = inBody ? !c.contains('pin') : (c.contains('pin') || (view === 'nodes' && !c.contains('v-nodes')) || (view === 'ext' && !c.contains('v-ext'))); });
+  document.getElementById('cutbar').hidden = inBody;
+}
+
+function frame(v, instant) {
+  view = v; layout();
+  document.querySelectorAll('[data-view]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.view === v));
+  document.querySelectorAll('.find li').forEach((li) => li.classList.toggle('on', li.dataset.view === v));
+  const s = R.side === 'R' ? -1 : 1; let c, r, dir;
+  if (v === 'body' && breastBox) {
+    c = new THREE.Vector3(s * 95, -150, 1245); r = 190; dir = new THREE.Vector3(s * 0.45, -1, 0.12);
+  } else {
+    const a = anchors[v] || anchors.spec; c = a.c.clone(); r = a.r * (v === "spec" ? 1.12 : 1.1);
+    if (v === 'spec') { const n = anchors.nodes; if (n) { c.lerp(n.c, 0.28); r *= 1.12; } }
+    dir = new THREE.Vector3(s * 0.85, -1, 0.42);
+  }
+  world.updateMatrixWorld(true);
+  const target = c.applyMatrix4(world.matrixWorld); const d = dir.normalize().applyQuaternion(world.quaternion);
+  const dist = r / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * (stage.clientWidth < stage.clientHeight ? stage.clientHeight / stage.clientWidth : 1);
+  controls.target.copy(target); camera.position.copy(target).addScaledVector(d, dist);
+  camera.near = dist / 60; camera.far = dist * 20; camera.updateProjectionMatrix();
+  setCut(0); document.getElementById('cut').value = 0;
+  if (instant) controls.update();
+  request();
+}
+function setCut(pct) {
+  request();
+  if (!pct || view === 'body') { cut.constant = 1e6; return; }
+  const h = (findG.userData.half?.y || 20) + 2; // world z is the body's front: cut from the front to the back
+  cut.constant = h - (2 * h) * (pct / 100);
+}
+
+// --- the reading panel
+function nearest() {
+  let best = null;
+  for (const [k, he, gF, dF] of DIRS) for (const [f, what] of [[dF, 'DCIS'], [gF, 'הגוש']]) { const m = num(R[f]); if (m !== null && (!best || m < best.m)) best = { k, he, m, what, raw: R[f] }; }
+  return best;
+}
+const boldMd = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+function renderCase() {
+  const el = document.getElementById('case'); el.hidden = !theCase; if (!theCase) return;
+  const c = theCase;
+  el.innerHTML = `<p class="label">מקרה לדוגמה · סרטן השד</p><h2>${esc(c.name_he)}</h2><p class="hl">${boldMd(c.headline_he)}</p>
+    <ol>${c.steps.map((st) => `<li data-view="${st.view}" tabindex="0"><i>${esc(st.k)}</i><span>${boldMd(st.text_he)}</span></li>`).join('')}</ol>
+    <p class="consent">${esc(c.consent_he)} ${esc(c.source_he)}</p>`;
+  document.title = `${c.name_he}: מקרה לדוגמה | רפואה`;
+}
+function renderPanel() {
+  renderCase();
+  document.getElementById('demo').hidden = !!R.mine;
+  const near = nearest(); const sideHe = R.side === 'R' ? 'ימין' : 'שמאל';
+  document.getElementById('glance').innerHTML = near
+    ? `<div class="big">${lt(near.raw) ? '&lt;' : ''}${near.m} <small>מ״מ</small></div><p>המרחק <mark>הקצר ביותר</mark> שנכתב בדוח: בין <b>${near.what}</b> לבין השוליים בצד ה<b>${near.he}</b>.</p>`
+    : '<p>הזינו את נתוני הדוח, והדגימה תצטייר לפי המידות.</p>';
+  const nodes = [[R.n1a, R.n1met], [R.n2a, R.n2met]].filter(([a]) => num(a));
+  const withMet = nodes.filter(([, m]) => num(m)).length;
+  const items = [
+    ['body', 'איפה בגוף', '', `כריתה חלקית ב<b>שד ${sideHe}</b>, ובלוטות זקיף מ<b>בית השחי</b> באותו צד.`],
+    ['spec', 'הגידול הפולשני', 'IDC', `קוטר <b>${num(R.idc)} מ״מ</b>, דרגה <b>${esc(R.grade)}</b>. מצויר ככדור כהה בלב הדגימה.${R.lvi === 'yes' ? ' נראתה <b>חדירה לכלי לימפה ודם</b> סביבו.' : ''}`],
+    ['spec', 'ה-DCIS שסביבו', 'DCIS', `יחד עם הגידול, קוטר של כ-<b>${num(R.dcis)} מ״מ</b>. מצויר כהילה כחולה שקופה, שמגיעה אל השוליים עד למרחק שנכתב.`],
+    ['nodes', nodes.length === 1 ? 'בלוטת זקיף אחת' : `${nodes.length} בלוטות זקיף`, 'SLN', nodes.length ? (withMet ? `ב-<b>${withMet}</b> מתוך <b>${nodes.length}</b> נמצאה גרורה${num(R.n1met) ? `, בקוטר <b>${num(R.n1met)} מ״מ</b>` : ''}. היא מצוירת ככדור כהה בתוך הבלוטה.` : 'לא נמצאה גרורה.') : 'לא הוזנו בלוטות.'],
+  ];
+  if (R.ext === 'yes') items.push(['ext', 'הרחבת השוליים', '', `חתיכת רקמה נוספת שהוצאה ליד הדגימה.${num(R.extDucts) ? ` נמצאו בה <b>${num(R.extDucts)}</b> צינורות עם DCIS` : ''}${mm(R.extMargin) ? `, במרחק <b>${mm(R.extMargin)}</b> מהשוליים החדשים.` : '.'}`]);
+  document.getElementById('find').innerHTML = items.map(([v, h, en, p]) => `<li data-view="${v}" tabindex="0"><h3>${h}${en ? `<span class="en">${en}</span>` : ''}</h3><p>${p}</p></li>`).join('');
+  document.getElementById('v-ext').hidden = R.ext !== 'yes';
+  document.getElementById('mg').innerHTML = `<tr><th>צד</th><th>דיו</th><th>הגוש, בעין</th><th>DCIS, במיקרוסקופ</th></tr>` + DIRS.map(([k, he, gF, dF, iF]) => {
+    const ink = INKS[R[iF]] || INKS[''];
+    return `<tr class="${near && near.k === k ? 'near' : ''}"><td>${he}</td><td><span class="sw" style="background:${ink[1]}"></span>${ink[0]}</td><td class="d">${mm(R[gF]) || "·"}</td><td class="d">${mm(R[dF]) || '·'}</td></tr>`;
+  }).join('');
+  document.getElementById('chips').innerHTML = [['ER', R.er], ['PR', R.pr], ['HER2', R.her2], ['Ki-67', R.ki67 ? `${R.ki67}%` : '']].filter(([, v]) => v !== '' && v != null).map(([k, v]) => `<span class="chip">${k} <b>${esc(v)}</b></span>`).join('') || '<span class="chip">לא הוזנו</span>';
+  const q = [];
+  if (near) q.push(`בדוח כתוב שהמרחק בין ${near.what} לשוליים בצד ה${near.he} הוא ${mmText(near.raw)}. מה המשמעות של המרחק הזה אצלי?`);
+  if (withMet) q.push('באחת מבלוטות הזקיף נמצאה גרורה. מה זה אומר על ההמשך?');
+  if (R.ext === 'yes') q.push('מה נמצא בהרחבת השוליים, והאם השוליים החדשים נקיים?');
+  q.push('איך הסמנים (ER, PR, HER2, Ki-67) משפיעים על ההחלטות שלפנינו?');
+  document.getElementById('questions').innerHTML = q.map((t) => `<li>${esc(t)}</li>`).join('');
+}
+function buildForm() {
+  const f = document.getElementById('form');
+  f.innerHTML = FIELDS.map(([k, he, kind]) => {
+    if (k === 'h') return `<h4>${he}</h4>`;
+    if (kind === 'ink') kind = Object.fromEntries(Object.entries(INKS).map(([id, [name]]) => [id, name]));
+    if (kind && typeof kind === 'object') return `<label>${he}<select name="${k}">${Object.entries(kind).map(([v, t]) => `<option value="${v}"${String(R[k] ?? '') === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label>`;
+    return `<label>${he}<input name="${k}" ${kind === 't' ? 'type="text"' : 'type="number" min="0" step="0.1"'} inputmode="decimal" autocomplete="off" value="${esc(R[k] ?? '')}"></label>`;
+  }).join('');
+  f.addEventListener('input', (e) => {
+    const el = e.target; if (!el.name) return;
+    theCase = null;
+    R[el.name] = el.type === 'number' ? (el.value === '' ? 0 : +el.value) : el.value; R.mine = true;
+    persist(); renderPanel(); buildFindings(); if (el.name === 'side') { tintSide(); frame(view); }
+  });
+}
+
+// --- wiring
+document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => frame(b.dataset.view)));
+document.getElementById('find').addEventListener('click', (e) => { const li = e.target.closest('li'); if (li) frame(li.dataset.view); });
+document.getElementById('case').addEventListener('click', (e) => { const li = e.target.closest('li'); if (!li) return; frame(li.dataset.view); document.querySelectorAll('.case li').forEach((x) => x.classList.toggle('on', x === li)); });
+document.getElementById('case').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.closest('li')?.click(); });
+document.getElementById('find').addEventListener('keydown', (e) => { if (e.key === 'Enter') { const li = e.target.closest('li'); if (li) frame(li.dataset.view); } });
+document.getElementById('cut').addEventListener('input', (e) => setCut(+e.target.value));
+document.getElementById('copy').addEventListener('click', async () => {
+  persist(); try { await navigator.clipboard.writeText(location.href); } catch { /* the address bar holds it */ }
+  document.getElementById('copied').hidden = false;
+});
+document.getElementById('reset').addEventListener('click', () => {
+  try { localStorage.removeItem(KEY); } catch { /* private mode */ }
+  history.replaceState(null, '', location.pathname); R = { ...EXAMPLE }; buildForm(); renderPanel(); buildFindings(); tintSide(); frame(view);
+});
+addEventListener('hashchange', () => { R = load(); buildForm(); renderPanel(); buildFindings(); tintSide(); frame(view); });
+
+const v3 = new THREE.Vector3();
+function placeTags() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  for (const t of tags) {
+    if (t.el.hidden) continue;
+    v3.copy(t.pos); (t.el.classList.contains('pin') || !findG.userData.spec ? world : findG.userData.spec).localToWorld(v3);
+    if (t.body && !t.el.classList.contains('pin')) { v3.copy(t.pos); world.localToWorld(v3); }
+    v3.project(camera);
+    t.x = (v3.x * 0.5 + 0.5) * w; t.y = (-v3.y * 0.5 + 0.5) * h;
+    t.el.style.visibility = v3.z > 1 ? 'hidden' : 'visible';
+  }
+  // Labels that land on each other are pushed apart, top to bottom.
+  const live = tags.filter((t) => !t.el.hidden && !t.el.classList.contains('pin')).sort((a, b) => a.y - b.y);
+  for (let i = 0; i < live.length; i++) for (let j = 0; j < i; j++) {
+    const a = live[j], b = live[i]; const bw = (a.el.offsetWidth + b.el.offsetWidth) / 2 + 6, bh = (a.el.offsetHeight + b.el.offsetHeight) / 2 + 3;
+    if (Math.abs(a.x - b.x) < bw && b.y - a.y < bh) b.y = a.y + bh;
+  }
+  for (const t of tags) if (!t.el.hidden) { t.el.style.left = `${t.x}px`; t.el.style.top = `${t.y}px`; }
+}
+function resize() { const r = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); request(); }
+new ResizeObserver(resize).observe(stage); resize();
+renderer.setAnimationLoop(() => { controls.update(); if (dirty <= 0) return; dirty--; scene.updateMatrixWorld(); placeTags(); renderer.render(scene, camera); });
+
+buildForm(); renderPanel(); buildFindings(); frame('spec', true);
+
+// The body: the woman's outline and the breast from the Human Reference Atlas, as placed in the app's own model.
+new GLTFLoader().load('../models/reproductive.glb', (gltf) => {
+  const keep = { skin_f: 0.1, breast: 0.5, breast_lobes: 1, breast_ducts: 1 }; const found = [];
+  gltf.scene.traverse((o) => { if (o.isMesh && o.name in keep) found.push(o); });
+  found.forEach((o) => {
+    o.geometry.computeVertexNormals();
+    const a = keep[o.name];
+    const skin = o.name === 'skin_f';
+    o.material = new THREE.MeshStandardMaterial({ color: skin ? '#b9b0a2' : '#ffffff', vertexColors: !skin, roughness: 0.92, transparent: a < 1, opacity: skin ? 0.16 : a, depthWrite: a === 1, side: skin ? THREE.FrontSide : THREE.DoubleSide });
+    o.renderOrder = a < 1 ? 1 : 0; bodyG.add(o); bodyMeshes.push(o);
+    if (!skin) bodyG.add(new THREE.Mesh(o.geometry, outlineMat(o.name === 'breast' ? 0.45 : 0.22)));
+    if (o.name === 'breast') {
+      o.geometry.computeBoundingBox(); breastBox = o.geometry.boundingBox.clone();
+      const p = o.geometry.attributes.position; let best = Infinity; nipple = new THREE.Vector3();
+      for (let i = 0; i < p.count; i++) if (p.getX(i) > 0 && p.getY(i) < best) { best = p.getY(i); nipple.fromBufferAttribute(p, i); }
+    }
+  });
+  tintSide(); document.getElementById('loading').hidden = true;
+  frame('body', true);
+  document.body.dataset.ready = '1';
+}, undefined, () => {
+  document.getElementById('loading').textContent = 'מודל הגוף לא נטען. הדגימה מוצגת בלעדיו.';
+  document.querySelector('[data-view="body"]').hidden = true; document.body.dataset.ready = '1';
+});
+</script>
+</body>
+</html>

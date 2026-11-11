@@ -82,7 +82,7 @@ ai-menu { margin-inline-start: auto; }
 /* ---------- Work area: right = entry, centre = focus, left = detail ---------- */
 .work {
   display: grid; min-height: 0;
-  grid-template-columns: minmax(260px, 21rem) minmax(0, 1fr) minmax(340px, 29rem);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); /* two frames: two thirds and a third */
   gap: var(--s4); padding: var(--s3) var(--s4);
 }
 .intro, .panel { min-height: 0; overflow: auto; scrollbar-width: thin; }
@@ -231,11 +231,6 @@ ai-menu { margin-inline-start: auto; }
 
 /* ---------- Medium: figure + panel, intro on top ---------- */
 @media (max-width: 1199px) {
-  .work { grid-template-columns: minmax(0, 1fr) minmax(320px, 26rem); grid-template-rows: auto minmax(0, 1fr); }
-  .intro { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--s4); overflow: visible; }
-  .intro > .label, .intro .headline, .intro .lede { grid-column: 1; }
-  .home-lead { grid-column: 1 / -1; overflow: visible; }
-  .intro .legend-block { grid-row: 1 / span 3; border-top: 0; padding-top: 0; }
   .inspo, .museum .haiku { display: none; }
   .museum { grid-template-columns: minmax(0, 1fr); }
 }
@@ -681,6 +676,19 @@ body.is-home .sysmark text { animation: mark-cycle 14s infinite; animation-delay
    Its colours follow the DNA: ink ground, insight-marker accent. */
 :root { --aoa-demo-ink: #16202b; --aoa-demo-accent: #fff0a0; --aoa-demo-accent-hover: #ffe766; }
 .home-demo:empty { display: none; }
+.home-feature { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--s2); align-items: stretch; }
+.home-case { display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; align-content: start; padding: 10px 12px 12px; background: var(--plate); color: var(--ink); text-decoration: none; direction: rtl; box-shadow: 0 1px 0 rgba(22,32,43,.08), 0 6px 18px rgba(22,32,43,.07); transition: transform .18s, box-shadow .18s; }
+.home-case:hover { transform: translateY(-2px); box-shadow: 0 1px 0 rgba(22,32,43,.08), 0 12px 26px rgba(22,32,43,.12); }
+.home-case img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #fff; margin-bottom: 6px; }
+.home-case b { font-family: var(--display); font-size: 19px; font-weight: 700; line-height: 1.2; }
+.home-case .hc-line { font-size: 13.5px; color: var(--graphite); line-height: 1.45; }
+a.to-3d { text-decoration: none; }
+.case-go { background: var(--known); }
+.case-go:hover { background: #17406a; }
+.case-hl { margin: 0 0 var(--s2); font-size: 16px; line-height: 1.5; }
+.case-steps { list-style: none; margin: 0 0 var(--s2); padding: 0; }
+.case-steps li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px; padding: 6px 0; border-top: 1px solid var(--hair); font-size: 14.5px; line-height: 1.5; }
+.case-steps li b { font-size: 13px; }
 
 /* ---------- יצירות: דף שנקרא בגלילה, ברוחב המסך (AppOfApp-GH/public/creations.js) ---------- */
 body.is-creations .app-shell { height: auto; min-height: 100dvh; padding-bottom: var(--ab-h, 0px); }
@@ -688,3 +696,39 @@ body.is-creations .work { display: block; overflow: visible; }
 body.is-creations .intro, body.is-creations .stage, body.is-creations .panel, body.is-creations .home-lead { display: none; }
 .creations-page { display: block; max-width: 1280px; margin: 0 auto; padding: var(--s2) 0 var(--s5); }
 .creations-page app-creations { --cr-sans: var(--sans); --cr-mono: var(--mono); --cr-accent: var(--known); }
+
+/* ---------- Two frames on every screen (Anat, 11.11.2026): the stage in two thirds, the reading in a third ---------- */
+.frame-main { display: contents; }
+@media (min-width: 1000px) {
+  .frame-main {
+    display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: var(--s2); min-height: 0; min-width: 0;
+    background: var(--paper); border: 1px solid var(--hair); padding: var(--s3) var(--s4);
+    box-shadow: 0 1px 2px rgba(22,32,43,.06), 0 18px 40px -28px rgba(22,32,43,.45);
+  }
+  /* The legend becomes one quiet strip above the stage. */
+  .intro { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 4px var(--s4); overflow: visible; padding: 0 0 var(--s2); border-bottom: 1px solid var(--hair); }
+  .intro > .label, .intro .lede, .intro .inspo, .intro .legend-block:first-of-type, .intro .legend-block .label { display: none; }
+  .intro .headline { font-size: 19px; margin: 0; }
+  .intro .legend-block { border: 0; padding: 0; margin: 0; margin-inline-start: auto; }
+  .intro .layers-legend { display: flex; gap: var(--s3); flex-wrap: wrap; margin: 0; }
+  .intro .layers-legend li { font-size: 12.5px; grid-template-columns: 30px auto; gap: 6px; }
+  .intro .layers-legend li > :nth-child(n+3) { display: none; }
+
+  /* Home: the teaching and the body side by side, then the video in two thirds and the case in a third. */
+  body.is-home .frame-main { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: none; grid-auto-rows: auto; align-content: start; gap: var(--s3) var(--s4); overflow: auto; scrollbar-width: thin; }
+  body.is-home .home-lead { display: contents; }
+  body.is-home .home-text { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: var(--s3); min-width: 0; }
+  body.is-home .stage { grid-column: 2; grid-row: 1; min-height: 360px; }
+  body.is-home .home-feature, body.is-home #quiz-box, body.is-home .home-lead > .inspo { grid-column: 1 / -1; }
+  body.is-home .home-feature { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--s3); }
+  body.is-home .home-feature:has(.home-demo:empty) { grid-template-columns: minmax(0, 1fr); }
+  body.is-home .home-feature:has(.home-demo:empty) .home-case { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); column-gap: var(--s3); }
+  body.is-home .home-feature:has(.home-demo:empty) .home-case img { grid-row: 1 / span 4; margin: 0; }
+  body.is-home .museum { display: none; }
+  body.is-creations .frame-main { display: none; }
+}
+@media (min-width: 1000px) and (max-width: 1199px) {
+  body.is-home .frame-main { grid-template-columns: minmax(0, 1fr); }
+  body.is-home .stage { grid-column: 1; grid-row: 2; }
+  body.is-home .home-feature { grid-template-columns: minmax(0, 1fr); }
+}
