@@ -600,6 +600,9 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     await cp.goto(BASE + '#s=cardio');
     await cp.waitForSelector('[data-view="creations"]');
     await cp.click('[data-view="creations"]');
+    // Since the shared articles (AppOfApp-GH, 07.11.2026) each room opens with its article, and the cards sit in a closed <details>.
+    await cp.waitForSelector('app-creations .cr-room .cr-card', { timeout: 20000, state: 'attached' });
+    await cp.evaluate(() => document.querySelectorAll('app-creations details.ar-more').forEach((d) => { d.open = true; }));
     await cp.waitForSelector('app-creations .cr-room .cr-card', { timeout: 20000 });
     const cr = await cp.evaluate(() => ({
       rooms: document.querySelectorAll('app-creations .cr-room').length,
