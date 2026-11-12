@@ -62,7 +62,7 @@ const ok = (name, cond) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}`); i
   ok('level two tells the case in steps', (await p3.locator('.case-steps li').count()) === 7);
   await p3.goto(`${BASE}/`); await p3.reload();
   await p3.waitForSelector('a.home-case img');
-  ok('the home page shows the case next to the video slot', await p3.evaluate(() => { const f = document.querySelector('.home-feature'); const im = f.querySelector('a.home-case img'); return !!f.querySelector('[data-aoa-demo]') && im.complete && im.naturalWidth > 100; }));
+  ok('the home page shows the case above the wonders, and holds the video slot', await p3.evaluate(() => { const im = document.querySelector('#panel a.home-case img'); return !!document.querySelector('.home-feature [data-aoa-demo]') && !!im && im.complete && im.naturalWidth > 100; }));
   // The lymphatic network and the living body, inside the app's own 3D body.
   const p4 = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   p4.on('pageerror', (e) => errors.push(e.message));

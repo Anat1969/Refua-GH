@@ -544,6 +544,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       }
       ok(true, 'home: each of the seven lines opens its screen');
       await page.goto(BASE + '#v=home');
+      await page.click('#quiz-more > summary');
       await page.waitForSelector('#quiz-box .q-row');
       const keys = await page.evaluate(async () => { const { SYSTEMS } = await import('./js/data.js'); const s = (id) => SYSTEMS.find((x) => x.id === id); return [s('skeletal').failure.find((f) => f.layer === 'believed').layer, s('cardio').role.layer, s('nervous').failure.find((f) => f.layer === 'said').layer]; });
       for (let i = 0; i < 3; i++) await page.click(`[data-q="${i}"][data-a="${keys[i]}"]`);

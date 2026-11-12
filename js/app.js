@@ -493,11 +493,11 @@ function homeLead() {
     <p class="label">על רגל אחת</p>
     <blockquote class="hillel">
       <p class="h-ar">„${HOME.hillel_he}”</p>
-      <p class="h-tr"><span class="q-tag">תרגום</span> ${HOME.hillel_tr}</p>
+      <details class="h-more"><summary>תרגום</summary><p class="h-tr">${HOME.hillel_tr}</p></details>
       <p class="imeta">${srcLine(HOME.hillel_source)}</p>
     </blockquote>
     <h1 class="headline display">${rich(HOME.one_foot)}</h1>
-    <p class="lede">${HOME.one_foot_more.split('\n').map(rich).join('<br>')}</p>
+    <p class="lede">${HOME.one_foot_more.split('\n').slice(0, 2).map(rich).join(' ')}</p>
     <ul class="home-nums" aria-label="במספרים">
       <li><button class="numcell press-soft" data-view-go="system">${n(SYSTEMS.length)}<span>מערכות</span></button></li>
       <li><button class="numcell press-soft" data-view-go="diseases">${n(DISEASES.length)}<span>מחלות</span></button></li>
@@ -505,17 +505,8 @@ function homeLead() {
       <li><button class="numcell press-soft" data-view-go="sources">${n(Object.keys(SOURCES).length)}<span>מקורות</span></button></li>
     </ul>
     </div>
-    <div class="home-feature">
-      <div class="home-demo" data-aoa-demo="hero" aria-label="סרטון הדגמה"></div>
-      ${CASES.slice(0, 1).map((c) => `<a class="home-case press-soft" href="${caseHref(c)}">
-        <img src="${c.image}" alt="" loading="lazy">
-        <span class="label">מקרה לדוגמה · סרטן השד</span>
-        <b>${esc(c.name_he)}: הדוח הפתולוגי, בתלת־ממד</b>
-        <span class="hc-line">${esc(c.tile_he)}</span>
-      </a>`).join('')}
-    </div>
-    <div id="quiz-box"></div>
-    <p class="inspo">בהשראת <b>הלל הזקן</b>, ו<b>ארונות הפלאות</b> של אירופה, <span class="num">1600</span> לערך: כל פריט מעורר שאלה.</p>`;
+    <div class="home-feature"><div class="home-demo" data-aoa-demo="hero" aria-label="סרטון הדגמה"></div></div>
+`;
 }
 
 function quizHTML() {
@@ -543,10 +534,14 @@ function homeView() {
   <header class="panel-head">
     <div><p class="label">ארון פלאות</p><h2 id="sys-title">תשעה פלאות, תשע מערכות</h2></div>
   </header>
+  ${CASES.slice(0, 1).map((c) => `<a class="home-case press-soft" href="${caseHref(c)}">
+    <img src="${c.image}" alt="" loading="lazy">
+    <span class="hc-text"><span class="label">מקרה לדוגמה · סרטן השד</span><b>${esc(c.name_he)}: הדוח הפתולוגי, בתלת־ממד</b><span class="hc-line">${esc(c.tile_he)}</span></span>
+  </a>`).join('')}
   <ul class="cabinet">${SYSTEMS.map((x) => {
     const w = WONDERS[x.id];
     const im = w.image && IMAGES[w.image];
-    return `<li><button class="wonder-tile press rise" data-pick="${x.id}">
+    return `<li><button class="wonder-tile press rise" data-pick="${x.id}" title="${esc(w.line_he)}">
       ${im ? `<img src="${im.src}" alt="" loading="lazy">` : `<img class="sheet" src="data:image/svg+xml,${encodeURIComponent(sheetSVG(x.id, 360, CROP[x.id]))}" alt="">`}
       <span class="wt-big">${esc(w.big)}</span><span class="wt-unit">${esc(w.unit_he)}</span>
       <span class="wt-line">${esc(w.line_he)}</span>
@@ -561,7 +556,8 @@ function homeView() {
         <p class="lt">${rich(ln.text_he)}</p>
         <p class="imeta">${ln.source_id ? srcLine(ln.source_id) : '<span class="ev">העדשה של האפליקציה</span>'}<button class="linkish" data-line="${i}">${ln.go_he}</button></p>
       </li>`).join('')}</ol>
-  </section>`;
+  </section>
+  <details class="quiz-more" id="quiz-more"><summary><span class="label">בדיקה של דקה</span>ידוע, נאמר, או מאמינים?</summary><div id="quiz-box"></div></details>`;
 }
 
 // ---------- Stage 5: timeline and traditions ----------
@@ -1003,6 +999,9 @@ function boot() {
   $('#home-lead').addEventListener('click', (e) => {
     const vg = e.target.closest('[data-view-go]');
     if (vg) go(SYSTEMS.find((x) => x.id === 'cardio'), vg.dataset.viewGo);
+  });
+  // The one-minute check lives in the cabinet panel, under the wonders.
+  $('#panel').addEventListener('click', (e) => {
     const qa = e.target.closest('[data-q]');
     if (qa) {
       quizState.answers[Number(qa.dataset.q)] = qa.dataset.a;

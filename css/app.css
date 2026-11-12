@@ -715,11 +715,13 @@ body.is-creations .intro, body.is-creations .stage, body.is-creations .panel, bo
   .intro .layers-legend li > :nth-child(n+3) { display: none; }
 
   /* Home: the teaching and the body side by side, then the video in two thirds and the case in a third. */
-  body.is-home .frame-main { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: none; grid-auto-rows: auto; align-content: start; gap: var(--s3) var(--s4); overflow: auto; scrollbar-width: thin; }
+  body.is-home .frame-main { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); grid-template-rows: minmax(0, 1fr) auto auto; gap: var(--s3) var(--s4); overflow: auto; scrollbar-width: thin; }
   body.is-home .home-lead { display: contents; }
   body.is-home .home-text { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: var(--s3); min-width: 0; }
   body.is-home .stage { grid-column: 2; grid-row: 1; min-height: 360px; }
-  body.is-home .home-feature, body.is-home #quiz-box, body.is-home .home-lead > .inspo { grid-column: 1 / -1; }
+  body.is-home .home-feature, body.is-home .quiz-more { grid-column: 1 / -1; }
+  body.is-home .home-feature { grid-row: 2; }
+  body.is-home .quiz-more { grid-row: 3; }
   body.is-home .home-feature { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--s3); }
   body.is-home .home-feature:has(.home-demo:empty) { grid-template-columns: minmax(0, 1fr); }
   body.is-home .home-feature:has(.home-demo:empty) .home-case { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); column-gap: var(--s3); }
@@ -761,3 +763,41 @@ body.is-creations .intro, body.is-creations .stage, body.is-creations .panel, bo
 .case-mg .sw { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-inline-end: 5px; vertical-align: -1px; box-shadow: 0 0 0 1px rgba(0,0,0,.18); }
 .case-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .case-chips span { font-size: 13px; background: #f5f6f8; padding: 4px 9px; }
+
+/* ---------- A calmer home (Anat, 12.11.2026: "דף הבית עמוס"): the body is the hero, the rest is quiet ---------- */
+body.is-home .figure-note, body.is-home .b3-cut { display: none; }
+body.is-home #atlas:not(.is-moving) .b3-card { display: none; }
+.hillel { padding: 4px var(--s3); background: transparent; }
+.hillel .h-ar { font-size: 14.5px; }
+.h-more { font-size: 12.5px; color: var(--graphite); }
+.h-more summary { cursor: pointer; display: inline; }
+.h-more .h-tr { margin: 2px 0 0; }
+.lede { font-size: 14.5px; line-height: 1.5; margin: 0; }
+.quiz-more { border-top: 1px solid var(--hair); padding-top: var(--s2); }
+.quiz-more > summary { cursor: pointer; display: flex; gap: var(--s2); align-items: baseline; font-weight: 600; font-size: 15px; }
+.quiz-more[open] > summary { margin-bottom: var(--s2); }
+body.is-home .cabinet { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+body.is-home .wonder-tile { padding: 6px 8px 8px; }
+body.is-home .wonder-tile img { height: 58px; margin-bottom: 4px; }
+body.is-home .wt-big { font-size: 26px; }
+body.is-home .wt-unit { font-size: 12px; }
+body.is-home .wt-line { font-size: 12px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+body.is-home .wt-sys { font-size: 11px; margin-top: 2px; }
+body.is-home .home-case img { aspect-ratio: 16 / 9; }
+body.is-home .numcell { padding: 5px 4px; }
+body.is-home .numcell .num { font-size: 20px; }
+
+/* The home, second pass: the text and the video on one side, the body on the other; the case and the quiz live in the cabinet panel. */
+body.is-home .frame-main { grid-template-rows: auto minmax(0, 1fr); align-content: start; }
+body.is-home .home-text { grid-column: 1; grid-row: 1; }
+body.is-home .home-feature { grid-column: 1; grid-row: 2; display: block; align-self: start; }
+body.is-home .home-feature:has(.home-demo:empty) { display: none; }
+body.is-home .stage { grid-column: 2; grid-row: 1 / span 2; min-height: 420px; }
+body.is-home .panel .home-case { grid-template-columns: 112px minmax(0, 1fr); column-gap: var(--s3); align-items: center; margin-bottom: var(--s2); padding: 8px 10px; }
+body.is-home .panel .home-case img { grid-row: 1; aspect-ratio: 4 / 3; margin: 0; height: auto; width: 100%; }
+body.is-home .panel .home-case .hc-text { display: grid; gap: 2px; }
+body.is-home .panel .home-case b { font-size: 16px; }
+@media (min-width: 1000px) and (max-width: 1199px) {
+  body.is-home .stage { grid-column: 1; grid-row: 3; }
+  body.is-home .home-feature { grid-row: 2; }
+}
