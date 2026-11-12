@@ -32,6 +32,8 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
 
   for (const [w, h] of SIZES) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
+    // The runner has no graphics card: drawing the 3D body in software takes tens of seconds a step, so an action may wait longer than the default 30s.
+    ctx.setDefaultTimeout(90000);
     // The real body is the default stage; these runs check the sheets, so they choose them, as a viewer can.
     await ctx.addInitScript(() => { try { if (!sessionStorage.getItem('t')) { localStorage.setItem('refua.mode', '2d'); sessionStorage.setItem('t', '1'); } } catch {} });
     const page = await ctx.newPage();
