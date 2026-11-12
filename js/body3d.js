@@ -205,7 +205,7 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     const M = MOTION3D[sel];
     const bold = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
     const moveBlock = moving && !whole && M ? `<div class="b3-motion"><p>${bold(M.text_he)}</p>${M.legend.length ? `<ul>${M.legend.map(([col, t]) => `<li><span class="b3-sw" style="--c:${col}"></span>${esc(t)}</li>`).join('')}</ul>` : ''}<p class="b3-meta"><span class="b3-layer">ידוע</span><span dir="ltr">${esc(SOURCES[M.source_id].title)}, ${SOURCES[M.source_id].year}</span></p></div>` : '';
-    if (whole) { c.innerHTML = moving ? `<p class="b3-k">הגוף החי</p><div class="b3-motion"><p>הלב שולח דם, הריאות מתמלאות, אותות חשמליים יוצאים מהמוח, המזון מתקדם, והלימפה חוזרת אל הדם.</p></div>` : `<p class="b3-k">גוף אחד, שבע רשתות</p><p class="b3-hint">לחיצה על מערכת בגוף, או על שמה למעלה, פותחת אותה. גרירה מסובבת, גלגלת מקרבת.</p>`; return; }
+    if (whole) { c.innerHTML = moving ? `<p class="b3-k">הגוף החי</p><div class="b3-motion"><p>הלב שולח דם, הריאות מתמלאות, אותות חשמליים יוצאים מהמוח, המזון מתקדם, הכליות מסננות, ההורמונים נשלחים בדם, והלימפה חוזרת אל הדם.</p></div>` : `<p class="b3-k">גוף אחד, תשע רשתות</p><p class="b3-hint">לחיצה על מערכת בגוף, או על שמה למעלה, פותחת אותה. גרירה מסובבת, גלגלת מקרבת.</p>`; return; }
     if (!A) { c.innerHTML = ''; return; }
     const list = partsOf(sel);
     const sexSeg = sel === 'reproductive' ? `<div class="b3-seg b3-sex" role="group" aria-label="גוף"><button data-b3-sex="f" aria-pressed="${sex === 'f'}">אישה</button><button data-b3-sex="m" aria-pressed="${sex === 'm'}">גבר</button></div>` : '';
@@ -381,7 +381,7 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     for (let i = 0; i < live.length; i++) for (let j = 0; j < i; j++) { const p = live[j], q = live[i]; const bw = (p.el.offsetWidth + q.el.offsetWidth) / 2 + 6, bh = (p.el.offsetHeight + q.el.offsetHeight) / 2 + 3; if (Math.abs(p.x - q.x) < bw && q.y - p.y < bh) q.y = p.y + bh; }
     for (const t of live) { t.el.style.left = `${t.x}px`; t.el.style.top = `${Math.max(64, t.y)}px`; }
   }
-  const PAD = { skeletal: 0.7, cardio: 1.15, immune: 1.02, reproductive: 2.2 };
+  const PAD = { skeletal: 0.7, cardio: 1.15, immune: 1.02, reproductive: 2.2, urinary: 1.5, endocrine: 1.3 };
   const padOf = (id) => (id === 'reproductive' && sex === 'f' ? 0.95 : PAD[id] || 0.82);
   const frameSel = () => frameBox(boxOf(sel), VIEW[view], padOf(sel));
   function setCut(v) {

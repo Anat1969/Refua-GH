@@ -77,6 +77,14 @@ const ok = (name, cond) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}`); i
   await p4.locator('[data-b3-move]').click();
   ok('the motion button turns on and says what to press to stop', (await p4.locator('[data-b3-move]').getAttribute('aria-pressed')) === 'true' && (await p4.locator('[data-b3-move]').innerText()) === 'עצירה');
   ok('the caption names the direction of the lymph', (await p4.locator('.b3-motion').innerText()).includes('כיוון אחד'));
+  // The urinary and the endocrine systems: nine in all, each with its structures and its motion.
+  await p4.goto(`${BASE}/#s=urinary&m=3d`, { waitUntil: 'domcontentloaded' });
+  await p4.waitForFunction(() => (document.querySelector('.b3-more summary b')?.textContent || '').trim().startsWith('4 '), null, { timeout: 90000 });
+  ok('the urinary system holds four structures: kidneys, ureters, bladder, renal arteries', true);
+  await p4.goto(`${BASE}/#s=endocrine&m=3d`, { waitUntil: 'domcontentloaded' });
+  await p4.waitForFunction(() => (document.querySelector('.b3-more summary b')?.textContent || '').trim().startsWith('5 '), null, { timeout: 90000 });
+  ok('the endocrine system holds five glands, and says its thyroid is a schema', (await p4.locator('.b3-gap').textContent()).includes('בלוטת התריס היא סכמה'));
+  ok('nine system names across the 3D body', (await p4.locator('.atlas-label').count()) === 9);
   await p4.goto(`${BASE}/#s=cardio&m=3d`, { waitUntil: 'domcontentloaded' });
   await p4.waitForSelector('.b3-card');
   ok('blood has two colours: red for oxygen-rich, blue for oxygen-poor', await p4.evaluate(() => { const r = getComputedStyle(document.documentElement); return r.getPropertyValue('--blood-rich').trim() === '#c8322b' && r.getPropertyValue('--blood-poor').trim() === '#2a55b8'; }));
