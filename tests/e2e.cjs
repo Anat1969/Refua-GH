@@ -39,6 +39,10 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/ai-menu.js', (r) => r.fulfill({ body: AIMENU, contentType: 'text/javascript' }));
     await page.route('**/fonts.g*/**', (r) => r.continue());
+    // The shared creations component sits on GitHub Pages; the screens here do not need it, and the creations test has its own page and route.
+    await page.route('**/creations.js', (r) => r.fulfill({ body: '', contentType: 'text/javascript' }));
+    // The demo video button asks the portfolio database for this app's video; tests run without it (the video would keep the network busy).
+    await page.route(/\/rest\/v1\/aoa_apps\?select=id,demo/, (r) => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '[]' }));
     await page.route('**/bridge.js', (r) => (BRIDGE ? r.fulfill({ body: BRIDGE, contentType: 'text/javascript' }) : r.fulfill({ body: '', contentType: 'text/javascript' })));
     await page.goto(BASE, { waitUntil: 'networkidle' });
     await page.waitForSelector('.panel h2');
@@ -524,7 +528,8 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       ok(true, 'leaving the timeline restores the body figure');
 
       // ---------- Home: on one foot, and the live bridge to nutrition ----------
-      await page.goto(BASE);
+      // Same page, home address: from a hash address to the bare address Chromium may not fire a new load event, so wait for the screen, not for load.
+      await page.goto(BASE + '#v=home', { waitUntil: 'domcontentloaded' });
       await page.waitForSelector('#home-lead .hillel');
       ok(await page.evaluate(() => document.body.classList.contains('is-home') && document.querySelectorAll('.line').length === 7 && !document.querySelector('.sys.on')), 'home: the default page, seven lines, no system preselected');
       ok(!(await page.textContent('body')).includes('כללי אצבע'), 'home: the lines act without being labelled as rules of thumb');

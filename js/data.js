@@ -158,8 +158,9 @@ export const SYSTEMS = [
   },
   {
     id: 'immune',
-    name_he: 'מערכת החיסון',
-    name_en: 'Immune system',
+    name_he: 'מערכת החיסון והלימפה',
+    short_he: 'החיסון והלימפה',
+    name_en: 'Immune and lymphatic system',
     insight: '==זיכרון של פולשים הוא הבסיס לכל חיסון.==',
     city: 'מערך הביטחון והתברואה: מזהה, מסמן ומפנה.',
     role: { layer: 'known', text_he: 'מערכת החיסון **זוכרת** פולש שפגשה. על הזיכרון הזה נשען כל חיסון, שמונע **3.5** עד **5** מיליון מקרי מוות בשנה.', evidence: 'גבוהה', source_id: 'who-immunization' },
@@ -697,8 +698,101 @@ export const FLAG_URL = (cc) => `https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/f
 // Each part: Hebrew name, the English term, one structural line (Gray's Anatomy, layer known), and a tissue colour.
 // Tissue colours are the anatomical convention (arteries red, veins blue). The ink look keeps the DNA palette.
 export const MODEL_CREDIT = { he: 'מודלים: BodyParts3D, © The Database Center for Life Science, ו-Human Reference Atlas, NIH HuBMAP. שניהם ברישיון CC BY 4.0. מפושטים ומקובצים למבנים.', url: 'https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html', hra_url: 'https://humanatlas.io/3d-reference-library' };
-export const MODEL_SOURCES = { bp3d: 'BodyParts3D', hra: 'Human Reference Atlas (NIH)' };
+export const MODEL_SOURCES = { bp3d: 'BodyParts3D', hra: 'Human Reference Atlas (NIH)', schema: 'סכמה, מעוגנת על כלי הדם של BodyParts3D' };
 const P = (id, he, en, tissue, text_he) => ({ id, he, en, tissue, layer: 'known', text_he, source_id: 'gray-2020' });
+// The living body: what moves in each system, drawn on the 3D model when the viewer presses "תנועה".
+// kind: beat (the heart contracts), breathe (volume), shift (a part moves), tide (air in and out),
+//       wave (from a point: dir 1 away from it, -1 towards it), axis (along a direction), flow (along the lymph path, to the vein).
+// from: a part of the same model, or a point in the body frame (millimetres). len: the wavelength in mm. rate: cycles a second.
+// Blood has two colours here, by Anat's request (11.11.2026): oxygen-rich red, oxygen-poor blue.
+const RICH = '#d62b2b', POOR = '#2f5fd0', AIR = '#bfe3ff', SPARK = '#ffd84a', LYMPH = '#fff0a0', FOOD = '#f0a94a';
+export const MOTION3D = {
+  cardio: {
+    text_he: 'הלב מתכווץ, ו**דם עשיר בחמצן** יוצא ממנו בעורקים אל כל הגוף. **דם דל בחמצן** חוזר אליו בוורידים, ונשלח אל הריאות.',
+    source_id: 'guyton-2020',
+    legend: [[RICH, 'עשיר בחמצן: מהלב אל הגוף'], [POOR, 'דל בחמצן: חוזר אל הלב']],
+    over: { kind: 'wave', from: [30, -125, 1220], color: RICH, dir: 1, len: 190, rate: 1.1 },
+    parts: {
+      lv: { kind: 'beat', rate: 1.1, amp: 0.07 }, rv: { kind: 'beat', rate: 1.1, amp: 0.07 },
+      la: { kind: 'beat', rate: 1.1, amp: 0.06, lag: 1.9 }, ra: { kind: 'beat', rate: 1.1, amp: 0.06, lag: 1.9 },
+      aorta: { kind: 'wave', from: 'lv', color: RICH, dir: 1, len: 150, rate: 1.1 },
+      arteries: { kind: 'wave', from: 'lv', color: RICH, dir: 1, len: 190, rate: 1.1 },
+      coronary: { kind: 'wave', from: 'aorticv', color: RICH, dir: 1, len: 60, rate: 1.1 },
+      pulmtrunk: { kind: 'wave', from: 'rv', color: POOR, dir: 1, len: 90, rate: 1.1 },
+      veins: { kind: 'wave', from: 'ra', color: POOR, dir: -1, len: 190, rate: 0.7 },
+      svc: { kind: 'wave', from: 'ra', color: POOR, dir: -1, len: 90, rate: 0.7 },
+      cveins: { kind: 'wave', from: 'ra', color: POOR, dir: -1, len: 60, rate: 0.7 },
+    },
+  },
+  respiratory: {
+    text_he: 'הסרעפת יורדת, נפח הריאות גדל, ו**אוויר נכנס**. היא עולה, והאוויר יוצא. בעורקי הריאה מגיע דם דל בחמצן, ובוורידי הריאה הוא חוזר אל הלב עשיר בחמצן.',
+    source_id: 'guyton-2020',
+    legend: [[AIR, 'אוויר: נכנס ויוצא'], [POOR, 'דם דל בחמצן, אל הריאות'], [RICH, 'דם עשיר בחמצן, אל הלב']],
+    over: { kind: 'breathe', rate: 0.22, amp: 0.035 },
+    parts: {
+      lungs: { kind: 'breathe', rate: 0.22, amp: 0.045 },
+      diaphragm: { kind: 'shift', rate: 0.22, amp: 16, axis: [0, 0, -1] },
+      trachea: { kind: 'tide', from: [0, -94, 1395], axis: [0, 0, -1], color: AIR, len: 70, rate: 0.22 },
+      airways: { kind: 'tide', from: [0, -94, 1395], axis: [0, 0, -1], color: AIR, len: 70, rate: 0.22 },
+      pulmart: { kind: 'wave', from: [10, -120, 1225], color: POOR, dir: 1, len: 80, rate: 1.1 },
+      pulmvein: { kind: 'wave', from: [10, -100, 1235], color: RICH, dir: -1, len: 80, rate: 1.1 },
+    },
+  },
+  nervous: {
+    text_he: 'תאי העצב מעבירים **אותות חשמליים**. הם יוצאים מהמוח דרך גזע המוח וחוט השדרה אל הגוף, וחוזרים ממנו אל המוח.',
+    source_id: 'guyton-2020',
+    legend: [[SPARK, 'אות חשמלי לאורך העצבים']],
+    over: { kind: 'wave', from: [0, -74, 1505], color: SPARK, dir: 1, len: 70, rate: 2.2 },
+    parts: {
+      cerebrum_l: { kind: 'wave', from: 'brainstem', color: SPARK, dir: 1, len: 46, rate: 1.6 },
+      cerebrum_r: { kind: 'wave', from: 'brainstem', color: SPARK, dir: -1, len: 46, rate: 1.6 },
+      cerebellum: { kind: 'wave', from: 'brainstem', color: SPARK, dir: 1, len: 30, rate: 1.6 },
+      diencephalon: { kind: 'wave', from: 'brainstem', color: SPARK, dir: 1, len: 30, rate: 1.6 },
+      brainstem: { kind: 'axis', from: [0, -74, 1546], axis: [0, 0, -1], color: SPARK, dir: 1, len: 40, rate: 2.4 },
+      cord: { kind: 'axis', from: [0, -74, 1546], axis: [0, 0, -1], color: SPARK, dir: 1, len: 40, rate: 2.4 },
+    },
+  },
+  digestive: {
+    text_he: 'שרירי הדופן מתכווצים בגלים, ודוחפים את המזון בכיוון אחד: מהוושט לקיבה, לאורך המעי הדק, ואל המעי הגס.',
+    source_id: 'guyton-2020',
+    legend: [[FOOD, 'גל התכווצות שמקדם את המזון']],
+    over: { kind: 'axis', from: [0, -95, 1390], axis: [0, 0, -1], color: FOOD, dir: 1, len: 160, rate: 0.35 },
+    parts: {
+      esophagus: { kind: 'axis', from: [7, -95, 1390], axis: [0, 0, -1], color: FOOD, dir: 1, len: 110, rate: 0.5 },
+      stomach: { kind: 'axis', from: [106, -138, 1157], axis: [-0.8, 0, -0.6], color: FOOD, dir: 1, len: 90, rate: 0.3 },
+      small: { kind: 'axis', from: [10, -144, 1077], axis: [0, 0, -1], color: FOOD, dir: 1, len: 90, rate: 0.3 },
+      large: { kind: 'axis', from: [-127, -104, 911], axis: [1, 0, 0], color: FOOD, dir: 1, len: 120, rate: 0.2 },
+    },
+  },
+  immune: {
+    text_he: 'הלימפה זורמת ב**כיוון אחד**: מהרקמות, דרך שרשראות של בלוטות, אל צינור החזה, ומשם חזרה לדם בבסיס הצוואר. אין לה משאבה: השרירים והנשימה דוחפים אותה.',
+    source_id: 'guyton-2020',
+    legend: [[LYMPH, 'לימפה: מהרקמות אל הדם']],
+    over: { kind: 'wave', from: [38, -116, 1350], color: LYMPH, dir: -1, len: 150, rate: 0.5 },
+    parts: {
+      thoracic_duct: { kind: 'flow', color: LYMPH, dir: -1, len: 90, rate: 0.6 },
+      lymph_vessels: { kind: 'flow', color: LYMPH, dir: -1, len: 90, rate: 0.6 },
+      nodes_neck: { kind: 'flow', color: LYMPH, dir: -1, len: 90, rate: 0.6 }, nodes_axilla: { kind: 'flow', color: LYMPH, dir: -1, len: 90, rate: 0.6 },
+      nodes_chest: { kind: 'flow', color: LYMPH, dir: -1, len: 90, rate: 0.6 }, nodes_abdomen: { kind: 'flow', color: LYMPH, dir: -1, len: 90, rate: 0.6 },
+      nodes_groin: { kind: 'flow', color: LYMPH, dir: -1, len: 90, rate: 0.6 },
+    },
+  },
+  reproductive: {
+    text_he: 'אחת לחודש בערך משתחררת **ביצית** מהשחלה. ריסים ותנועות של דופן החצוצרה מובילים אותה אל הרחם.',
+    source_id: 'guyton-2020',
+    legend: [[LYMPH, 'הדרך מהשחלה אל הרחם']],
+    over: null,
+    parts: {
+      tubes: { kind: 'wave', from: 'uterus', color: LYMPH, dir: -1, len: 26, rate: 0.35 },
+      ovaries: { kind: 'wave', from: 'uterus', color: LYMPH, dir: -1, len: 26, rate: 0.35 },
+    },
+  },
+  skeletal: {
+    text_he: 'בשלד אין זרימה להראות. התנועה שלו היא במפרקים, והיא לא מונפשת כאן.',
+    source_id: 'gray-2020', legend: [], over: null, parts: {},
+  },
+};
+
 export const ANATOMY3D = {
   cardio: {
     focus: ['lv', 'rv', 'la', 'ra', 'pulmtrunk', 'svc'],
@@ -774,9 +868,16 @@ export const ANATOMY3D = {
     ],
   },
   immune: {
-    focus: ['thymus', 'spleen'],
-    gap_he: 'הטחול והשקדים ממאגר HRA של NIH, והתימוס מ-BodyParts3D. ב-HRA יש בלוטת לימפה אחת, מוגדלת, בלי מקום בגוף, ולכן היא לא מוצבת כאן.',
+    focus: ['lymph_vessels'],
+    gap_he: 'רשת הלימפה כאן היא סכמה, ולא סריקה: במאגרים הפתוחים אין מודל שלה. כלי הלימפה מצוירים לאורך כלי הדם שהם מלווים, והבלוטות באזורים המוכרים שלהן, מוגדלות כדי להיראות. הטחול והשקדים ממאגר HRA של NIH, והתימוס מ-BodyParts3D.',
     parts: [
+      { ...P('thoracic_duct', 'צינור החזה', 'Thoracic duct', '#e9d27a', 'צינור הלימפה הגדול בגוף. אוסף לימפה משתי הרגליים, מהבטן ומצד שמאל של החזה, הזרוע והראש, ומחזיר אותה לדם בזווית הוורידים השמאלית, בבסיס הצוואר.'), model: 'schema' },
+      { ...P('lymph_vessels', 'כלי הלימפה', 'Lymphatic vessels', '#d9c98a', 'רשת של צינורות דקים שאוספת נוזל מהרקמות ומחזירה אותו לדם. הזרימה בכיוון אחד, אל הלב, דרך שרשרת של בלוטות. מהשד רוב הלימפה מתנקזת לבית השחי, וחלקה לשרשרת שלצד עצם החזה.'), model: 'schema' },
+      { ...P('nodes_neck', 'בלוטות הצוואר', 'Cervical lymph nodes', '#8fa86a', 'שרשרת של בלוטות לאורך כלי הדם הגדולים בצוואר. מסננות לימפה מהראש ומהצוואר.'), model: 'schema' },
+      { ...P('nodes_axilla', 'בלוטות בית השחי', 'Axillary lymph nodes', '#7f9c5a', 'קבוצת בלוטות בבית השחי, ובלוטות המרפק. מסננות לימפה מהזרוע, מדופן החזה ומרוב השד. בלוטת הזקיף של השד היא לרוב אחת מהן.'), model: 'schema' },
+      { ...P('nodes_chest', 'בלוטות החזה', 'Thoracic lymph nodes', '#86a262', 'בלוטות סביב התפצלות קנה הנשימה, שמסננות לימפה מהריאות, ובלוטות לצד עצם החזה, שמקבלות חלק מהלימפה של השד.'), model: 'schema' },
+      { ...P('nodes_abdomen', 'בלוטות הבטן', 'Abdominal lymph nodes', '#789656', 'בלוטות לאורך אבי העורקים ובמתלה המעי. מהן הלימפה נאספת לבריכת הלימפה (cisterna chyli), תחילתו של צינור החזה.'), model: 'schema' },
+      { ...P('nodes_groin', 'בלוטות המפשעה והאגן', 'Inguinal and iliac lymph nodes', '#84a060', 'בלוטות המפשעה, האגן ומאחורי הברך. מסננות לימפה מהרגל, מדופן הבטן התחתונה ומאיברי האגן.'), model: 'schema' },
       P('thymus', 'התימוס', 'Thymus', '#e6c3a0', 'בלוטה מאחורי עצם החזה. בה מבשילים תאי T. גדולה בילדות, ומצטמקת עם הגיל.'),
       { ...P('spleen', 'הטחול', 'Spleen', '#6b2a3a', 'מסנן את הדם, מפרק תאי דם אדומים ישנים, ומשמש תחנה לתאי חיסון.'), model: 'hra' },
       { ...P('tonsils', 'השקדים', 'Palatine tonsils', '#d99a8c', 'רקמה לימפטית בלוע: נקודת מפגש ראשונה של מערכת החיסון עם מה שנכנס בפה ובאף.'), model: 'hra' },
