@@ -47,7 +47,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     // The demo video button asks the portfolio database for this app's video; tests run without it (the video would keep the network busy).
     await page.route(/\/rest\/v1\/aoa_apps\?select=id,demo/, (r) => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '[]' }));
     await page.route('**/bridge.js', (r) => (BRIDGE ? r.fulfill({ body: BRIDGE, contentType: 'text/javascript' }) : r.fulfill({ body: '', contentType: 'text/javascript' })));
-    await page.goto(BASE, { waitUntil: 'networkidle' });
+    await page.goto(BASE + '#v=home', { waitUntil: 'networkidle' });
     await page.waitForSelector('.panel h2');
 
     const m = await page.evaluate(() => {
@@ -150,8 +150,11 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       ok(await page.evaluate(() => document.querySelector('.sysmark.on').dataset.id === 'respiratory'), 'state restored from URL after reload');
       // Brand goes home
       await page.click('.brand');
+      await page.waitForFunction(() => location.hash === '#v=intro' && document.body.classList.contains('is-intro'));
+      ok(await page.isVisible('#intro-page .hillel') && await page.isVisible('#intro-page .enter') && await page.isHidden('.panel'), 'app name links to the opening page: Hillel, headline, entry button; no reading frame');
+      await page.click('#intro-page [data-enter]');
       await page.waitForFunction(() => location.hash === '#v=home' && document.body.classList.contains('is-home'));
-      ok(true, 'app name links home');
+      ok(true, 'the entry button opens the atlas page');
       // Installability
       const cdp = await ctx.newCDPSession(page);
       await page.goto(BASE);
@@ -303,7 +306,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       const fp = await fresh.newPage();
       await fp.route('**/ai-menu.js', (r) => r.fulfill({ body: AIMENU, contentType: 'text/javascript' }));
       await routeThree(fp);
-      await fp.goto(BASE);
+      await fp.goto(BASE + '#v=home');
       await fp.waitForFunction(() => !document.querySelector('#atlas').hidden && document.querySelector('.atlas-wait')?.hidden && /תשע רשתות/.test(document.querySelector('.b3-card')?.textContent || ''), null, { timeout: 60000 });
       ok(await fp.isHidden('#figure') && await fp.evaluate(() => document.querySelector('#atlas').classList.contains('is-tissue')), 'first visit: the home page opens on the real body, nine networks in one figure, in tissue colour');
       await fp.screenshot({ path: path.join(SHOTS, `home-3d-${tag}.png`), timeout: 120000 });
@@ -533,7 +536,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       // ---------- Home: on one foot, and the live bridge to nutrition ----------
       // Same page, home address: from a hash address to the bare address Chromium may not fire a new load event, so wait for the screen, not for load.
       await page.goto(BASE + '#v=home', { waitUntil: 'domcontentloaded' });
-      await page.waitForSelector('#home-lead .hillel');
+      await page.waitForSelector('.panel .line');
       ok(await page.evaluate(() => document.body.classList.contains('is-home') && document.querySelectorAll('.line').length === 7 && !document.querySelector('.sys.on')), 'home: the default page, seven lines, no system preselected');
       ok(!(await page.textContent('body')).includes('כללי אצבע'), 'home: the lines act without being labelled as rules of thumb');
       for (let i = 0; i < 7; i++) {
@@ -552,9 +555,11 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await page.click('[data-quiz-reset]');
       ok(await page.evaluate(() => !document.querySelector('.q-opt[disabled]')), 'one-minute check: again');
       await page.screenshot({ path: path.join(SHOTS, `home-quiz-${tag}.png`) });
-      await page.click('.numcell[data-view-go="diseases"]');
+      await page.goto(BASE + '#v=intro');
+      await page.waitForSelector('#intro-page .numcell');
+      await page.click('#intro-page .numcell[data-view-go="diseases"]');
       await page.waitForFunction(() => location.hash.includes('v=diseases'));
-      ok(true, 'home: the numbers lead to their screens');
+      ok(true, 'opening page: the numbers lead to their screens');
       await page.goto(BASE + '#s=cardio&l=2');
       await page.waitForSelector('.bridge-go');
       ok((await page.getAttribute('.bridge-go', 'href')).startsWith('https://tzuna-gh.vercel.app/#/foods?id=olive'), 'bridge: heart card links to olive in the nutrition app');
@@ -670,7 +675,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
   await ctx.addInitScript(() => { try { localStorage.setItem('refua.mode', '2d'); } catch {} });
   const p = await ctx.newPage();
   await p.route('**/ai-menu.js', (r) => r.fulfill({ body: AIMENU, contentType: 'text/javascript' }));
-  await p.goto(BASE);
+  await p.goto(BASE + '#v=home');
   await p.waitForSelector('.panel h2');
   const anim = await p.evaluate(() => getComputedStyle(document.querySelector('.rise')).animationName);
   ok(anim === 'none', 'reduced motion disables animation');
