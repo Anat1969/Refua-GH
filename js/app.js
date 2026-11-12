@@ -375,7 +375,7 @@ function diseasesView(f) {
 }
 
 // An example case: one person's path, by her own request. It links to the 3D reading of her report.
-const caseHref = (c) => `lab/pathology.html?case=${c.id}`;
+const caseHref = (c) => `#s=${DISEASES.find((d) => d.id === c.disease).system}&v=disease&m=3d&f=cancer&d=${c.disease}&c=${c.id}`;
 const caseGo = (c) => `<a class="to-3d case-go press-soft" href="${caseHref(c)}"><b>מקרה לדוגמה: ${esc(c.name_he)}</b><span>${esc(c.tile_he)}</span></a>`;
 const caseBlock = (c) => `<section class="block case-block rise" aria-labelledby="h-case-${c.id}"><h3 id="h-case-${c.id}"><span class="label">מקרה לדוגמה</span>${esc(c.name_he)}</h3>
   <p class="case-hl">${rich(c.headline_he)}</p>
@@ -383,7 +383,45 @@ const caseBlock = (c) => `<section class="block case-block rise" aria-labelledby
   <p class="imeta"><span class="ev">${esc(c.consent_he)} ${esc(c.source_he)}</span></p>
   ${caseGo(c)}</section>`;
 
+// The case inside the app: the same bar, the same body, and the story in steps. Each step moves the 3D body.
+const CASE_INKS = { black: ['שחור', '#1b1b1b'], yellow: ['צהוב', '#e8c21a'], green: ['ירוק', '#2e8b4a'], red: ['אדום', '#c8322b'], blue: ['כחול', '#2a55b8'], orange: ['כתום', '#e07b1f'] };
+const caseMm = (v) => { const n = parseFloat(String(v ?? '').replace(/[<>≤~\s]/g, '')); return Number.isFinite(n) ? `${/[<≤]/.test(String(v)) ? 'פחות מ-' : ''}<span class="num">${n}</span> מ״מ` : '·'; };
+function caseView(c, k, f) {
+  const d = DISEASES.find((x) => x.id === c.disease), R = c.report, i = Math.min(k, c.steps.length - 1);
+  const rows = [['עליון', 'gSup', 'dSup', 'inkSup'], ['תחתון', 'gInf', 'dInf', 'inkInf'], ['קדמי', 'gAnt', 'dAnt', 'inkAnt'], ['אחורי', 'gPost', 'dPost', 'inkPost'], ['לטרלי', 'gLat', 'dLat', 'inkLat'], ['מדיאלי', 'gMed', 'dMed', 'inkMed']];
+  const val = (x) => { const n = parseFloat(String(x ?? '').replace(/[<>≤~\s]/g, '')); return Number.isFinite(n) ? n : Infinity; };
+  const nearest = rows.reduce((b, r) => (Math.min(val(R[r[1]]), val(R[r[2]])) < Math.min(val(R[b[1]]), val(R[b[2]])) ? r : b), rows[0]);
+  return `
+  <header class="panel-head">
+    <div>
+      <button class="label linkish-label" data-case-close>מקרה לדוגמה: ${d.name_he}</button>
+      <h2 id="sys-title">${esc(c.name_he)}</h2>
+      <p class="latin-line">${rich(c.headline_he)}</p>
+    </div>
+    <div class="ops" role="group" aria-label="מעבר בין שלבי המקרה">
+      <button class="icon press" data-case-step="-1" title="השלב הקודם" aria-label="השלב הקודם">${ico.prev}</button>
+      <span class="pos"><span class="num">${i + 1}/${c.steps.length}</span></span>
+      <button class="icon press" data-case-step="1" title="השלב הבא" aria-label="השלב הבא">${ico.next}</button>
+      <button class="icon press" data-case-close title="חזרה לכרטיס המחלה" aria-label="חזרה לכרטיס המחלה">${ico.close}</button>
+    </div>
+  </header>
+  <section class="block rise" aria-labelledby="h-case-steps"><h3 id="h-case-steps"><span class="label">הדרך</span>מהסקר ועד הדוח, שלב אחרי שלב</h3>
+    <ol class="case-steps live">${c.steps.map((st, j) => `<li class="${j === i ? 'on' : ''}" data-case-go="${j}" tabindex="0"><b>${esc(st.k)}</b><span>${rich(st.text_he)}</span></li>`).join('')}</ol>
+    <p class="imeta"><span class="ev">לחיצה על שלב מזיזה את הגוף אל מה שהוא מתאר.</span></p>
+  </section>
+  <section class="block rise" aria-labelledby="h-case-mg"><h3 id="h-case-mg"><span class="label">השוליים</span>צבע הדיו והמרחק, כפי שנכתב</h3>
+    <table class="case-mg"><tr><th>צד</th><th>דיו</th><th>הגוש, בעין</th><th>DCIS, במיקרוסקופ</th></tr>${rows.map((r) => { const ink = CASE_INKS[R[r[3]]] || ['לא נכתב', '#d9d4c8']; return `<tr class="${r === nearest ? 'near' : ''}"><td>${r[0]}</td><td><span class="sw" style="background:${ink[1]}"></span>${ink[0]}</td><td>${caseMm(R[r[1]])}</td><td>${caseMm(R[r[2]])}</td></tr>`; }).join('')}</table>
+  </section>
+  <section class="block rise"><h3><span class="label">סמנים</span>בתאי הגידול, כפי שנכתב</h3>
+    <div class="case-chips">${[['ER', R.er], ['PR', R.pr], ['HER2', R.her2], ['Ki-67', R.ki67 ? `${R.ki67}%` : '']].filter(([, x]) => x !== '' && x != null).map(([n, x]) => `<span>${n} <b dir="ltr">${esc(String(x))}</b></span>`).join('')}</div>
+  </section>
+  <p class="imeta"><span class="ev">${esc(c.consent_he)} ${esc(c.source_he)}</span></p>
+  <p class="quiet-care"><span class="label">ומה זה אומר</span>ההדמיה מציירת את מה שכתוב בדוח, ולא מפרשת אותו. את המשמעות מסבירים הרופאים שמכירים את התמונה כולה.</p>`;
+}
+
 function diseaseView(id, f, l) {
+  const cseId = readState().c;
+  if (cseId) return caseView(CASES.find((x) => x.id === cseId), readState().cs, f);
   const d = DISEASES.find((x) => x.id === id) || DISEASES[0];
   const list = diseasesIn(f);
   const i = Math.max(0, list.indexOf(d));
@@ -661,7 +699,9 @@ function readState() {
   const e = eventIndex(p.get('e'));
   const h = p.get('h') === 'traditions' ? 'traditions' : 'timeline';
   const l = [1, 2, 3].includes(parseInt(p.get('l'), 10)) ? parseInt(p.get('l'), 10) : 1;
-  return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m, f, e, h, l };
+  const cse = CASES.find((x) => x.id === p.get('c')) && v === 'disease' ? p.get('c') : '';
+  const cst = Math.max(0, parseInt(p.get('cs'), 10) || 0);
+  return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m, f, e, h, l, c: cse, cs: cst };
 }
 const VIEWS = ['home', 'emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease', 'history', 'creations'];
 function go(s, v = 'system', extra = {}, replace = false) {
@@ -676,6 +716,7 @@ function go(s, v = 'system', extra = {}, replace = false) {
   if (extra.a) prm.set('a', extra.a);
   if ((v === 'diseases' || v === 'disease') && extra.f) prm.set('f', extra.f);
   if (v === 'disease' && extra.d) prm.set('d', extra.d);
+  if (v === 'disease' && extra.c) { prm.set('c', extra.c); if (extra.cs) prm.set('cs', String(extra.cs)); }
   if (v === 'history') { if (extra.e) prm.set('e', TIMELINE[extra.e].id); if (extra.h === 'traditions') prm.set('h', 'traditions'); }
   if (v === 'deep') {
     if (extra.t && extra.t !== 'process') prm.set('t', extra.t);
@@ -697,6 +738,7 @@ function atlasFocus(st) {
   if (st.v === 'home') return { whole: true };
   if (st.v === 'system') return { level: st.l };
   if (st.v !== 'disease') return {};
+  if (st.c) { const c = CASES.find((x) => x.id === st.c); return { case: { id: c.id, report: c.report, view: c.steps[Math.min(st.cs, c.steps.length - 1)].view }, sex: 'f', level: 1 }; }
   const d = DISEASES.find((x) => x.id === st.d);
   const parts = d && DISEASE3D[d.id];
   if (!parts) return { level: st.l };
@@ -1016,6 +1058,11 @@ function boot() {
     if (fb) { const st = readState(); const nf = fb.dataset.f === st.f ? '' : fb.dataset.f; go(SYSTEMS.find((x) => x.id === nf) || st.s, 'diseases', { f: nf }); }
     const gg = e.target.closest('[data-group-go]');
     if (gg) go(readState().s, 'diseases', { f: gg.dataset.groupGo });
+    const cg = e.target.closest('[data-case-go]');
+    if (cg) { const st = readState(); return go(st.s, 'disease', { ...st, cs: Number(cg.dataset.caseGo) }, true); }
+    const cstep = e.target.closest('[data-case-step]');
+    if (cstep) { const st = readState(); const n = CASES.find((x) => x.id === st.c).steps.length; return go(st.s, 'disease', { ...st, cs: (st.cs + Number(cstep.dataset.caseStep) + n) % n }, true); }
+    if (e.target.closest('[data-case-close]')) { const st = readState(); return go(st.s, 'disease', { d: st.d, f: st.f, l: 2 }); }
     const ds = e.target.closest('[data-dz-step]');
     if (ds) stepDisease(Number(ds.dataset.dzStep));
     const dd = e.target.closest('[data-deep-dz]');

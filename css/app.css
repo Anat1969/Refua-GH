@@ -340,16 +340,16 @@ ai-menu { margin-inline-start: auto; }
 .seg { cursor: pointer; outline: none; }
 .seg .hitpath { fill: none; stroke: transparent; stroke-width: 22; }
 .seg .flow { fill: none; stroke-linecap: round; stroke-linejoin: round; transition: stroke-width .3s, opacity .3s; }
-.seg-rich .flow { stroke: var(--ink); stroke-width: 4; }
-.seg-poor .flow { stroke: #8d96a1; stroke-width: 1.8; }
+.seg-rich .flow { stroke: var(--blood-rich); stroke-width: 4; }
+.seg-poor .flow { stroke: var(--blood-poor); stroke-width: 2.4; }
 .seg-swap .flow { stroke: var(--ink); stroke-width: 2.5; }
 .seg .flow { opacity: .55; }
 .seg.on .flow, .seg:hover .flow { opacity: 1; }
 .seg-rich.on .flow { stroke-width: 6; }
-.seg-poor.on .flow { stroke-width: 3; stroke: var(--ink); }
+.seg-poor.on .flow { stroke-width: 4; stroke: var(--blood-poor); }
 .seg-swap.on .flow { stroke-width: 3.5; }
-.dot-rich { fill: var(--ink); }
-.dot-poor { fill: #fff; stroke: var(--ink); stroke-width: 1.6; }
+.dot-rich { fill: var(--blood-rich); }
+.dot-poor { fill: #fff; stroke: var(--blood-poor); stroke-width: 1.8; }
 .dot-swap { stroke: var(--ink); stroke-width: 1.6; }
 .seg:not(.on) .dots { opacity: .35; }
 .badge { fill: #fff; stroke: #8d96a1; stroke-width: 1.4; }
@@ -369,7 +369,7 @@ ai-menu { margin-inline-start: auto; }
 .ctl-legend { list-style: none; padding: 0; margin: 0; display: flex; gap: var(--s3); font-size: 13px; color: var(--graphite); }
 .ctl-legend li { display: flex; align-items: center; gap: 6px; }
 .lg { width: 28px; height: 0; border-top: 4px solid var(--ink); position: relative; }
-.lg-poor { border-top: 2px solid #8d96a1; }
+.lg-poor { border-top: 3px solid var(--blood-poor); }
 .lg::after { content: ''; position: absolute; left: 9px; top: -7px; width: 9px; height: 9px; border-radius: 50%; background: var(--ink); }
 .lg-poor::after { background: #fff; border: 1.5px solid var(--ink); top: -6.5px; width: 7px; height: 7px; }
 
@@ -732,3 +732,32 @@ body.is-creations .intro, body.is-creations .stage, body.is-creations .panel, bo
   body.is-home .stage { grid-column: 1; grid-row: 2; }
   body.is-home .home-feature { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---------- Blood has two colours (Anat, 11.11.2026): oxygen-rich red, oxygen-poor blue. A deliberate exception to the DNA palette. ---------- */
+:root { --blood-rich: #c8322b; --blood-poor: #2a55b8; }
+.lg-rich { border-top-color: var(--blood-rich); }
+.lg-rich::after { background: var(--blood-rich); }
+.lg-poor::after { border-color: var(--blood-poor); }
+/* ---------- The living body: the motion button and its caption ---------- */
+.b3-move[aria-pressed="true"] { background: var(--marker); color: var(--ink); }
+.b3-motion { border-inline-start: 3px solid var(--known); padding-inline-start: 8px; margin-bottom: 6px; }
+.b3-motion p { margin: 0 0 4px; font-size: 13.5px; line-height: 1.5; }
+.b3-motion ul { list-style: none; margin: 0 0 4px; padding: 0; display: grid; gap: 2px; font-size: 12.5px; }
+.b3-motion li { display: flex; align-items: center; gap: 6px; }
+
+/* ---------- An example case on the 3D body: labels of the findings ---------- */
+.b3-tag { position: absolute; pointer-events: none; direction: rtl; transform: translate(-50%, -50%); font-size: 12.5px; line-height: 1.25; padding: 3px 7px; background: rgba(255,255,255,.94); color: var(--ink); white-space: nowrap; box-shadow: 0 1px 6px rgba(22,32,43,.18); z-index: 2; }
+.b3-tag.near { background: var(--marker); }
+.b3-tag.pin { transform: translate(-50%, -100%); text-align: center; padding: 5px 9px; }
+.b3-tag.pin::after { content: ''; position: absolute; left: 50%; top: 100%; width: 1px; height: 22px; background: currentColor; }
+.b3-tag small { display: block; color: var(--graphite); font-size: 11.5px; }
+.case-steps.live li { cursor: pointer; padding-inline: 6px; }
+.case-steps.live li:hover { background: var(--mist, #f5f6f8); }
+.case-steps.live li.on { background: var(--marker); }
+.case-mg { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.case-mg th { text-align: right; font-weight: 500; font-size: 12px; color: var(--graphite); padding: 3px 4px; }
+.case-mg td { padding: 5px 4px; border-top: 1px solid var(--hair); white-space: nowrap; }
+.case-mg tr.near td { background: var(--marker); font-weight: 600; }
+.case-mg .sw { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-inline-end: 5px; vertical-align: -1px; box-shadow: 0 0 0 1px rgba(0,0,0,.18); }
+.case-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.case-chips span { font-size: 13px; background: #f5f6f8; padding: 4px 9px; }
