@@ -77,6 +77,17 @@ const LAYERS = {
     single('M204,180 L204,400') +
     mirror('M222,142 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M274,232 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M230,440 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0 M244,620 a4,4 0 1,0 -8,0 a4,4 0 1,0 8,0') +
     mirror('M218,146 C240,170 262,200 270,228 M226,444 C236,500 240,560 240,616'),
+  // Kidneys, ureters and bladder: the drainage of the city, behind and below the gut.
+  urinary:
+    mirror('M178,290 C168,296 164,314 170,330 C176,340 186,336 188,326 C190,312 188,296 178,290 Z') +
+    mirror('M188,332 C190,350 194,372 198,392') +
+    single('M188,396 C188,386 212,386 212,396 C212,408 206,414 200,414 C194,414 188,408 188,396 Z'),
+  // Glands: the pituitary in the head, the thyroid at the neck, the adrenals on the kidneys, the pancreas.
+  endocrine:
+    single('M200,64 a2.6,2.6 0 1,0 0.1,0') +
+    single('M188,128 C190,120 198,122 200,128 C202,122 210,120 212,128 C210,138 202,138 200,132 C198,138 190,138 188,128 Z') +
+    mirror('M176,282 C182,274 192,276 192,284') +
+    single('M150,320 C170,306 200,308 220,316 C206,324 176,328 150,320 Z'),
   // Breast tissue on the chest wall, and a neutral pelvic organ outline (no sex-specific detail).
   reproductive:
     mirror('M212,252 C220,276 248,284 264,264') +
@@ -94,6 +105,8 @@ const MARKS = {
   digestive: { side: 'r', y: 336, ax: FIG_X + 238, ay: 312 },
   skeletal: { side: 'l', y: 532, ax: FIG_X + 163, ay: 532 },
   reproductive: { side: 'r', y: 430, ax: FIG_X + 214, ay: 412 },
+  urinary: { side: 'l', y: 336, ax: FIG_X + 172, ay: 312 },
+  endocrine: { side: 'r', y: 150, ax: FIG_X + 212, ay: 128 },
 };
 
 export function bodySVG(systems) {
@@ -114,7 +127,7 @@ export function bodySVG(systems) {
       </g>`;
     })
     .join('');
-  return `<svg class="body-svg" viewBox="0 0 560 800" role="group" aria-label="מפת הגוף: שבע מערכות" preserveAspectRatio="xMidYMid meet">
+  return `<svg class="body-svg" viewBox="0 0 560 800" role="group" aria-label="מפת הגוף: תשע מערכות" preserveAspectRatio="xMidYMid meet">
     <defs>
       <filter id="paper" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#16202b" flood-opacity="0.10"/></filter>
     </defs>

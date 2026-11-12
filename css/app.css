@@ -583,10 +583,10 @@ body.is-home .intro { display: none; }
 .q-row.miss .q-fb { color: var(--ink); }
 .q-score { font-size: 13.5px; }
 /* The figure on the home page: each system draws in turn, one transparency after another. */
-body.is-home .sys path, body.is-home .sys rect { animation: sys-cycle 14s infinite; animation-delay: calc(var(--i) * 2s); }
-body.is-home .sysmark text { animation: mark-cycle 14s infinite; animation-delay: calc(var(--i) * 2s); }
-@keyframes sys-cycle { 0% { stroke: var(--silver); } 3%, 11% { stroke: var(--ink); stroke-width: 1.9; } 15%, 100% { stroke: var(--silver); stroke-width: 1.1; } }
-@keyframes mark-cycle { 0% { fill: #6b7480; } 3%, 11% { fill: var(--ink); } 15%, 100% { fill: #6b7480; } }
+body.is-home .sys path, body.is-home .sys rect { animation: sys-cycle 18s infinite; animation-delay: calc(var(--i) * 2s); }
+body.is-home .sysmark text { animation: mark-cycle 18s infinite; animation-delay: calc(var(--i) * 2s); }
+@keyframes sys-cycle { 0% { stroke: var(--silver); } 2.3%, 8.6% { stroke: var(--ink); stroke-width: 1.9; } 11.7%, 100% { stroke: var(--silver); stroke-width: 1.1; } }
+@keyframes mark-cycle { 0% { fill: #6b7480; } 2.3%, 8.6% { fill: var(--ink); } 11.7%, 100% { fill: #6b7480; } }
 
 /* ---------- Discovery layer: depth, plates, flags, cabinet ---------- */
 .headline.display, .case-headline, .w-big, .wt-big, .ev-year { font-family: var(--display); }

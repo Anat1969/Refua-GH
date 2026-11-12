@@ -63,6 +63,7 @@ export const SOURCES = {
   'nhs-asthma': { title: 'NHS, Asthma attack', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/asthma/asthma-attack/' },
   'nhs-pneumonia': { title: 'NHS, Pneumonia', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/pneumonia/' },
   'nhs-lung-cancer': { title: 'NHS, Lung cancer: symptoms', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/lung-cancer/symptoms/' },
+  'nhs-blood-urine': { title: 'NHS, Blood in urine', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/symptoms/blood-in-urine/' },
   'nhs-diabetes': { title: 'NHS, Diabetes', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/diabetes/' },
   'nhs-back-pain': { title: 'NHS, Back pain', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/back-pain/' },
   'nhs-pep': { title: 'NHS, Post-exposure prophylaxis (PEP)', type: 'מידע רשמי', year: 2024, note: '', url: 'https://www.nhs.uk/conditions/post-exposure-prophylaxis/' },
@@ -185,6 +186,36 @@ export const SYSTEMS = [
     ],
     action: { urgency: 'doctor', sign_he: 'גוש או נפיחות בשד, בחזה או בבית השחי, או שינוי בעור או בפטמה', go_he: 'פנייה לרופא', source_id: 'nhs-breast', question_he: 'אילו בדיקות סקר מתאימות לגילי?' },
     bridge: { kind: 'nutrition', layer: 'known', text_he: '**שתיית אלכוהול** היא גורם סיכון מוכר לסרטן השד.', evidence: 'גבוהה', source_id: 'who-breast', next_he: 'אלכוהול', link: { app: 'nutrition', topic: 'alcohol', foods: ['grape'] } },
+  },
+  {
+    id: 'urinary',
+    name_he: 'מערכת השתן',
+    short_he: 'מערכת השתן',
+    name_en: 'Urinary system',
+    insight: '==הכליות מסננות כ-**180** ליטר ביממה.==',
+    city: 'תחנת הטיהור והניקוז של העיר: מסננת, מחזירה מה שנחוץ, ומפנה את השאר.',
+    role: { layer: 'known', text_he: 'הכליות מסננות את **הדם**, שומרות על **מים ומלחים** בגוף, ומפנות פסולת בשתן.', evidence: 'גבוהה', source_id: 'guyton-2020' },
+    failure: [
+      { layer: 'known', text_he: 'כשהכליות מפסיקות לסנן, **פסולת ונוזלים** מצטברים בדם. כליה אחת בריאה מספיקה לרוב האנשים.', evidence: 'גבוהה', source_id: 'guyton-2020' },
+      { layer: 'said', text_he: 'ברפואה העתיקה נחשב **השתן** למראה של מצב הגוף. הרופאים התבוננו בצבעו ובריחו.', tradition: 'רפואה יוונית', source_id: 'porter-1997' },
+    ],
+    action: { urgency: 'doctor', sign_he: 'דם בשתן, כאב עז בצד הגב, או שתן מועט מאוד', go_he: 'פנייה לרופא', source_id: 'nhs-blood-urine', question_he: 'האם כדאי לבדוק את תפקוד הכליות שלי?' },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: 'תזונה עם הרבה **מלח** מעלה את לחץ הדם, ולחץ דם גבוה פוגע בכליות.', evidence: 'גבוהה', source_id: 'who-hypertension', next_he: 'מלח', link: { app: 'nutrition', topic: 'sodium' } },
+  },
+  {
+    id: 'endocrine',
+    name_he: 'מערכת ההורמונים',
+    short_he: 'מערכת ההורמונים',
+    name_en: 'Endocrine system',
+    insight: '==בלוטה בגודל אפונה מנצחת על כולן.==',
+    city: 'מערך ההנחיות של העיר: הודעות כימיות, שנשלחות בדם אל מי שצריך.',
+    role: { layer: 'known', text_he: 'בלוטות מפרישות **הורמונים** אל הדם. ההורמון משנה את פעולתם של איברי היעד שלו, והוא פועל אצלם בלבד.', evidence: 'גבוהה', source_id: 'guyton-2020' },
+    failure: [
+      { layer: 'known', text_he: '**סוכרת** היא כשל בהורמון **אינסולין**: הלבלב אינו מפריש מספיק, או שהגוף אינו מגיב אליו.', evidence: 'גבוהה', source_id: 'who-diabetes' },
+      { layer: 'said', text_he: 'ב**רפואה העתיקה** ייחסו את מצב הרוח והאופי לארבע ליחות שזורמות בגוף, ולא להורמונים.', tradition: 'רפואה יוונית', source_id: 'porter-1997' },
+    ],
+    action: { urgency: 'doctor', sign_he: 'צמא רב, שתן בכמות גדולה, ועייפות חריגה', go_he: 'פנייה לרופא', source_id: 'nhs-diabetes', question_he: 'איזו בדיקת דם תגלה אם רמת הסוכר שלי תקינה?' },
+    bridge: { kind: 'nutrition', layer: 'known', text_he: 'תזונה בריאה היא אחד הצעדים שמונעים או מעכבים **סוכרת מסוג 2**.', evidence: 'גבוהה', source_id: 'who-diabetes', next_he: 'סיבים', link: { app: 'nutrition', topic: 'fiber' } },
   },
 ];
 
@@ -653,14 +684,14 @@ export const HOME = {
   // Seven insights for someone who studies systems. Each one is born in a screen of the app, and leads back to it.
   lines: [
     { text_he: '**הצורה היא התשובה:** ארבעה חללים וארבעה מסתמים, כדי שהדם יזרום לכיוון אחד.', source_id: 'guyton-2020', go: { v: 'deep', s: 'cardio', t: 'organs' }, go_he: 'הלב, לעומק' },
-    { text_he: '**הגוף הוא עיר של רשתות:** אספקה, תקשורת, אוורור ופינוי, שבע מערכות.', go: { v: 'system', s: 'nervous' }, go_he: 'מפת הגוף' },
+    { text_he: '**הגוף הוא עיר של רשתות:** אספקה, תקשורת, אוורור, ניקוז ופינוי, תשע מערכות.', go: { v: 'system', s: 'nervous' }, go_he: 'מפת הגוף' },
     { text_he: '**אנחנו מערכת אקולוגית:** בגוף חיידקים כמספר התאים שלו.', source_id: 'sender-2016', go: { v: 'system', s: 'digestive' }, go_he: 'מערכת העיכול' },
     { text_he: '**החומר זורם, הצורה נשארת:** העצם נבנית ומתפרקת כל החיים.', source_id: 'gray-2020', go: { v: 'system', s: 'skeletal' }, go_he: 'השלד' },
     { text_he: '**גילוי מתחיל בשאלה מוזרה:** הארווי שאל כמה דם יוצא מהלב בשעה.', source_id: 'harvey-1628', go: { v: 'history', e: 5 }, go_he: 'הארווי, 1628' },
     { text_he: '**מסורת היא השערה שמחכה לבדיקה:** חלקן אוששו, חלקן הופרכו.', go: { v: 'history', h: 'traditions' }, go_he: 'ארבע מסורות' },
     { text_he: '**מה שנשבר מלמד איך זה עובד:** כל מחלה היא חלון אל המערכת שלה.', go: { v: 'diseases' }, go_he: '24 מחלות' },
   ],
-  haiku: ['על רגל אחת', 'שבע רשתות בעיר', 'שאלה ביד'],
+  haiku: ['על רגל אחת', 'תשע רשתות בעיר', 'שאלה ביד'],
   haiku_note: 'הגוף כעיר, והידע כשאלה שמביאים לרופא.',
 };
 
@@ -683,6 +714,8 @@ export const WONDERS = {
   digestive: { big: '38', unit_he: 'טריליון', line_he: 'חיידקים בגוף, בערך כמספר התאים', source_id: 'sender-2016', open_q_he: 'מה בדיוק עושים בשבילנו החיידקים שבמעי?' },
   skeletal: { big: '206', unit_he: 'עצמות', line_he: 'בשלד של אדם בוגר, שנבנה ומתפרק כל החיים', source_id: 'gray-2020', image: 'vesalius-fabrica', open_q_he: 'איך יודעת העצם היכן להתחזק, לפי העומס שהיא נושאת?' },
   immune: { big: '3.5–5', unit_he: 'מיליון', line_he: 'חיים בשנה, בזכות הזיכרון שחיסונים מלמדים', source_id: 'who-immunization', open_q_he: 'איך זוכרת מערכת החיסון פולש במשך עשרות שנים?' },
+  urinary: { big: '180', unit_he: 'ליטר', line_he: 'נוזל מסוננים בכליות בכל יממה', source_id: 'guyton-2020', open_q_he: 'איך יודעות הכליות כמה מים להשאיר בגוף, בכל רגע?' },
+  endocrine: { big: '0.5', unit_he: 'גרם', line_he: 'בלוטת יותרת המוח, שמכוונת את שאר הבלוטות', source_id: 'gray-2020', open_q_he: 'איך מתואמים עשרות הורמונים, בלי שמישהו מנהל אותם?' },
   reproductive: { big: 'HPV', unit_he: '', line_he: 'נגיף אחד, ונגדו חיסון שמונע סרטן', source_id: 'who-cervical', open_q_he: 'למה רוב מקרי סרטן השד מופיעים בלי גורם סיכון מזוהה?' },
 };
 
@@ -694,18 +727,18 @@ export const COUNTRIES = {
 export const FLAG_URL = (cc) => `https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/${cc}.svg`;
 
 // ---------- The real body in 3D (BodyParts3D, CC BY 4.0, © DBCLS) ----------
-// One model per system in models/<id>.glb, and models/body.glb with all seven, light, for context.
+// One model per system in models/<id>.glb, and models/body.glb with all nine, light, for context.
 // Each part: Hebrew name, the English term, one structural line (Gray's Anatomy, layer known), and a tissue colour.
 // Tissue colours are the anatomical convention (arteries red, veins blue). The ink look keeps the DNA palette.
 export const MODEL_CREDIT = { he: 'מודלים: BodyParts3D, © The Database Center for Life Science, ו-Human Reference Atlas, NIH HuBMAP. שניהם ברישיון CC BY 4.0. מפושטים ומקובצים למבנים.', url: 'https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html', hra_url: 'https://humanatlas.io/3d-reference-library' };
-export const MODEL_SOURCES = { bp3d: 'BodyParts3D', hra: 'Human Reference Atlas (NIH)', schema: 'סכמה, מעוגנת על כלי הדם של BodyParts3D' };
+export const MODEL_SOURCES = { bp3d: 'BodyParts3D', hra: 'Human Reference Atlas (NIH)', schema: 'סכמה, מעוגנת על מבנים אמיתיים במודל' };
 const P = (id, he, en, tissue, text_he) => ({ id, he, en, tissue, layer: 'known', text_he, source_id: 'gray-2020' });
 // The living body: what moves in each system, drawn on the 3D model when the viewer presses "תנועה".
 // kind: beat (the heart contracts), breathe (volume), shift (a part moves), tide (air in and out),
 //       wave (from a point: dir 1 away from it, -1 towards it), axis (along a direction), flow (along the lymph path, to the vein).
 // from: a part of the same model, or a point in the body frame (millimetres). len: the wavelength in mm. rate: cycles a second.
 // Blood has two colours here, by Anat's request (11.11.2026): oxygen-rich red, oxygen-poor blue.
-const RICH = '#d62b2b', POOR = '#2f5fd0', AIR = '#bfe3ff', SPARK = '#ffd84a', LYMPH = '#fff0a0', FOOD = '#f0a94a';
+const RICH = '#d62b2b', POOR = '#2f5fd0', AIR = '#bfe3ff', SPARK = '#ffd84a', LYMPH = '#fff0a0', FOOD = '#f0a94a', URINE = '#e8c84a', HORMONE = '#c06ad8';
 export const MOTION3D = {
   cardio: {
     text_he: 'הלב מתכווץ, ו**דם עשיר בחמצן** יוצא ממנו בעורקים אל כל הגוף. **דם דל בחמצן** חוזר אליו בוורידים, ונשלח אל הריאות.',
@@ -775,6 +808,31 @@ export const MOTION3D = {
       nodes_neck: { kind: 'flow', color: LYMPH, dir: -1, len: 90, rate: 0.6 }, nodes_axilla: { kind: 'flow', color: LYMPH, dir: -1, len: 90, rate: 0.6 },
       nodes_chest: { kind: 'flow', color: LYMPH, dir: -1, len: 90, rate: 0.6 }, nodes_abdomen: { kind: 'flow', color: LYMPH, dir: -1, len: 90, rate: 0.6 },
       nodes_groin: { kind: 'flow', color: LYMPH, dir: -1, len: 90, rate: 0.6 },
+    },
+  },
+  urinary: {
+    text_he: 'הדם נכנס לכליות בעורקים, ומסונן בהן. **השתן** שנוצר יורד בשופכנים אל שלפוחית השתן, בגלי התכווצות.',
+    source_id: 'guyton-2020',
+    legend: [[RICH, 'דם עשיר בחמצן, אל הכליות'], [URINE, 'שתן: מהכליות אל השלפוחית']],
+    over: { kind: 'axis', from: [0, -92, 1080], axis: [0, 0, -1], color: URINE, dir: 1, len: 130, rate: 0.4 },
+    parts: {
+      renal_arteries: { kind: 'wave', from: [10, -108, 1040], color: RICH, dir: 1, len: 70, rate: 1.1 },
+      kidneys: { kind: 'wave', from: [10, -108, 1040], color: RICH, dir: 1, len: 90, rate: 1.1 },
+      ureters: { kind: 'axis', from: [0, -92, 1080], axis: [0, 0, -1], color: URINE, dir: 1, len: 60, rate: 0.5 },
+      bladder: { kind: 'breathe', rate: 0.15, amp: 0.06 },
+    },
+  },
+  endocrine: {
+    text_he: 'בלוטות מפרישות **הורמונים** אל הדם, והדם נושא אותם אל איברי היעד. יותרת המוח מכוונת את שאר הבלוטות.',
+    source_id: 'guyton-2020',
+    legend: [[HORMONE, 'הורמון: מהבלוטה אל הדם']],
+    over: { kind: 'wave', from: [0, -106, 1529], color: HORMONE, dir: 1, len: 200, rate: 0.35 },
+    parts: {
+      pituitary: { kind: 'wave', color: HORMONE, dir: 1, len: 8, rate: 0.5 },
+      pineal: { kind: 'wave', color: HORMONE, dir: 1, len: 6, rate: 0.5 },
+      thyroid: { kind: 'wave', color: HORMONE, dir: 1, len: 14, rate: 0.5 },
+      adrenals: { kind: 'wave', color: HORMONE, dir: 1, len: 20, rate: 0.5 },
+      pancreas: { kind: 'wave', color: HORMONE, dir: 1, len: 24, rate: 0.5 },
     },
   },
   reproductive: {
@@ -881,6 +939,27 @@ export const ANATOMY3D = {
       P('thymus', 'התימוס', 'Thymus', '#e6c3a0', 'בלוטה מאחורי עצם החזה. בה מבשילים תאי T. גדולה בילדות, ומצטמקת עם הגיל.'),
       { ...P('spleen', 'הטחול', 'Spleen', '#6b2a3a', 'מסנן את הדם, מפרק תאי דם אדומים ישנים, ומשמש תחנה לתאי חיסון.'), model: 'hra' },
       { ...P('tonsils', 'השקדים', 'Palatine tonsils', '#d99a8c', 'רקמה לימפטית בלוע: נקודת מפגש ראשונה של מערכת החיסון עם מה שנכנס בפה ובאף.'), model: 'hra' },
+    ],
+  },
+  urinary: {
+    focus: ['kidneys', 'bladder'],
+    depth: { outer: ['kidneys', 'bladder'], inner: ['renal_arteries', 'ureters'] },
+    parts: [
+      P('kidneys', 'הכליות', 'Kidneys', '#9a4a3c', 'שתי כליות בגודל אגרוף, משני צדי עמוד השדרה, בחלק האחורי של הבטן. מסננות את הדם ומפיקות שתן.'),
+      P('ureters', 'השופכנים', 'Ureters', '#e7c59a', 'שני צינורות דקים שמובילים את השתן מהכליות אל שלפוחית השתן, בגלי התכווצות של הדופן.'),
+      P('bladder', 'שלפוחית השתן', 'Urinary bladder', '#d98a80', 'שק שרירי באגן. אוגר את השתן עד הריקון.'),
+      P('renal_arteries', 'עורקי הכליה', 'Renal arteries', '#b5181c', 'מובילים אל כל כליה דם עשיר בחמצן מאבי העורקים. כחמישית מתפוקת הלב עוברת בכליות.'),
+    ],
+  },
+  endocrine: {
+    focus: ['pituitary', 'thyroid', 'adrenals', 'pancreas'],
+    gap_he: 'בלוטת התריס היא סכמה, ולא סריקה: אין לה מודל במאגר הפתוח. היא מוצבת על קנה הנשימה של המודל, במקומה המוכר. שאר הבלוטות מ-BodyParts3D. הלבלב נמצא גם במערכת העיכול.',
+    parts: [
+      P('pituitary', 'יותרת המוח', 'Pituitary gland', '#e0b26a', 'בלוטה בגודל אפונה בבסיס המוח. מפרישה הורמונים שמכוונים את שאר הבלוטות.'),
+      P('pineal', 'האצטרובל', 'Pineal body', '#c9a0d8', 'בלוטה זעירה במוח. מפרישה מלטונין בקצב של יום ולילה.'),
+      { ...P('thyroid', 'בלוטת התריס', 'Thyroid gland', '#d98f6a', 'שתי אונות משני צדי קנה הנשימה, בצוואר. מפרישה הורמונים שמווסתים את קצב חילוף החומרים.'), model: 'schema' },
+      P('adrenals', 'יותרת הכליה', 'Adrenal glands', '#e3b34f', 'בלוטה על קצה כל כליה. מפרישה את הורמוני הלחץ, כמו אדרנלין וקורטיזול.'),
+      P('pancreas', 'הלבלב', 'Pancreas', '#e3b48a', 'מפריש **אינסולין** וגלוקגון, שמווסתים את רמת הסוכר בדם, וגם אנזימי עיכול.'),
     ],
   },
   reproductive: {

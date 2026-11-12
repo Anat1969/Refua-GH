@@ -74,7 +74,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     if (w === 1440) {
       // Every system via its label
       const ids = await page.$$eval('.sysmark', (els) => els.map((e) => e.dataset.id));
-      ok(ids.length === 7, 'seven system labels');
+      ok(ids.length === 9, 'nine system labels');
       for (const id of ids) {
         await page.click(`.sysmark[data-id="${id}"] text`);
         await page.waitForFunction((i) => location.hash.includes(`s=${i}`) && document.querySelector(`.sys[data-id="${i}"]`).classList.contains('on') && document.querySelector('.panel .wonder'), id);
@@ -131,7 +131,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       // Views
       await page.click('[data-view="emergency"]');
       await page.waitForFunction(() => location.hash.includes('v=emergency') && document.querySelectorAll('.signs li').length > 0);
-      ok((await page.$$('.signs li')).length === 7, 'emergency view lists a sign for each of the 7 systems');
+      ok((await page.$$('.signs li')).length === 9, 'emergency view lists a sign for each of the 9 systems');
       await page.screenshot({ path: path.join(SHOTS, `emergency-${tag}.png`) });
       await page.click('.sign-row[data-pick="cardio"]');
       await page.waitForFunction(() => location.hash === '#s=cardio');
@@ -304,8 +304,8 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       await fp.route('**/ai-menu.js', (r) => r.fulfill({ body: AIMENU, contentType: 'text/javascript' }));
       await routeThree(fp);
       await fp.goto(BASE);
-      await fp.waitForFunction(() => !document.querySelector('#atlas').hidden && document.querySelector('.atlas-wait')?.hidden && /שבע רשתות/.test(document.querySelector('.b3-card')?.textContent || ''), null, { timeout: 60000 });
-      ok(await fp.isHidden('#figure') && await fp.evaluate(() => document.querySelector('#atlas').classList.contains('is-tissue')), 'first visit: the home page opens on the real body, seven networks in one figure, in tissue colour');
+      await fp.waitForFunction(() => !document.querySelector('#atlas').hidden && document.querySelector('.atlas-wait')?.hidden && /תשע רשתות/.test(document.querySelector('.b3-card')?.textContent || ''), null, { timeout: 60000 });
+      ok(await fp.isHidden('#figure') && await fp.evaluate(() => document.querySelector('#atlas').classList.contains('is-tissue')), 'first visit: the home page opens on the real body, nine networks in one figure, in tissue colour');
       await fp.screenshot({ path: path.join(SHOTS, `home-3d-${tag}.png`), timeout: 120000 });
       await fp.click('[data-mode="2d"]');
       await fp.waitForFunction(() => !document.querySelector('#figure').hidden && localStorage.getItem('refua.mode') === '2d');
@@ -314,7 +314,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       ok(await fp.isHidden('#atlas'), 'choosing the sheets is remembered across screens');
       await fresh.close();
       await page.click('[data-mode="3d"]');
-      await page.waitForFunction(() => location.hash.includes('m=3d') && document.querySelectorAll('.atlas-label').length === 7 && document.querySelector('.atlas-wait')?.hidden, null, { timeout: 60000 });
+      await page.waitForFunction(() => location.hash.includes('m=3d') && document.querySelectorAll('.atlas-label').length === 9 && document.querySelector('.atlas-wait')?.hidden, null, { timeout: 60000 });
       await page.waitForTimeout(1500);
       const drawn = await page.evaluate(() => {
         const c = document.querySelector('.atlas-canvas');
@@ -336,7 +336,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
         const inside = r.every((x) => x.left >= host.left - 1 && x.right <= host.right + 1 && x.top >= host.top - 1 && x.bottom <= host.bottom + 1);
         return { overlap, inside, on: document.querySelector('.atlas-label.on')?.dataset.id };
       });
-      ok(!lab.overlap && lab.inside && lab.on === 'cardio', '3D: seven names, inside the frame, no overlap, selected system marked');
+      ok(!lab.overlap && lab.inside && lab.on === 'cardio', '3D: nine names, inside the frame, no overlap, selected system marked');
       await page.screenshot({ path: path.join(SHOTS, `atlas-${tag}.png`), timeout: 120000 });
       // Parts: the list opens, a part shows its name, role and source; the look switches.
       await page.click('.b3-more summary');

@@ -94,7 +94,7 @@ function depthBar(l) {
 }
 const flag = (cc) => (cc && COUNTRIES[cc] ? `<img class="flag" src="${FLAG_URL(cc)}" alt="${COUNTRIES[cc]}" title="${COUNTRIES[cc]}" width="20" height="15" loading="lazy">` : '');
 // Close-up crops of each ink sheet (viewBox in the 400x800 sheet), 2:1 for the cabinet tiles.
-const CROP = { nervous: '120 25 160 80', respiratory: '26 128 348 174', cardio: '80 140 240 120', digestive: '0 150 400 200', skeletal: '80 140 240 120', immune: '60 140 280 140', reproductive: '23 252 354 177' };
+const CROP = { nervous: '120 25 160 80', respiratory: '26 128 348 174', cardio: '80 140 240 120', digestive: '0 150 400 200', skeletal: '80 140 240 120', immune: '60 140 280 140', reproductive: '23 252 354 177', urinary: '110 250 180 190', endocrine: '100 20 200 300' };
 // A plate: a historical image when one is verified, otherwise the system's own ink sheet.
 function plate(imgId, sysId, cls = '') {
   const im = imgId && IMAGES[imgId];
@@ -541,7 +541,7 @@ function quizHTML() {
 function homeView() {
   return `
   <header class="panel-head">
-    <div><p class="label">ארון פלאות</p><h2 id="sys-title">שבעה פלאות, שבע מערכות</h2></div>
+    <div><p class="label">ארון פלאות</p><h2 id="sys-title">תשעה פלאות, תשע מערכות</h2></div>
   </header>
   <ul class="cabinet">${SYSTEMS.map((x) => {
     const w = WONDERS[x.id];
