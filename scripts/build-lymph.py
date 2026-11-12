@@ -50,7 +50,7 @@ def oriented(line, start_near=None, top_first=None):
     return line
 
 
-def smooth(pts, k=4):
+def smooth(pts, k=2):
     """Catmull-Rom through the points: lymph vessels do not turn at angles."""
     p = np.vstack([pts[0], pts, pts[-1]]); out = []
     for i in range(1, len(p) - 2):
@@ -69,7 +69,7 @@ class Part:
     def add(self, v, f, u):
         self.v.append(v); self.f.append(f + self.n); self.u.append(u); self.n += len(v)
 
-    def tube(self, pts, r, d_end, seg=6):
+    def tube(self, pts, r, d_end, seg=4):
         """A tube along pts, flowing towards pts[-1]; d_end is the distance left to the venous angle at its end."""
         pts = smooth(np.asarray(pts, float)); m = len(pts)
         d = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(pts, axis=0), axis=1))]); left = d[-1] - d + d_end
@@ -90,7 +90,7 @@ class Part:
 
     def node(self, c, size, d_left, axis=(0, 0, 1)):
         """A bean-shaped node: an ellipsoid, a little flattened."""
-        s = trimesh.creation.icosphere(subdivisions=1)
+        s = trimesh.creation.icosphere(subdivisions=0)  # 20 faces: a node is a few pixels wide, and the body is drawn without a graphics card in tests
         v = s.vertices * np.array([size * 0.42, size * 0.3, size * 0.5])
         ax = np.asarray(axis, float); ax /= np.linalg.norm(ax)
         R = trimesh.geometry.align_vectors([0, 0, 1], ax)[:3, :3]

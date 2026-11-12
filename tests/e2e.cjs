@@ -41,6 +41,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     await page.route('**/fonts.g*/**', (r) => r.continue());
     // The shared creations component sits on GitHub Pages; the screens here do not need it, and the creations test has its own page and route.
     await page.route('**/creations.js', (r) => r.fulfill({ body: '', contentType: 'text/javascript' }));
+    await page.route('**/demo.js', (r) => r.fulfill({ body: '', contentType: 'text/javascript' })); // the shared video player, loaded from the portfolio
     // The demo video button asks the portfolio database for this app's video; tests run without it (the video would keep the network busy).
     await page.route(/\/rest\/v1\/aoa_apps\?select=id,demo/, (r) => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '[]' }));
     await page.route('**/bridge.js', (r) => (BRIDGE ? r.fulfill({ body: BRIDGE, contentType: 'text/javascript' }) : r.fulfill({ body: '', contentType: 'text/javascript' })));
