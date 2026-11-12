@@ -486,27 +486,32 @@ function loadQuiz() { try { return JSON.parse(localStorage.getItem(QUIZ_KEY)) ||
 function saveQuiz(q) { try { localStorage.setItem(QUIZ_KEY, JSON.stringify(q)); } catch { /* private mode: answers stay on screen only */ } }
 let quizState = { answers: {} };
 
-function homeLead() {
+// The opening page: the film, the one-foot teaching, and one way in. The atlas itself is the next page (#v=home).
+function introView() {
   const n = (x) => `<span class="num">${x}</span>`;
+  const c = CASES[0];
   return `
-    <div class="home-text">
-    <p class="label">על רגל אחת</p>
-    <blockquote class="hillel">
-      <p class="h-ar">„${HOME.hillel_he}”</p>
-      <details class="h-more"><summary>תרגום</summary><p class="h-tr">${HOME.hillel_tr}</p></details>
-      <p class="imeta">${srcLine(HOME.hillel_source)}</p>
-    </blockquote>
-    <h1 class="headline display">${rich(HOME.one_foot)}</h1>
-    <p class="lede">${HOME.one_foot_more.split('\n').slice(0, 2).map(rich).join(' ')}</p>
-    <ul class="home-nums" aria-label="במספרים">
-      <li><button class="numcell press-soft" data-view-go="system">${n(SYSTEMS.length)}<span>מערכות</span></button></li>
-      <li><button class="numcell press-soft" data-view-go="diseases">${n(DISEASES.length)}<span>מחלות</span></button></li>
-      <li><button class="numcell press-soft" data-view-go="history">${n(TIMELINE.length)}<span>גילויים</span></button></li>
-      <li><button class="numcell press-soft" data-view-go="sources">${n(Object.keys(SOURCES).length)}<span>מקורות</span></button></li>
-    </ul>
+    <div class="intro-text">
+      <p class="label">על רגל אחת</p>
+      <blockquote class="hillel">
+        <p class="h-ar">„${HOME.hillel_he}”</p>
+        <details class="h-more"><summary>תרגום</summary><p class="h-tr">${HOME.hillel_tr}</p></details>
+        <p class="imeta">${srcLine(HOME.hillel_source)}</p>
+      </blockquote>
+      <h1 class="headline display">${rich(HOME.one_foot)}</h1>
+      <p class="lede">${HOME.one_foot_more.split('\n').slice(0, 2).map(rich).join(' ')}</p>
+      <ul class="home-nums" aria-label="במספרים">
+        <li><button class="numcell press-soft" data-view-go="system">${n(SYSTEMS.length)}<span>מערכות</span></button></li>
+        <li><button class="numcell press-soft" data-view-go="diseases">${n(DISEASES.length)}<span>מחלות</span></button></li>
+        <li><button class="numcell press-soft" data-view-go="history">${n(TIMELINE.length)}<span>גילויים</span></button></li>
+        <li><button class="numcell press-soft" data-view-go="sources">${n(Object.keys(SOURCES).length)}<span>מקורות</span></button></li>
+      </ul>
+      <div class="intro-cta">
+        <button class="enter press" data-enter>כניסה לגוף</button>
+        ${c ? `<a class="enter alt press-soft" href="${caseHref(c)}">מקרה לדוגמה: ${esc(c.name_he)}</a>` : ''}
+      </div>
     </div>
-    <div class="home-feature"><div class="home-demo" data-aoa-demo="hero" aria-label="סרטון הדגמה"></div></div>
-`;
+    <div class="intro-video"><div class="home-demo" data-aoa-demo="hero" aria-label="סרטון הדגמה"></div></div>`;
 }
 
 function quizHTML() {
@@ -683,7 +688,7 @@ function readState() {
   const p = new URLSearchParams(location.hash.slice(1));
   const s = SYSTEMS.find((x) => x.id === p.get('s')) || SYSTEMS.find((x) => x.id === 'cardio');
   const q = p.get('q') || '';
-  let v = VIEWS.includes(p.get('v')) ? p.get('v') : p.get('s') ? 'system' : 'home';
+  let v = VIEWS.includes(p.get('v')) ? p.get('v') : p.get('s') ? 'system' : 'intro';
   if (v === 'search' && !normalize(q)) v = 'system';
   if (v === 'deep' && !DEEP[s.id]) v = 'system';
   const D = DEEP[s.id];
@@ -699,12 +704,12 @@ function readState() {
   const cst = Math.max(0, parseInt(p.get('cs'), 10) || 0);
   return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m, f, e, h, l, c: cse, cs: cst };
 }
-const VIEWS = ['home', 'emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease', 'history', 'creations'];
+const VIEWS = ['intro', 'home', 'emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease', 'history', 'creations'];
 function go(s, v = 'system', extra = {}, replace = false) {
-  const prm = v === 'home' ? new URLSearchParams() : new URLSearchParams({ s: s.id });
+  const prm = v === 'intro' ? new URLSearchParams() : v === 'home' ? new URLSearchParams({ v: 'home' }) : new URLSearchParams({ s: s.id });
   if (v !== 'system') prm.set('v', v);
   const mode = extra.m || readState().m;
-  if (v !== 'deep' && v !== 'history' && v !== 'home' && v !== 'creations') {
+  if (v !== 'deep' && v !== 'history' && v !== 'home' && v !== 'intro' && v !== 'creations') {
     if (mode === '3d') prm.set('m', '3d');
     else if (prefMode() === '3d') prm.set('m', '2d');
   }
@@ -889,8 +894,13 @@ function render() {
   document.body.classList.toggle('is-creations', isCr);
   $('#creations-page').hidden = !isCr;
   if (isCr && !$('#creations-page').firstChild) $('#creations-page').innerHTML = '<app-creations src="./creations.json" heading="מה הגוף מלמד: יצירות מהאטלס"></app-creations>';
-  panel.innerHTML = isCr ? '' : (views[v] || (() => systemView(s, l)))();
-  if (!isCr) renderStage(s, v, k);
+  const isIntro = v === 'intro';
+  document.body.classList.toggle('is-intro', isIntro);
+  const introEl = $('#intro-page');
+  introEl.hidden = !isIntro;
+  if (!introEl.dataset.ready) { introEl.innerHTML = introView(); introEl.dataset.ready = '1'; }
+  panel.innerHTML = isCr || isIntro ? '' : (views[v] || (() => systemView(s, l)))();
+  if (!isCr && !isIntro) renderStage(s, v, k);
   const box = $('#search');
   if (v === 'search' && document.activeElement !== box) box.value = q;
   if (v !== 'search' && document.activeElement !== box) box.value = '';
@@ -900,8 +910,7 @@ function render() {
   panel.scrollTop = 0;
   const isHome = v === 'home';
   document.body.classList.toggle('is-home', isHome);
-  $('#home-lead').hidden = !isHome;
-  if (isHome && !$('#home-lead').dataset.ready) { $('#home-lead').innerHTML = homeLead(); $('#home-lead').dataset.ready = '1'; }
+  $('#home-lead').hidden = true;
   if (isHome) $('#quiz-box').innerHTML = quizHTML();
   $$('.sys').forEach((g) => g.classList.toggle('on', !isHome && g.dataset.id === s.id));
   $$('.sysmark').forEach((g) => {
@@ -910,7 +919,7 @@ function render() {
     g.setAttribute('aria-pressed', String(on));
   });
   $$('[data-view]').forEach((b) => b.setAttribute('aria-current', String((b.dataset.view === v && v !== 'home') || (b.dataset.view === 'system' && v === 'deep') || (b.dataset.view === 'diseases' && v === 'disease'))));
-  document.title = isHome ? 'רפואה: גוף, מחלה, בריאות' : v === 'system' ? `${s.name_he} | רפואה` : v === 'deep' ? `${DEEP[s.id].title_he} | רפואה` : v === 'disease' ? `${(DISEASES.find((x) => x.id === d) || DISEASES[0]).name_he} | רפואה` : v === 'history' ? 'ציר זמן | רפואה' : isCr ? 'יצירות | רפואה' : 'רפואה: גוף, מחלה, בריאות';
+  document.title = isHome || isIntro ? 'רפואה: גוף, מחלה, בריאות' : v === 'system' ? `${s.name_he} | רפואה` : v === 'deep' ? `${DEEP[s.id].title_he} | רפואה` : v === 'disease' ? `${(DISEASES.find((x) => x.id === d) || DISEASES[0]).name_he} | רפואה` : v === 'history' ? 'ציר זמן | רפואה' : isCr ? 'יצירות | רפואה' : 'רפואה: גוף, מחלה, בריאות';
   document.body.classList.toggle('has-alert', !!panel.querySelector('.alert-card'));
   // On narrow screens the panel sits below the figure: bring the change into view.
   // Except where the stage itself is the content (map, circulation): there the stage stays first.
@@ -996,9 +1005,10 @@ function boot() {
     b.setAttribute('aria-pressed', 'true'); b.title = 'עצירה'; b.setAttribute('aria-label', 'עצירה');
     historyTimer = setInterval(() => eventTo(readState().e + 1, true), 2600);
   });
-  $('#home-lead').addEventListener('click', (e) => {
+  $('#intro-page').addEventListener('click', (e) => {
     const vg = e.target.closest('[data-view-go]');
     if (vg) go(SYSTEMS.find((x) => x.id === 'cardio'), vg.dataset.viewGo);
+    if (e.target.closest('[data-enter]')) go(SYSTEMS.find((x) => x.id === 'cardio'), 'home');
   });
   // The one-minute check lives in the cabinet panel, under the wonders.
   $('#panel').addEventListener('click', (e) => {
