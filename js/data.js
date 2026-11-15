@@ -738,12 +738,18 @@ const P = (id, he, en, tissue, text_he) => ({ id, he, en, tissue, layer: 'known'
 //       wave (from a point: dir 1 away from it, -1 towards it), axis (along a direction), flow (along the lymph path, to the vein).
 // from: a part of the same model, or a point in the body frame (millimetres). len: the wavelength in mm. rate: cycles a second.
 // Blood has two colours here, by Anat's request (11.11.2026): oxygen-rich red, oxygen-poor blue.
-const RICH = '#d62b2b', POOR = '#2f5fd0', AIR = '#bfe3ff', SPARK = '#ffd84a', LYMPH = '#fff0a0', FOOD = '#f0a94a', URINE = '#e8c84a', HORMONE = '#c06ad8';
+const RICH = '#d62b2b', POOR = '#2f5fd0', AIR = '#1fa2ff', SPARK = '#ffd84a', LYMPH = '#fff0a0', FOOD = '#f0a94a', URINE = '#e8c84a', HORMONE = '#c06ad8', INKDOT = '#16202b';
 export const MOTION3D = {
   cardio: {
     text_he: 'הלב מתכווץ, ו**דם עשיר בחמצן** יוצא ממנו בעורקים אל כל הגוף. **דם דל בחמצן** חוזר אליו בוורידים, ונשלח אל הריאות.',
     source_id: 'guyton-2020',
     legend: [[RICH, 'עשיר בחמצן: מהלב אל הגוף'], [POOR, 'דל בחמצן: חוזר אל הלב']],
+    pad: 1.0,
+    see: { lv: 0.22, rv: 0.22, la: 0.22, ra: 0.22, aorta: 0.3, pulmtrunk: 0.3, svc: 0.3, mitral: 0.45, tricuspid: 0.45, aorticv: 0.45, pulmv: 0.45 },
+    carriers: [
+      { kind: 'stream', path: 'right', color: POOR, size: 3.2, speed: 140, gap: 26, fade: 10, pulse: { rate: 1.1, amp: 0.85, phase: 0 } },
+      { kind: 'stream', path: 'left', color: RICH, size: 3.2, speed: 190, gap: 26, fade: 10, pulse: { rate: 1.1, amp: 0.85, phase: 0 } },
+    ],
     over: { kind: 'wave', from: [30, -125, 1220], color: RICH, dir: 1, len: 190, rate: 1.1 },
     parts: {
       lv: { kind: 'beat', rate: 1.1, amp: 0.07 }, rv: { kind: 'beat', rate: 1.1, amp: 0.07 },
@@ -761,6 +767,8 @@ export const MOTION3D = {
     text_he: 'הסרעפת יורדת, נפח הריאות גדל, ו**אוויר נכנס**. היא עולה, והאוויר יוצא. בעורקי הריאה מגיע דם דל בחמצן, ובוורידי הריאה הוא חוזר אל הלב עשיר בחמצן.',
     source_id: 'guyton-2020',
     legend: [[AIR, 'אוויר: נכנס ויוצא'], [POOR, 'דם דל בחמצן, אל הריאות'], [RICH, 'דם עשיר בחמצן, אל הלב']],
+    see: { lungs: 0.16, trachea: 0.3, airways: 0.55, pulmart: 0.5, pulmvein: 0.5, diaphragm: 0.5 },
+    carriers: [{ kind: 'tide', paths: ['trachea+air_0', 'trachea+air_1', 'trachea+air_2', 'trachea+air_3', 'trachea+air_4', 'trachea+air_5', 'trachea+air_6', 'trachea+air_7', 'trachea+air_8', 'trachea+air_9', 'trachea+air_10', 'trachea+air_11', 'trachea+air_12', 'trachea+air_13'], n: 5, rate: 0.22, color: AIR, size: 3 }],
     over: { kind: 'breathe', rate: 0.22, amp: 0.035 },
     parts: {
       lungs: { kind: 'breathe', rate: 0.22, amp: 0.045 },
@@ -774,7 +782,14 @@ export const MOTION3D = {
   nervous: {
     text_he: 'תאי העצב מעבירים **אותות חשמליים**. הם יוצאים מהמוח דרך גזע המוח וחוט השדרה אל הגוף, וחוזרים ממנו אל המוח.',
     source_id: 'guyton-2020',
-    legend: [[SPARK, 'אות חשמלי לאורך העצבים']],
+    note_he: 'מסלול הקליפה אל חוט השדרה הוא קו מייצג, כי המודל בלי רצועות סיבים. עצבים היקפיים אינם בו.',
+    legend: [[SPARK, 'אות מוטורי: מהקליפה אל חוט השדרה'], ['#7fd1ff', 'אות חושי: אל הקליפה']],
+    view: 'side', pad: 0.95, focus: ['cerebrum_l', 'cerebrum_r', 'cerebellum', 'brainstem', 'cord'],
+    see: { cerebrum_l: 0.2, cerebrum_r: 0.2, cerebellum: 0.3, brainstem: 0.3, diencephalon: 0.3, cord: 0.45 },
+    carriers: [
+      { kind: 'stream', paths: ['motor_l', 'motor_r'], color: SPARK, size: 3.2, speed: 130, gap: 34, fade: 8 },
+      { kind: 'stream', paths: ['motor_l', 'motor_r'], dir: -1, color: '#2aa8e8', size: 3.2, speed: 110, gap: 41, fade: 8 },
+    ],
     over: { kind: 'wave', from: [0, -74, 1505], color: SPARK, dir: 1, len: 70, rate: 2.2 },
     parts: {
       cerebrum_l: { kind: 'wave', from: 'brainstem', color: SPARK, dir: 1, len: 46, rate: 1.6 },
@@ -788,7 +803,14 @@ export const MOTION3D = {
   digestive: {
     text_he: 'שרירי הדופן מתכווצים בגלים, ודוחפים את המזון בכיוון אחד: מהוושט לקיבה, לאורך המעי הדק, ואל המעי הגס.',
     source_id: 'guyton-2020',
-    legend: [[FOOD, 'גל התכווצות שמקדם את המזון']],
+    note_he: 'במעי הדק הלולאות צפופות במודל, ולכן הגל מוצג על הדופן עצמה, ולא כחלקיק.',
+    legend: [[FOOD, 'מזון: מהוושט אל הקיבה'], ['#b9854a', 'תוכן המעי: אל פי הטבעת'], [FOOD, 'גל התכווצות על דופן המעי']],
+    pad: 0.9, focus: ['esophagus', 'stomach', 'small', 'large'],
+    see: { esophagus: 0.3, stomach: 0.22, small: 0.38, large: 0.25 },
+    carriers: [
+      { kind: 'stream', path: 'esophagus+stomach', color: FOOD, size: 4.2, speed: 34, gap: 46, fade: 10, pulse: { rate: 0.35, amp: 0.8, phase: 0 } },
+      { kind: 'stream', path: 'large', color: '#b9854a', size: 4.5, speed: 22, gap: 52, fade: 10, pulse: { rate: 0.2, amp: 0.8, phase: 0 } },
+    ],
     over: { kind: 'axis', from: [0, -95, 1390], axis: [0, 0, -1], color: FOOD, dir: 1, len: 160, rate: 0.35 },
     parts: {
       esophagus: { kind: 'axis', from: [7, -95, 1390], axis: [0, 0, -1], color: FOOD, dir: 1, len: 110, rate: 0.5 },
@@ -801,6 +823,8 @@ export const MOTION3D = {
     text_he: 'הלימפה זורמת ב**כיוון אחד**: מהרקמות, דרך שרשראות של בלוטות, אל צינור החזה, ומשם חזרה לדם בבסיס הצוואר. אין לה משאבה: השרירים והנשימה דוחפים אותה.',
     source_id: 'guyton-2020',
     legend: [[LYMPH, 'לימפה: מהרקמות אל הדם']],
+    see: { thoracic_duct: 0.35, lymph_vessels: 0.4 },
+    carriers: [{ kind: 'stream', paths: ['duct', 'vessel_0', 'vessel_1', 'vessel_2', 'vessel_3', 'vessel_4', 'vessel_5'], color: LYMPH, size: 7, speed: 40, gap: 46, fade: 10 }],
     over: { kind: 'wave', from: [38, -116, 1350], color: LYMPH, dir: -1, len: 150, rate: 0.5 },
     parts: {
       thoracic_duct: { kind: 'flow', color: LYMPH, dir: -1, len: 90, rate: 0.6 },
@@ -814,6 +838,9 @@ export const MOTION3D = {
     text_he: 'הדם נכנס לכליות בעורקים, ומסונן בהן. **השתן** שנוצר יורד בשופכנים אל שלפוחית השתן, בגלי התכווצות.',
     source_id: 'guyton-2020',
     legend: [[RICH, 'דם עשיר בחמצן, אל הכליות'], [URINE, 'שתן: מהכליות אל השלפוחית']],
+    pad: 0.95,
+    see: { kidneys: 0.24, ureters: 0.5, bladder: 0.3 },
+    carriers: [{ kind: 'stream', paths: ['ureter_r', 'ureter_l'], color: URINE, size: 3.6, speed: 12, gap: 24, fade: 8, pulse: { rate: 0.25, amp: 1, phase: 0 } }],
     over: { kind: 'axis', from: [0, -92, 1080], axis: [0, 0, -1], color: URINE, dir: 1, len: 130, rate: 0.4 },
     parts: {
       renal_arteries: { kind: 'wave', from: [10, -108, 1040], color: RICH, dir: 1, len: 70, rate: 1.1 },
@@ -825,7 +852,9 @@ export const MOTION3D = {
   endocrine: {
     text_he: 'בלוטות מפרישות **הורמונים** אל הדם, והדם נושא אותם אל איברי היעד. יותרת המוח מכוונת את שאר הבלוטות.',
     source_id: 'guyton-2020',
-    legend: [[HORMONE, 'הורמון: מהבלוטה אל הדם']],
+    note_he: 'המסלולים סכמטיים: בלוטות הדגם בלי כלי דם. בגזע הקו עוקב אחר אבי העורקים האמיתי של המודל.',
+    legend: [[HORMONE, 'הורמון: מהבלוטה אל הדם, אל איבר היעד']],
+    carriers: [{ kind: 'stream', paths: ['pituitary_thyroid', 'pituitary_adrenals', 'adrenals_heart', 'pancreas_body'], route: true, color: HORMONE, size: 4.5, speed: 50, gap: 36, fade: 8 }],
     over: { kind: 'wave', from: [0, -106, 1529], color: HORMONE, dir: 1, len: 200, rate: 0.35 },
     parts: {
       pituitary: { kind: 'wave', color: HORMONE, dir: 1, len: 8, rate: 0.5 },
@@ -836,9 +865,16 @@ export const MOTION3D = {
     },
   },
   reproductive: {
-    text_he: 'אחת לחודש בערך משתחררת **ביצית** מהשחלה. ריסים ותנועות של דופן החצוצרה מובילים אותה אל הרחם.',
+    text_he: 'אחת לחודש בערך משתחררת **ביצית** מהשחלה. הפימבריות, קצות החצוצרה, קולטות אותה, וריסים ותנועות של דופן החצוצרה מובילים אותה אל הרחם.',
+    male_he: 'במודל של הגבר אין אשכים וצינורות זרע, ולכן התנועה מוצגת רק במערכת של האישה.',
     source_id: 'guyton-2020',
-    legend: [[LYMPH, 'הדרך מהשחלה אל הרחם']],
+    legend: [['#fff7d0', 'הביצית, מהשחלה אל הרחם'], [LYMPH, 'גל הריסים בדופן החצוצרה']],
+    see: { tubes: 0.3, ovaries: 0.34, uterus: 0.18 },
+    focus: ['tubes', 'ovaries', 'uterus'],
+    carriers: [{
+      kind: 'cycle', sex: 'f', sides: ['r', 'l'],
+      stages: ['הזקיק בשחלה גדל ומבשיל', 'ביוץ: הזקיק נפתח, והביצית משתחררת', 'הפימבריות, קצות החצוצרה, קולטות את הביצית', 'ריסים ותנועות הדופן מובילים אותה לאורך החצוצרה', 'הביצית מגיעה אל חלל הרחם'],
+    }],
     over: null,
     parts: {
       tubes: { kind: 'wave', from: 'uterus', color: LYMPH, dir: -1, len: 26, rate: 0.35 },
@@ -846,8 +882,16 @@ export const MOTION3D = {
     },
   },
   skeletal: {
-    text_he: 'בשלד אין זרימה להראות. התנועה שלו היא במפרקים, והיא לא מונפשת כאן.',
-    source_id: 'gray-2020', legend: [], over: null, parts: {},
+    text_he: 'השלד נע **במפרקים**. במרפק ובברך העצם נעה סביב נקודה קבועה, כמו ציר של דלת. בהליכה צד אחד כפוף והשני ישר, לסירוגין. הצלעות עולות ויורדות עם הנשימה.',
+    note_he: 'המפרקים מוצגים בלי סחוס, רצועות ושרירים: אינם בדגם. הזווית מייצגת, לא מדידה.',
+    source_id: 'gray-2020',
+    legend: [[INKDOT, 'העצמות שמעבר למפרק מסתובבות סביבו']],
+    over: null,
+    parts: {
+      arms: { kind: 'hinge', from: [225, -76, 1045], rate: 0.45, dir: -1, amp: 1.15, joint: { below: 1045, minAbsX: 190 } },
+      legs: { kind: 'hinge', from: [72, -84, 372], rate: 0.45, dir: 1, amp: 0.95, joint: { below: 372 } },
+      thorax: { kind: 'breathe', rate: 0.22, amp: 0.025 },
+    },
   },
 };
 

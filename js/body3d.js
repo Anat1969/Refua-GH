@@ -7,6 +7,7 @@ import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
 import { RoomEnvironment } from './vendor/RoomEnvironment.js';
 import { ANATOMY3D, MODEL_CREDIT, MODEL_SOURCES, SOURCES, MOTION3D } from './data.js';
+import { makeCarriers } from './carriers.js';
 
 const INK = '#16202b', NAVY = '#1f4e79', PORCELAIN = '#fbf8f2', GHOST_INK = '#c4cad2';
 const LOOK_KEY = 'refua.look3d', SEX_KEY = 'refua.sex3d';
@@ -94,13 +95,42 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
 
   // ---- The living body: one shader layer on every material; each mesh brings its own motion (MOTION3D).
   const MOT = { uTime: { value: 0 }, uOn: { value: 0 } };
-  const KIND = { wave: 1, flow: 2, axis: 3, beat: 4, breathe: 5, shift: 6, tide: 7 };
+  const KIND = { wave: 1, flow: 2, axis: 3, beat: 4, breathe: 5, shift: 6, tide: 7, hinge: 8 };
   const NOMOT = { k: 0, o: new THREE.Vector3(), a: new THREE.Vector3(0, 0, 1), c: new THREE.Color('#ffffff'), p: new THREE.Vector4(100, 1, 1, 0) };
   let moving = false, moveT0 = 0;
+  // Carriers: bodies that travel along the centre lines of the model (js/carriers.js). The lines load once, when the viewer first presses "תנועה".
+  let carriers = null, carriersKey = '', pathsData = null, pathsLoading = null, liveStage = '';
+  const carrierSpecs = () => (MOTION3D[sel]?.carriers || []).filter((c) => !c.sex || c.sex === sex);
+  function syncCarriers() {
+    const specs = moving && !whole ? carrierSpecs() : [];
+    const key = specs.length ? `${sel}|${sex}` : '';
+    if (key === carriersKey && (carriers || !key)) return;
+    if (carriers) { carriers.dispose(); carriers = null; }
+    carriersKey = key; liveStage = '';
+    if (!key) return;
+    if (!pathsData) { pathsLoading ||= fetch('models/paths.json').then((r) => r.json()).then((j) => { pathsData = j; }).catch(() => { pathsData = {}; }); pathsLoading.then(() => { carriersKey = ''; syncCarriers(); request(); }); return; }
+    carriers = makeCarriers(THREE, { body, cut, paths: pathsData[sel] || {}, specs, reduced });
+    request();
+  }
   const centreOf = (mesh) => { mesh.geometry.computeBoundingBox(); return mesh.geometry.boundingBox.getCenter(new THREE.Vector3()); };
   // Turns one MOTION3D entry into uniform values. A "from" that names a part is resolved against the loaded model.
+  // A joint turns part of a mesh about a fixed point (an elbow, a knee). Which part: the separate bones of the mesh that lie beyond the joint (rule).
+  function markJoint(mesh, rule) {
+    if (mesh.userData.jointMask === JSON.stringify(rule)) return;
+    const geo = mesh.geometry, pos = geo.attributes.position, idx = geo.index ? geo.index.array : null;
+    const n = pos.count, up = new Int32Array(n).map((_, i) => i);
+    const find = (a) => { while (up[a] !== a) { up[a] = up[up[a]]; a = up[a]; } return a; };
+    const tri = idx ? idx.length : n;
+    for (let i = 0; i < tri; i += 3) { const a = idx ? idx[i] : i, b = idx ? idx[i + 1] : i + 1, c = idx ? idx[i + 2] : i + 2; up[find(a)] = find(b); up[find(b)] = find(c); }
+    const sum = new Map();
+    for (let i = 0; i < n; i++) { const r = find(i); const s = sum.get(r) || [0, 0, 0, 0]; s[0] += pos.getX(i); s[2] += pos.getZ(i); s[3]++; sum.set(r, s); }
+    const mask = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const s = sum.get(find(i)); const cx = s[0] / s[3], cz = s[2] / s[3]; if (cz < rule.below && Math.abs(cx) > (rule.minAbsX || 0)) mask[i] = 1; }
+    geo.setAttribute('aJ', new THREE.BufferAttribute(mask, 1)); mesh.userData.jointMask = JSON.stringify(rule);
+  }
   function motion(def, mesh, meshes) {
     if (!def) return null;
+    if (def.kind === 'hinge') markJoint(mesh, def.joint);
     const from = Array.isArray(def.from) ? new THREE.Vector3(...def.from) : def.from && meshes?.[def.from] ? centreOf(meshes[def.from]) : centreOf(mesh);
     const amp = def.amp ?? 0;
     return { k: KIND[def.kind] || 0, o: from, a: new THREE.Vector3(...(def.axis || [0, 0, 1])), c: new THREE.Color(def.color || '#ffffff'),
@@ -122,17 +152,23 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     m.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, { uTime: MOT.uTime, uOn: MOT.uOn, mK: { value: u.k }, mO: { value: u.o }, mA: { value: u.a }, mC: { value: u.c }, mP: { value: u.p } });
       const pars = 'uniform float uTime, uOn, mK; uniform vec3 mO, mA, mC; uniform vec4 mP; varying vec3 vB; varying float vU;\n';
-      sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>\n${pars}`).replace('#include <begin_vertex>', `#include <begin_vertex>
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>\nattribute float aJ;\n${pars}`).replace('#include <begin_vertex>', `#include <begin_vertex>
         vB = position; vU = uv.x;
         if (uOn > 0.5 && mK > 3.5) {
           float cyc = uTime * mP.y * 6.2832;
           if (mK < 4.5) transformed = mO + (transformed - mO) * (1.0 - mP.w * pow(max(0.0, sin(cyc + mP.x)), 6.0));       // beat: the wall contracts
           else if (mK < 5.5) transformed = mO + (transformed - mO) * (1.0 + mP.w * (0.5 - 0.5 * cos(cyc)));               // breathe: the volume grows
           else if (mK < 6.5) transformed += mA * mP.w * (0.5 - 0.5 * cos(cyc));                                           // shift: the part moves
+          else if (mK > 7.5) {                                                                                           // hinge: the bones beyond a joint turn about it; left and right in opposite phase
+            float f = 0.5 - 0.5 * cos(cyc + (position.x > 0.0 ? 3.1416 : 0.0));
+            float ang = mP.z * mP.w * f * aJ;
+            vec3 pv = vec3(sign(position.x) * abs(mO.x), mO.y, mO.z); vec3 d = transformed - pv;
+            transformed = pv + vec3(d.x, d.y * cos(ang) - d.z * sin(ang), d.y * sin(ang) + d.z * cos(ang));
+          }
         }`);
       sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>\n${pars}float mW = 0.0;\n`).replace('#include <color_fragment>', `#include <color_fragment>
         if (!gl_FrontFacing) diffuseColor.rgb *= 0.5;
-        if (uOn > 0.5 && mK > 0.5 && (mK < 3.5 || mK > 6.5)) {
+        if (uOn > 0.5 && mK > 0.5 && (mK < 3.5 || (mK > 6.5 && mK < 7.5))) {
           float d = mK < 1.5 ? distance(vB, mO) : (mK < 2.5 ? vU * 1000.0 : dot(vB - mO, mA));
           float ph = mK > 6.5 ? fract(d / mP.x + 1.4 * cos(uTime * mP.y * 6.2832)) : fract(d / mP.x - uTime * mP.y * mP.z);
           mW = smoothstep(0.5, 0.9, ph) * (1.0 - smoothstep(0.9, 1.0, ph));
@@ -184,17 +220,21 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
         const on = pid === part || hl.includes(pid) || (deep && level === 3 && dp.inner.includes(pid));
         const peeled = deep && level === 2 && dp.outer.includes(pid);
         const faded = (isolate && part && !on) || (hl.length > 0 && !on) || peeled || (cs && id === 'reproductive');
-        m.material.dispose(); m.material = materialFor(m.userData.color, faded, moving ? motion(MOTION3D[id]?.parts?.[pid], m, d.meshes) : null);
+        const see = moving && carrierSpecs().length ? MOTION3D[id]?.see?.[pid] : undefined; // a part that carries something stays faintly see-through
+        m.material.dispose(); m.material = materialFor(m.userData.color, faded || see != null, moving ? motion(MOTION3D[id]?.parts?.[pid], m, d.meshes) : null);
         if (faded) m.material.opacity = cs && id === 'reproductive' ? (pid === 'breast' ? 0.16 : 0.3) : peeled ? 0.2 : 0.12;
+        else if (see != null) m.material.opacity = see;
+        const seeOl = see != null && !faded;
         if (on && look === 'ink') m.material.color.set('#dfe8f2');
         if (on && look === 'tissue') m.material.emissive = new THREE.Color('#3a1410');
         const ol = m.userData.outline;
-        ol.visible = look === 'ink';
+        ol.visible = look === 'ink' && !(moving && MOTION3D[id]?.parts?.[pid]?.kind === 'hinge'); // the outline does not turn with the bones
         ol.material.uniforms.ink.value.set(on ? NAVY : INK);
-        ol.material.uniforms.a.value = faded ? 0.15 : 1;
+        ol.material.uniforms.a.value = faded ? 0.15 : seeOl ? 0.18 : 1;
         ol.material.uniforms.w.value = on ? 1 : 0.6;
       }
     }
+    syncCarriers();
     host.querySelectorAll('.atlas-label').forEach((b) => { const on = !whole && b.dataset.id === sel; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     card(); request();
   }
@@ -204,7 +244,7 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     const c = $('.b3-card');
     const M = MOTION3D[sel];
     const bold = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
-    const moveBlock = moving && !whole && M ? `<div class="b3-motion"><p>${bold(M.text_he)}</p>${M.legend.length ? `<ul>${M.legend.map(([col, t]) => `<li><span class="b3-sw" style="--c:${col}"></span>${esc(t)}</li>`).join('')}</ul>` : ''}<p class="b3-meta"><span class="b3-layer">ידוע</span><span dir="ltr">${esc(SOURCES[M.source_id].title)}, ${SOURCES[M.source_id].year}</span></p></div>` : '';
+    const moveBlock = moving && !whole && M ? `<div class="b3-motion">${carrierSpecs().length ? `${carrierSpecs().some((c) => c.stages) ? '<p class="b3-live" aria-live="polite"></p>' : ''}<details class="b3-why"><summary>מה רואים כאן</summary><p>${bold(M.text_he)}</p></details>` : `<p>${bold(M.text_he)}</p>`}${M.male_he && sex === 'm' ? `<p>${esc(M.male_he)}</p>` : ''}${M.note_he ? `<p class="b3-note">${esc(M.note_he)}</p>` : ''}${M.legend.length ? `<ul>${M.legend.map(([col, t]) => `<li><span class="b3-sw" style="--c:${col}"></span>${esc(t)}</li>`).join('')}</ul>` : ''}<p class="b3-meta"><span class="b3-layer">ידוע</span><span dir="ltr">${esc(SOURCES[M.source_id].title)}, ${SOURCES[M.source_id].year}</span></p></div>` : '';
     if (whole) { c.innerHTML = moving ? `<p class="b3-k">הגוף החי</p><div class="b3-motion"><p>הלב שולח דם, הריאות מתמלאות, אותות חשמליים יוצאים מהמוח, המזון מתקדם, הכליות מסננות, ההורמונים נשלחים בדם, והלימפה חוזרת אל הדם.</p></div>` : `<p class="b3-k">גוף אחד, תשע רשתות</p><p class="b3-hint">לחיצה על מערכת בגוף, או על שמה למעלה, פותחת אותה. גרירה מסובבת, גלגלת מקרבת.</p>`; return; }
     if (!A) { c.innerHTML = ''; return; }
     const list = partsOf(sel);
@@ -236,7 +276,8 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     const d = detail[id];
     const A = ANATOMY3D[id];
     const inner = (A?.depth?.inner || []).filter((pid) => showsPart(A.parts.find((p) => p.id === pid)));
-    const focus = id === sel && hl.length ? hl : id === sel && level === 3 && inner.length ? inner : (sex === 'm' && A?.focus_m ? A.focus_m : A?.focus || []);
+    const mf = id === sel && moving && !whole && carrierSpecs().length ? MOTION3D[id]?.focus : null; // while it moves, the camera comes close to what moves
+    const focus = id === sel && hl.length ? hl : mf ? mf : id === sel && level === 3 && inner.length ? inner : (sex === 'm' && A?.focus_m ? A.focus_m : A?.focus || []);
     if (d) focus.forEach((pid) => d.meshes[pid] && b.expandByObject(d.meshes[pid]));
     if (b.isEmpty() && over[id]) b.expandByObject(over[id]);
     return b;
@@ -249,6 +290,13 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     const half = THREE.MathUtils.degToRad(camera.fov / 2);
     const dist = (r / Math.sin(Math.min(half, Math.atan(Math.tan(half) * camera.aspect)))) * pad;
     const to = { t: c, p: c.clone().add(new THREE.Vector3(...dirv).normalize().multiplyScalar(dist)) };
+    // While it moves, the caption card sits at the left of the stage: slide the view so what moves sits in the free part.
+    if (moving && !whole && carriers !== undefined && carrierSpecs().length) {
+      const cam = camera.clone(); cam.position.copy(to.p); cam.up.set(0, 1, 0); cam.lookAt(to.t); cam.updateMatrixWorld();
+      const right = new THREE.Vector3(1, 0, 0).applyQuaternion(cam.quaternion);
+      const off = right.multiplyScalar(dist * Math.tan(half) * camera.aspect * -0.3);
+      to.t.add(off); to.p.add(off);
+    }
     camera.near = dist / 60; camera.far = dist * 30; camera.updateProjectionMatrix();
     if (reduced || !fly && camera.position.lengthSq() === 0) { controls.target.copy(to.t); camera.position.copy(to.p); request(); return; }
     fly = { t0: performance.now(), from: { t: controls.target.clone(), p: camera.position.clone() }, to };
@@ -383,7 +431,7 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
   }
   const PAD = { skeletal: 0.7, cardio: 1.15, immune: 1.02, reproductive: 2.2, urinary: 1.5, endocrine: 1.3 };
   const padOf = (id) => (id === 'reproductive' && sex === 'f' ? 0.95 : PAD[id] || 0.82);
-  const frameSel = () => frameBox(boxOf(sel), VIEW[view], padOf(sel));
+  const frameSel = () => { const mv = moving && !whole && carrierSpecs().length ? MOTION3D[sel] : null; frameBox(boxOf(sel), mv?.view ? VIEW[mv.view] : VIEW[view], mv?.pad ?? padOf(sel)); };
   function setCut(v) {
     if (!+v) { cut.constant = 1e6; request(); return; }
     const b = boxOf(sel);
@@ -488,7 +536,7 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     moving = !!on; MOT.uOn.value = moving ? 1 : 0; if (moving) moveT0 = performance.now();
     host.classList.toggle('is-moving', moving);
     const b = $('[data-b3-move]'); b.setAttribute('aria-pressed', String(moving)); b.textContent = moving ? 'עצירה' : 'תנועה';
-    restyle();
+    restyle(); if (!whole && sel) frameSel();
   }
 
   // A name pin above the chosen part.
@@ -519,7 +567,10 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
       if (t < 1) more = true; else fly = null;
     }
     if (controls.update()) more = true;
-    if (moving) { MOT.uTime.value = (performance.now() - moveT0) / 1000; more = true; }
+    if (moving) {
+      MOT.uTime.value = (performance.now() - moveT0) / 1000; more = true;
+      if (carriers) { const st = carriers.update(MOT.uTime.value); if (st !== null && st !== liveStage) { liveStage = st; const el = $('.b3-live'); if (el) el.textContent = st; } }
+    }
     renderer.render(scene, camera);
     placePin(); placeTags();
     if (more) request();

@@ -375,6 +375,14 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       sexes.m = await page.$$eval('.b3-parts .b3-part', (l) => l.length);
       await page.click('[data-b3-sex="f"]');
       ok(sexes.f === 7 && sexes.m === 2, `3D reproductive: a woman's body (${sexes.f} parts, from HRA) and a man's (${sexes.m}), and the sources said in words`);
+      // The egg moves on the model itself: the caption names the stage, the lines load, and a man's body says why it shows nothing.
+      await page.click('[data-b3-move]');
+      await page.waitForFunction(() => document.querySelector('.b3-live')?.textContent.length > 5, null, { timeout: 60000 });
+      const stage = await page.textContent('.b3-live');
+      ok(/זקיק|ביוץ|פימבריות|חצוצרה|רחם/.test(stage) && (await page.evaluate(() => fetch('models/paths.json').then((r) => r.json()).then((j) => j.reproductive.tube_r.length > 20 && j.reproductive.ovary_r.length === 2))), `3D motion, reproductive: the egg's journey is told in stages (${stage})`);
+      await page.click('[data-b3-sex="m"]');
+      ok(await page.evaluate(() => !document.querySelector('.b3-live') && /אין אשכים/.test(document.querySelector('.b3-motion')?.textContent || '')), '3D motion, a man: no stage line, and the card says what the model lacks');
+      await page.click('[data-b3-sex="f"]'); await page.click('[data-b3-move]');
       await page.goto(BASE + '#s=cardio&v=disease&d=ischemic&m=3d');
       await page.waitForFunction(() => /מחלת לב איסכמית/.test(document.querySelector('.b3-card')?.textContent || '') && /העורקים הכליליים/.test(document.querySelector('.b3-lit')?.textContent || ''), null, { timeout: 60000 });
       ok(true, '3D: a disease card lights up its structure in the body (ischemic heart disease: the coronary arteries)');

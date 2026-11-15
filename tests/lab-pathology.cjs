@@ -76,7 +76,7 @@ const ok = (name, cond) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}`); i
   ok('the motion button starts off', (await p4.locator('[data-b3-move]').getAttribute('aria-pressed')) === 'false');
   await p4.locator('[data-b3-move]').click();
   ok('the motion button turns on and says what to press to stop', (await p4.locator('[data-b3-move]').getAttribute('aria-pressed')) === 'true' && (await p4.locator('[data-b3-move]').innerText()) === 'עצירה');
-  ok('the caption names the direction of the lymph', (await p4.locator('.b3-motion').innerText()).includes('כיוון אחד'));
+  ok('the caption names the direction of the lymph', (await p4.locator('.b3-motion').textContent()).includes('כיוון אחד'));
   // The urinary and the endocrine systems: nine in all, each with its structures and its motion.
   await p4.goto(`${BASE}/#s=urinary&m=3d`, { waitUntil: 'domcontentloaded' });
   await p4.waitForFunction(() => (document.querySelector('.b3-more summary b')?.textContent || '').trim().startsWith('4 '), null, { timeout: 90000 });
