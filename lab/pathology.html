@@ -22,7 +22,9 @@
 [hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; }
 body { font-family: var(--sans); color: var(--ink); background: var(--paper); direction: rtl; }
-.lab { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); height: 100vh; }
+.lab { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); height: 100vh; }
+.lab > .stage { grid-column: 2; grid-row: 1; }
+.lab > .panel { grid-column: 1; grid-row: 1; }
 .stage { position: relative; min-height: 0; overflow: hidden; direction: ltr; background: radial-gradient(120% 90% at 50% 35%, #ffffff 0%, #f7f5f0 70%, #efebe2 100%); }
 .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
 .stage canvas:active { cursor: grabbing; }
@@ -49,7 +51,7 @@ body { font-family: var(--sans); color: var(--ink); background: var(--paper); di
 .cutbar { position: absolute; inset-inline-start: 16px; bottom: 44px; direction: rtl; display: flex; align-items: center; gap: 8px; font-size: 13px; background: rgba(255,255,255,.9); padding: 6px 10px; box-shadow: 0 1px 6px rgba(22,32,43,.1); }
 input[type=range] { accent-color: var(--ink); direction: ltr; }
 
-.panel { border-inline-start: 1px solid var(--hair); overflow: auto; padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+.panel { border-inline-end: 1px solid var(--hair); overflow: auto; padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 16px; }
 .label { font-size: 12px; color: var(--graphite); letter-spacing: .04em; font-weight: 500; margin: 0 0 6px; }
 .case { background: var(--plate); padding: 12px 14px; }
 .case h2 { margin: 2px 0 0; font-family: var(--display); font-size: 26px; font-weight: 900; line-height: 1.1; }
@@ -102,7 +104,8 @@ ol.q { margin: 10px 0 0; padding-inline-start: 20px; font-size: 14.5px; line-hei
 .decl a { color: inherit; }
 @media (max-width: 900px) {
   .lab { grid-template-columns: minmax(0, 1fr); grid-template-rows: 64vh auto; height: auto; }
-  .panel { border-inline-start: 0; border-top: 1px solid var(--hair); }
+  .lab > .stage, .lab > .panel { grid-column: 1; grid-row: auto; }
+  .panel { border-inline-end: 0; border-top: 1px solid var(--hair); }
   .brand p { display: none; }
   .hud { flex-direction: column; gap: 6px; }
   .views { justify-content: flex-start; }
