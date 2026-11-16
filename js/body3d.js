@@ -101,6 +101,22 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
   // Carriers: bodies that travel along the centre lines of the model (js/carriers.js). The lines load once, when the viewer first presses "תנועה".
   let carriers = null, carriersKey = '', pathsData = null, pathsLoading = null, liveStage = '';
   const carrierSpecs = () => (MOTION3D[sel]?.carriers || []).filter((c) => !c.sex || c.sex === sex);
+  // The story: what the movement is for, told in stages. Each stage has a line, and the parts it is about glow.
+  function storyStage(t) {
+    const S = MOTION3D[sel]?.story; if (!S) return null;
+    const f = (t % S.cycle) / S.cycle;
+    return S.stages.find((s) => f < s.to) || S.stages[S.stages.length - 1];
+  }
+  function setStage(st) {
+    liveStage = st;
+    const el = $('.b3-live'); if (el) el.textContent = st.he;
+    const lit = new Set(st.hl || []);
+    for (const [pid, m] of Object.entries(detail[sel]?.meshes || {})) {
+      const mat = m.material; if (!mat.emissive) continue;
+      if (lit.has(pid)) { mat.emissive.set('#ffe680'); mat.emissiveIntensity = 0.55; } else { mat.emissive.set('#000000'); mat.emissiveIntensity = 1; }
+    }
+    request();
+  }
   function syncCarriers() {
     const specs = moving && !whole ? carrierSpecs() : [];
     const key = specs.length ? `${sel}|${sex}` : '';
@@ -234,7 +250,7 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
         ol.material.uniforms.w.value = on ? 1 : 0.6;
       }
     }
-    syncCarriers();
+    liveStage = ''; syncCarriers();
     host.querySelectorAll('.atlas-label').forEach((b) => { const on = !whole && b.dataset.id === sel; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     card(); request();
   }
@@ -244,7 +260,7 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     const c = $('.b3-card');
     const M = MOTION3D[sel];
     const bold = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
-    const moveBlock = moving && !whole && M ? `<div class="b3-motion">${carrierSpecs().length ? `${carrierSpecs().some((c) => c.stages) ? '<p class="b3-live" aria-live="polite"></p>' : ''}<details class="b3-why"><summary>מה רואים כאן</summary><p>${bold(M.text_he)}</p></details>` : `<p>${bold(M.text_he)}</p>`}${M.male_he && sex === 'm' ? `<p>${esc(M.male_he)}</p>` : ''}${M.note_he ? `<p class="b3-note">${esc(M.note_he)}</p>` : ''}${M.legend.length ? `<ul>${M.legend.map(([col, t]) => `<li><span class="b3-sw" style="--c:${col}"></span>${esc(t)}</li>`).join('')}</ul>` : ''}<p class="b3-meta"><span class="b3-layer">ידוע</span><span dir="ltr">${esc(SOURCES[M.source_id].title)}, ${SOURCES[M.source_id].year}</span></p></div>` : '';
+    const moveBlock = moving && !whole && M ? `<div class="b3-motion">${carrierSpecs().length || M.story ? `${carrierSpecs().some((c) => c.stages) || M.story ? '<p class="b3-live" aria-live="polite"></p>' : ''}<details class="b3-why"><summary>מה רואים כאן</summary><p>${bold(M.text_he)}</p></details>` : `<p>${bold(M.text_he)}</p>`}${M.male_he && sex === 'm' ? `<p>${esc(M.male_he)}</p>` : ''}${M.note_he ? `<p class="b3-note">${esc(M.note_he)}</p>` : ''}${M.legend.length ? `<ul>${M.legend.map(([col, t]) => `<li><span class="b3-sw" style="--c:${col}"></span>${esc(t)}</li>`).join('')}</ul>` : ''}<p class="b3-meta"><span class="b3-layer">ידוע</span><span dir="ltr">${esc(SOURCES[M.source_id].title)}, ${SOURCES[M.source_id].year}</span></p></div>` : '';
     if (whole) { c.innerHTML = moving ? `<p class="b3-k">הגוף החי</p><div class="b3-motion"><p>הלב שולח דם, הריאות מתמלאות, אותות חשמליים יוצאים מהמוח, המזון מתקדם, הכליות מסננות, ההורמונים נשלחים בדם, והלימפה חוזרת אל הדם.</p></div>` : `<p class="b3-k">גוף אחד, תשע רשתות</p><p class="b3-hint">לחיצה על מערכת בגוף, או על שמה למעלה, פותחת אותה. גרירה מסובבת, גלגלת מקרבת.</p>`; return; }
     if (!A) { c.innerHTML = ''; return; }
     const list = partsOf(sel);
@@ -569,7 +585,8 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     if (controls.update()) more = true;
     if (moving) {
       MOT.uTime.value = (performance.now() - moveT0) / 1000; more = true;
-      if (carriers) { const st = carriers.update(MOT.uTime.value); if (st !== null && st !== liveStage) { liveStage = st; const el = $('.b3-live'); if (el) el.textContent = st; } }
+      const st = (carriers && carriers.update(MOT.uTime.value)) || (whole ? null : storyStage(MOT.uTime.value));
+      if (st && st !== liveStage) setStage(st);
     }
     renderer.render(scene, camera);
     placePin(); placeTags();
