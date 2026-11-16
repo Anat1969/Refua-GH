@@ -873,3 +873,11 @@ body.is-home .panel .wt-sys { font-size: 13px; }
 .intro-page { grid-column: 1 / -1; }
 @media (min-width: 1000px) { body.is-intro .work { grid-template-columns: minmax(0, 1fr); } }
 @media (min-width: 1000px) { .intro-page:has(.home-demo:empty) { grid-template-columns: minmax(0, 760px); justify-content: center; } }
+.b3-live { font-weight: 700; font-size: 14.5px; background: var(--marker); padding: 3px 6px; min-height: 1.5em; }
+/* While a system moves, its caption card goes to the top left of the stage, so what moves stays in view. */
+@media (min-width: 1000px) { .atlas.is-moving .b3-card { inset-inline-start: auto; inset-inline-end: 8px; bottom: auto; top: 66px; width: min(300px, 38%); max-height: calc(100% - 250px); min-height: 150px; } }
+.b3-why { margin-bottom: 4px; }
+.b3-why summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--known); list-style: none; padding: 2px 8px; display: inline-block; background: linear-gradient(#fff, #e9edf3); box-shadow: var(--lift); }
+.b3-why summary::-webkit-details-marker { display: none; }
+.b3-why[open] summary { background: var(--ink); color: #fff; }
+.b3-note { font-size: 12.5px; color: var(--graphite); border-top: 1px solid var(--hair); padding-top: 3px; }
