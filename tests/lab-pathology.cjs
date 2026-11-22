@@ -45,7 +45,7 @@ const ok = (name, cond) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}`); i
   await p3.addInitScript(() => { try { localStorage.setItem('refua.mode', '2d'); } catch {} });
   await p3.goto(`${BASE}/lab/pathology.html?case=anat`);
   await p3.waitForFunction(() => document.body.dataset.ready === '1', null, { timeout: 90000 });
-  ok('the case card shows its name and seven steps', (await p3.locator('#case h2').innerText()).length > 3 && (await p3.locator('#case li').count()) === 7);
+  ok('the lab case card shows its name and the seven pathology steps, without the scan', (await p3.locator('#case h2').innerText()).length > 3 && (await p3.locator('#case li').count()) === 7);
   ok('the case places the specimen in the breast', (await p3.locator('.tag.pin[data-pin="breast"]').innerText()).includes('שעה 8, חיצוני־תחתון'));
   ok('a case step moves the stage', await (async () => { await p3.locator('#case li[data-view="nodes"]').click(); return (await p3.locator('button[data-view="nodes"]').getAttribute('aria-pressed')) === 'true'; })());
   await p3.goto(`${BASE}/#s=reproductive&v=disease&d=breast-cancer&f=cancer`);
@@ -53,13 +53,13 @@ const ok = (name, cond) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}`); i
   ok('the disease card opens the case inside the app', (await p3.locator('a.case-go').getAttribute('href')).includes('&c=anat'));
   await p3.locator('a.case-go').click();
   await p3.waitForSelector('.case-steps.live li.on');
-  ok('the case keeps the app frame: same bar, same stage, seven steps', (await p3.locator('.case-steps.live li').count()) === 7 && await p3.locator('header.bar ai-menu').count() === 1 && await p3.locator('.frame-main .stage').isVisible());
+  ok('the case keeps the app frame: same bar, same stage, eight steps', (await p3.locator('.case-steps.live li').count()) === 8 && await p3.locator('header.bar ai-menu').count() === 1 && await p3.locator('.frame-main .stage').isVisible());
   await p3.locator('[data-case-go="5"]').click();
   ok('a step is written into the address', p3.url().includes('cs=5') && (await p3.locator('.case-steps.live li.on > b').innerText()) === 'בלוטות');
   ok('the margins table marks the nearest side once', (await p3.locator('.case-mg tr.near').count()) === 1);
   await p3.goto(`${BASE}/#s=reproductive&v=disease&d=breast-cancer&f=cancer&l=2`);
   await p3.waitForSelector('.case-block');
-  ok('level two tells the case in steps', (await p3.locator('.case-steps li').count()) === 7);
+  ok('level two tells the case in steps', (await p3.locator('.case-steps li').count()) === 8);
   await p3.goto(`${BASE}/#v=home`); await p3.reload();
   await p3.waitForSelector('a.home-case img');
   ok('the atlas page shows the case above the wonders; the opening page holds the video slot', await p3.evaluate(() => { const im = document.querySelector('#panel a.home-case img'); return !!document.querySelector('#intro-page [data-aoa-demo]') && !!im && im.complete && im.naturalWidth > 100; }));
