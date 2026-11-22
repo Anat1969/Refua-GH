@@ -222,8 +222,19 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     }
     for (const [id, d] of Object.entries(detail)) {
       const extra = !whole && cs && id === 'immune' && sel === 'reproductive'; // the case shows the lymph of the armpit beside the breast
-      d.group.visible = !whole && (id === sel || extra);
-      if (whole || !(id === sel || extra)) continue;
+      const pet = !whole && petOn() && id !== sel ? (id === 'immune' ? {} : petHeat(id)) : null;
+      d.group.visible = !whole && (id === sel || extra || !!pet);
+      if (whole || !(id === sel || extra || pet)) continue;
+      if (pet) { // the scan: the lymph stations stay as they are, quiet; an organ shows only by how much tracer it took
+        if (d.skin) d.skin.visible = false;
+        for (const [pid, m] of Object.entries(d.meshes)) {
+          const ol = m.userData.outline, station = id === 'immune' && pid.startsWith('nodes_');
+          m.visible = station || pet[pid] != null; m.material.dispose();
+          m.material = station ? materialFor(m.userData.color, false) : heatMat(pet[pid] ?? 0);
+          ol.visible = station && look === 'ink'; ol.material.uniforms.ink.value.set(INK); ol.material.uniforms.a.value = 1; ol.material.uniforms.w.value = 0.6;
+        }
+        continue;
+      }
       if (d.skin) {
         d.skin.visible = femaleBody();
         d.skin.material.dispose(); d.skin.material = materialFor('#f2dccb', true); d.skin.material.opacity = look === 'ink' ? 0.05 : 0.08;
@@ -250,6 +261,10 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
         ol.material.uniforms.w.value = on ? 1 : 0.6;
       }
     }
+    if (cs?.parts.pet) cs.parts.pet.traverse((o) => { if (o.userData.heat != null) { o.material?.dispose?.(); o.material = heatMat(o.userData.heat, o.userData.rim || 0); } else if (o.isLine) o.material.color.set(look === 'tissue' ? '#ffffff' : INK); });
+    if (over.skin && !whole) over.skin.material.opacity = petOn() ? (look === 'ink' ? 0.1 : 0.16) : over.skin.material.opacity;
+    if (over.skin && petOn() && look === 'ink') over.skin.userData.outline.visible = true; // black on white needs the silhouette
+    host.classList.toggle('is-pet', petOn());
     liveStage = ''; syncCarriers();
     host.querySelectorAll('.atlas-label').forEach((b) => { const on = !whole && b.dataset.id === sel; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     card(); request();
@@ -262,6 +277,14 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     const bold = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
     const moveBlock = moving && !whole && M ? `<div class="b3-motion">${carrierSpecs().length || M.story ? `${carrierSpecs().some((c) => c.stages) || M.story ? '<p class="b3-live" aria-live="polite"></p>' : ''}<details class="b3-why"><summary>מה רואים כאן</summary><p>${bold(M.text_he)}</p></details>` : `<p>${bold(M.text_he)}</p>`}${M.male_he && sex === 'm' ? `<p>${esc(M.male_he)}</p>` : ''}${M.note_he ? `<p class="b3-note">${esc(M.note_he)}</p>` : ''}${M.legend.length ? `<ul>${M.legend.map(([col, t]) => `<li><span class="b3-sw" style="--c:${col}"></span>${esc(t)}</li>`).join('')}</ul>` : ''}<p class="b3-meta"><span class="b3-layer">ידוע</span><span dir="ltr">${esc(SOURCES[M.source_id].title)}, ${SOURCES[M.source_id].year}</span></p></div>` : '';
     if (whole) { c.innerHTML = moving ? `<p class="b3-k">הגוף החי</p><div class="b3-motion"><p>הלב שולח דם, הריאות מתמלאות, אותות חשמליים יוצאים מהמוח, המזון מתקדם, הכליות מסננות, ההורמונים נשלחים בדם, והלימפה חוזרת אל הדם.</p></div>` : `<p class="b3-k">גוף אחד, תשע רשתות</p><p class="b3-hint">לחיצה על מערכת בגוף, או על שמה למעלה, פותחת אותה. גרירה מסובבת, גלגלת מקרבת.</p>`; return; }
+    if (petOn()) {
+      const src = SOURCES['eanm-fdg-2015'];
+      c.innerHTML = `<p class="b3-k">PET-CT · <span class="num">${esc(cs.pet.date_he)}</span></p>
+        <div class="b3-heat"><span>פחות</span><i></i><span>יותר קליטה</span></div>
+        <details class="b3-why"><summary>מה רואים כאן</summary><p>הסולם הוא לציור בלבד: בדוח אין ערכי קליטה במספרים. הגוף אחרי הזרקת FDG, סוכר מסומן. המוח, הלב, הכבד, הכליות והשלפוחית קולטים אותו בכל גוף: הם מצוירים לפי הידוע, ולא מהדוח. שאר הנקודות הן מה שנכתב בדוח. תחנות הלימפה מצוירות בלי קליטה, חוץ מהמפשעה.</p></details>
+        <p class="b3-meta"><span class="b3-layer">ידוע</span><span dir="ltr">EANM procedure guidelines for tumour imaging, ${src.year}</span></p>`;
+      return;
+    }
     if (!A) { c.innerHTML = ''; return; }
     const list = partsOf(sel);
     const sexSeg = sel === 'reproductive' ? `<div class="b3-seg b3-sex" role="group" aria-label="גוף"><button data-b3-sex="f" aria-pressed="${sex === 'f'}">אישה</button><button data-b3-sex="m" aria-pressed="${sex === 'm'}">גבר</button></div>` : '';
@@ -331,6 +354,21 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
   let cs = null; // { id, report, view, group, parts: { spec, nodes, piece }, tags: [] }
   const ell = (a, b, c, mat, seg = 40) => { const g = new THREE.SphereGeometry(1, seg, Math.round(seg * 0.66)); g.scale(a, b, c); g.computeVertexNormals(); return new THREE.Mesh(g, mat); };
   const lineOf = (p, q) => new THREE.Line(new THREE.BufferGeometry().setFromPoints([p, q]), new THREE.LineBasicMaterial({ color: look === 'tissue' ? '#ffffff' : INK, clippingPlanes: [cut] }));
+  // ---- PET-CT: what took up the tracer. Two looks, as in a reading room: black on white (the classic projection) in ink,
+  // and the fused colour scale in tissue. The heat is a drawing level: the report of the case gives no numbers.
+  const HEAT = [[0, '#3a0803'], [0.35, '#a31a06'], [0.55, '#e8480c'], [0.75, '#ff9a1a'], [0.9, '#ffe066'], [1, '#fff8d6']];
+  const heatCol = (t) => { let i = 1; while (i < HEAT.length - 1 && HEAT[i][0] < t) i++; const [a, ca] = HEAT[i - 1], [b, cb] = HEAT[i]; return new THREE.Color(ca).lerp(new THREE.Color(cb), Math.min(1, Math.max(0, (t - a) / (b - a)))); };
+  const heatMat = (t, rim = 0) => new THREE.ShaderMaterial({
+    uniforms: { c: { value: look === 'tissue' ? heatCol(t) : new THREE.Color(INK) }, a: { value: look === 'tissue' ? 0.14 + 0.78 * t * t : 0.08 + 0.7 * t * t }, rim: { value: rim } },
+    vertexShader: 'varying vec3 vN; varying vec3 vV; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }',
+    fragmentShader: 'uniform vec3 c; uniform float a; uniform float rim; varying vec3 vN; varying vec3 vV; void main(){ float f = abs(dot(normalize(vN), normalize(vV))); gl_FragColor = vec4(c, a * mix(0.3 + 0.7 * pow(f, 1.6), pow(1.0 - f, 1.3), rim)); }',
+    transparent: true, depthWrite: false, depthTest: false, side: THREE.DoubleSide, blending: look === 'tissue' ? THREE.AdditiveBlending : THREE.NormalBlending,
+  });
+  // organs that take up FDG in every body (EANM guideline): drawn from what is known, not from the report
+  const PET_NORMAL = { nervous: { cerebrum_r: 0.95, cerebrum_l: 0.95, cerebellum: 0.85, diencephalon: 0.8, brainstem: 0.7 }, cardio: { lv: 0.38 }, digestive: { liver: 0.16 }, urinary: { kidneys: 0.6, bladder: 0.9 } };
+  const PET_SYS = ['nervous', 'cardio', 'digestive', 'urinary', 'endocrine'];
+  const petOn = () => !!(cs && cs.pet && cs.view === 'pet');
+  const petHeat = (id) => { const h = { ...(PET_NORMAL[id] || {}) }; if (id === 'endocrine') { const t = cs.pet.spots.find((x) => x.where === 'thyroid'); if (t) h.thyroid = t.heat; } return Object.keys(h).length ? h : null; };
   function clearCase() {
     if (!cs) return;
     body.remove(cs.group); cs.group.traverse((o) => { o.geometry?.dispose(); if (o.material?.dispose) o.material.dispose(); });
@@ -420,6 +458,36 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     if (nodes.children.length) caseTag(`<b>${nodes.children.length === 1 ? 'בלוטת זקיף' : `${nodes.children.length} בלוטות זקיף`}, בית השחי</b><small>מיקום מייצג</small>`, site.clone().add(new THREE.Vector3(s * 8, -6, 30)), ['body'], 'pin');
     cs.parts.spec.userData.inBody = !!h;
     spec.visible = !!h;
+    // the PET-CT after the operation: what lit up, where the report wrote it
+    if (c.pet) {
+      cs.pet = c.pet;
+      const pet = new THREE.Group(); cs.group.add(pet); cs.parts.pet = pet;
+      const blob = (r, pos, heat, rim = 0) => { const m = ell(r, r, r, new THREE.MeshBasicMaterial(), 28); m.userData.heat = heat; m.userData.rim = rim; m.position.copy(pos); m.renderOrder = 12; m.raycast = () => {}; pet.add(m); };
+      // a label stands beside the body, at the height of what it names, and a thin line joins them
+      const lead = (html, at, side, cls) => { const to = new THREE.Vector3(side * 250, at.y, at.z); const l = lineOf(at, to); l.material.depthTest = false; l.material.transparent = true; l.material.opacity = 0.55; l.renderOrder = 13; pet.add(l); caseTag(html, to, ['pet'], cls); cs.tags[cs.tags.length - 1].from = at.clone(); };
+      const PLACE = {
+        'breast-med': () => new THREE.Vector3(nip.x - s * 28, nip.y + 32, nip.z - 2),
+        axilla: () => site.clone(),
+        thyroid: () => { const m = detail.endocrine?.meshes.thyroid; return m ? new THREE.Box3().setFromBufferAttribute(m.geometry.attributes.position).getCenter(new THREE.Vector3()) : new THREE.Vector3(0, -103, 1368); },
+        groin: () => new THREE.Vector3(s * 48, -130, 818),
+        'liver-4a': () => new THREE.Vector3(-14, -128, 1150),
+      };
+      for (const sp of c.pet.spots) {
+        const at = PLACE[sp.where]?.(); if (!at) continue;
+        if (sp.where === 'breast-med') { const r = (sp.mm || 20) / 2; blob(r, at, sp.heat, 1); blob(r * 1.5, at, sp.heat * 0.7); }
+        else if (sp.where === 'axilla') blob(15, at, sp.heat);
+        else if (sp.where === 'groin') { blob(11, at, sp.heat); blob(11, new THREE.Vector3(-at.x, at.y, at.z), sp.heat); }
+        else if (sp.where === 'liver-4a') blob(5, at, sp.heat);
+        lead(`<b>${esc(sp.he)}</b>${sp.mm ? ` · <span class="num">${sp.mm}</span> מ״מ` : ''}<small>${esc(sp.line_he)}</small>`, sp.where === 'groin' ? new THREE.Vector3(-at.x, at.y, at.z) : at, sp.where === 'liver-4a' || sp.where === 'groin' ? -s : s, 'hot');
+      }
+      // what every scan shows, said quietly: the brain burns sugar, and the tracer leaves in the urine
+      const sk = over.skin?.geometry.attributes.position; const hand = new THREE.Vector3(-310, -120, 800);
+      if (sk) { let mx = Infinity; for (let i = 0; i < sk.count; i++) mx = Math.min(mx, sk.getX(i)); let n = 0; hand.set(0, 0, 0); for (let i = 0; i < sk.count; i++) if (sk.getX(i) < mx + 30) { hand.x += sk.getX(i); hand.y += sk.getY(i); hand.z += sk.getZ(i); n++; } hand.multiplyScalar(1 / n); }
+      lead('<b>המוח</b><small>שורף סוכר: קליטה רגילה</small>', new THREE.Vector3(-s * 40, -80, 1575), -s, 'quiet');
+      lead('<b>כליות ושלפוחית</b><small>הסמן יוצא בשתן</small>', new THREE.Vector3(-s * 60, -85, 1030), -s, 'quiet');
+      caseTag('<b>הזרקת FDG</b><small>כף יד ימין</small>', hand.clone().add(new THREE.Vector3(-60, 0, -70)), ['pet'], 'quiet');
+      pet.visible = false;
+    }
   }
   function frameCase() {
     if (!cs) return;
@@ -427,6 +495,12 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     const b = new THREE.Box3();
     const target = v === 'nodes' ? cs.parts.nodes : v === 'ext' && cs.parts.piece ? cs.parts.piece : v === 'spec' ? cs.parts.spec : null;
     scene.updateMatrixWorld(true);
+    const isPet = v === 'pet' && cs.parts.pet;
+    cs.parts.spec.visible = cs.parts.spec.userData.inBody && !isPet; cs.parts.nodes.visible = !isPet; // the scan came after the operation: the specimen and the sentinel nodes are out
+    if (cs.parts.pet) cs.parts.pet.visible = !!isPet;
+    if (isPet) { // from the top of the head to mid-thigh, as the scanner covers
+      b.setFromObject(over.skin); const lo = body.localToWorld(new THREE.Vector3(0, 0, 640)); b.min.y = Math.max(b.min.y, lo.y);
+      frameBox(b, VIEW.front, 0.9); cs.tags.forEach((t) => { t.el.hidden = !t.views.includes(v); }); return; }
     if (target) b.setFromObject(target); else { b.setFromObject(cs.parts.nodes); b.expandByPoint(body.localToWorld(new THREE.Vector3(s * 30, -250, 1110))); b.expandByPoint(body.localToWorld(new THREE.Vector3(s * 150, -100, 1330))); }
     if (cs.parts.piece) cs.parts.piece.visible = v === 'spec' || v === 'ext';
     frameBox(b, [s * (v === 'body' ? 0.4 : 0.75), 0.3, 1], v === 'body' ? 1.0 : v === 'spec' ? 1.25 : 1.9);
@@ -440,10 +514,12 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
       if (t.el.hidden) continue;
       tagV.copy(t.pos); body.localToWorld(tagV); tagV.project(camera);
       t.x = (tagV.x * 0.5 + 0.5) * r.width; t.y = (-tagV.y * 0.5 + 0.5) * r.height; t.el.style.visibility = tagV.z > 1 ? 'hidden' : 'visible'; live.push(t);
+      // a label on a leader line stands clear of the body: it hangs from the outer end of its line
+      if (t.from) { tagV.copy(t.from); body.localToWorld(tagV); tagV.project(camera); t.x += (t.x >= (tagV.x * 0.5 + 0.5) * r.width ? 1 : -1) * (t.el.offsetWidth / 2 + 4); }
     }
     live.sort((p, q) => p.y - q.y);
     for (let i = 0; i < live.length; i++) for (let j = 0; j < i; j++) { const p = live[j], q = live[i]; const bw = (p.el.offsetWidth + q.el.offsetWidth) / 2 + 6, bh = (p.el.offsetHeight + q.el.offsetHeight) / 2 + 3; if (Math.abs(p.x - q.x) < bw && q.y - p.y < bh) q.y = p.y + bh; }
-    for (const t of live) { t.el.style.left = `${t.x}px`; t.el.style.top = `${Math.max(64, t.y)}px`; }
+    for (const t of live) { const hw = t.el.offsetWidth / 2 + 4; t.el.style.left = `${Math.min(r.width - hw, Math.max(hw, t.x))}px`; t.el.style.top = `${Math.max(64, t.y)}px`; }
   }
   const PAD = { skeletal: 0.7, cardio: 1.15, immune: 1.02, reproductive: 2.2, urinary: 1.5, endocrine: 1.3 };
   const padOf = (id) => (id === 'reproductive' && sex === 'f' ? 0.95 : PAD[id] || 0.82);
@@ -495,10 +571,11 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     if (whole) { part = null; restyle(); frameBox(new THREE.Box3().setFromObject(over.skin), VIEW.front, 1.0); return; }
     if (opts.sex) sex = opts.sex;
     if (changed || hl.length || wasWhole) { part = null; isolate = false; $('.b3-cut input').value = 0; setCut(0); }
-    if (opts.case && cs && cs.id === opts.case.id) { cs.view = opts.case.view; restyle(); frameCase(); return; }
+    const petLoad = () => { if (opts.case?.view === 'pet' && opts.case.pet) PET_SYS.forEach((x) => ensureDetail(x).then(() => { if (cs) restyle(); })); };
+    if (opts.case && cs && cs.id === opts.case.id) { cs.view = opts.case.view; restyle(); frameCase(); petLoad(); return; }
     restyle(); if (!opts.case) frameSel();
     await ensureDetail(id);
-    if (opts.case) { await ensureDetail('immune'); if (sel !== id || lastKey !== key) return; buildCase(opts.case); restyle(); frameCase(); return; }
+    if (opts.case) { await ensureDetail('immune'); if (sel !== id || lastKey !== key) return; buildCase(opts.case); restyle(); frameCase(); petLoad(); return; }
     if (sel === id && !whole) { restyle(); frameSel(); }
   }
 

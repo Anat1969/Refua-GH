@@ -38,6 +38,7 @@ export const SOURCES = {
   'ghassa-2024': { title: 'Ghassa et al., Annals of Medicine & Surgery', type: 'תיאור מקרה', year: 2024, note: 'מקרה יחיד', url: 'https://doi.org/10.1097/MS9.0000000000001760' },
   'iarc-82': { title: 'IARC Monographs, vol. 82', type: 'סיווג רשמי', year: 2002, note: 'תכשירים צמחיים עם אריסטולוכיה', url: 'https://publications.iarc.who.int/' },
   'debelle-2008': { title: 'Debelle, Vanherweghem & Nortier, Kidney International', type: 'סקירה', year: 2008, note: 'כרך 74, עמ׳ 158-169', url: 'https://pubmed.ncbi.nlm.nih.gov/?term=Aristolochic+acid+nephropathy+a+worldwide+problem' },
+  'eanm-fdg-2015': { title: 'Boellaard et al., FDG PET/CT: EANM procedure guidelines for tumour imaging, Eur J Nucl Med Mol Imaging', type: 'הנחיה מקצועית', year: 2015, note: 'גרסה 2.0. כרך 42, עמ׳ 328-354', url: 'https://pubmed.ncbi.nlm.nih.gov/?term=FDG+PET%2FCT+EANM+procedure+guidelines+for+tumour+imaging+version+2.0' },
   'saper-2008': { title: 'Saper et al., JAMA', type: 'מחקר', year: 2008, note: '193 תכשירים שנבדקו', url: 'https://pubmed.ncbi.nlm.nih.gov/18728265/' },
   'harvey-1628': { title: 'William Harvey, De Motu Cordis', type: 'מקור היסטורי', year: 1628, note: 'פרק 8, תרגום Willis, 1847', url: 'https://en.wikisource.org/wiki/The_Works_of_William_Harvey/An_Anatomical_Disquisition_on_the_Motion_of_the_Heart_and_Blood_in_Animals/Chapter_8' },
   'who-cvd': { title: 'WHO, Cardiovascular diseases', type: 'הנחיה רשמית', year: 2025, note: '', url: 'https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds)' },
