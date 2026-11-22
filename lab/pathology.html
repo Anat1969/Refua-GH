@@ -518,7 +518,7 @@ function renderCase() {
   const el = document.getElementById('case'); el.hidden = !theCase; if (!theCase) return;
   const c = theCase;
   el.innerHTML = `<p class="label">מקרה לדוגמה · סרטן השד</p><h2>${esc(c.name_he)}</h2><p class="hl">${boldMd(c.headline_he)}</p>
-    <ol>${c.steps.map((st) => `<li data-view="${st.view}" tabindex="0"><i>${esc(st.k)}</i><span>${boldMd(st.text_he)}</span></li>`).join('')}</ol>
+    <ol>${c.steps.filter((st) => st.view !== 'pet').map((st) => `<li data-view="${st.view}" tabindex="0"><i>${esc(st.k)}</i><span>${boldMd(st.text_he)}</span></li>`).join('')}</ol>
     <p class="consent">${esc(c.consent_he)} ${esc(c.source_he)}</p>`;
   document.title = `${c.name_he}: מקרה לדוגמה | רפואה`;
 }

@@ -678,6 +678,27 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     await bc.close();
   }
 
+  // The example case, PET-CT step: what lit up, what did not, and the source document without personal details
+  {
+    const cc = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+    await cc.addInitScript(() => { try { localStorage.setItem('refua.mode', '2d'); } catch {} });
+    const cp = await cc.newPage();
+    await cp.route('**/ai-menu.js', (r) => r.fulfill({ body: AIMENU, contentType: 'text/javascript' }));
+    await cp.goto(BASE + '#s=reproductive&v=disease&f=cancer&d=breast-cancer&c=anat&cs=7');
+    await cp.waitForSelector('.pet-list li');
+    ok(await cp.$$eval('.case-steps.live li', (l) => l.length === 8 && l[7].classList.contains('on')), 'case: the PET-CT step is the eighth, and it is marked');
+    ok(await cp.$$eval('.pet-list li', (l) => l.length) === 5, 'case PET-CT: five findings, as written');
+    ok(await cp.$$eval('.pet-clear li', (l) => l.length) === 6, 'case PET-CT: six regions with nothing found');
+    ok(await cp.$('.case-mg') === null, 'case PET-CT: the margins table gives way to the scan');
+    const doc = await cp.$eval('.pet-how + a', (a) => a.getAttribute('href'));
+    const res = await cp.request.get(BASE + doc);
+    ok(res.ok() && (await res.body()).length > 50000, `case PET-CT: the source document opens (${doc})`);
+    await cp.goto(BASE + '#s=reproductive&v=disease&f=cancer&d=breast-cancer&c=anat&cs=4');
+    await cp.waitForSelector('.case-mg');
+    ok(await cp.$('.pet-list') === null, 'case: other steps keep the margins table');
+    await cc.close();
+  }
+
   // Reduced motion
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, reducedMotion: 'reduce' });
   await ctx.addInitScript(() => { try { localStorage.setItem('refua.mode', '2d'); } catch {} });

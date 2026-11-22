@@ -753,6 +753,23 @@ body.is-creations .intro, body.is-creations .stage, body.is-creations .panel, bo
 .b3-tag.pin { transform: translate(-50%, -100%); text-align: center; padding: 5px 9px; }
 .b3-tag.pin::after { content: ''; position: absolute; left: 50%; top: 100%; width: 1px; height: 22px; background: currentColor; }
 .b3-tag small { display: block; color: var(--graphite); font-size: 11.5px; }
+/* PET-CT: the scan after the operation. Heat colours are a deliberate exception to the palette, as tissue colour is. */
+.b3-tag.hot { text-align: right; padding: 5px 9px; box-shadow: inset -3px 0 0 #e8480c, 0 1px 6px rgba(22,32,43,.18); }
+.atlas:not(.is-tissue) .b3-tag.hot { box-shadow: inset -3px 0 0 var(--ink), 0 1px 6px rgba(22,32,43,.18); }
+.b3-tag.quiet { text-align: right; background: rgba(255,255,255,.72); color: var(--graphite); box-shadow: none; font-size: 11.5px; }
+.b3-tag.quiet small { font-size: 11px; }
+@media (max-width: 700px) { .b3-tag.quiet, .b3-tag.hot small { display: none; } .b3-tag.hot { font-size: 11.5px; padding: 3px 6px; } }
+.b3-heat { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 12px; direction: rtl; }
+.b3-heat i { flex: 1; height: 10px; background: linear-gradient(to left, #3a0803, #a31a06 35%, #e8480c 55%, #ff9a1a 75%, #ffe066 90%, #fff8d6); }
+.atlas:not(.is-tissue) .b3-heat i { background: linear-gradient(to left, #fff, var(--ink)); box-shadow: 0 0 0 1px rgba(22,32,43,.2); }
+.pet-list, .pet-clear, .pet-how { list-style: none; margin: 0 0 var(--s2); padding: 0; direction: rtl; }
+.pet-list li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--hair); font-size: 14.5px; line-height: 1.5; }
+.pet-list li > span > b:first-child { display: block; font-size: 15.5px; }
+.pet-dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 6px; background: color-mix(in srgb, #ffb21a var(--h), #8a1407); box-shadow: 0 0 0 3px color-mix(in srgb, #e8480c 22%, transparent); }
+.pet-clear li { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 10px; padding: 6px 0; border-top: 1px solid var(--hair); font-size: 14px; line-height: 1.45; }
+.pet-clear li b { font-size: 13.5px; }
+.pet-sum { margin: 0 0 var(--s2); padding: 6px 8px; background: var(--marker); font-size: 14.5px; line-height: 1.5; }
+.pet-how li { padding: 4px 0; font-size: 14.5px; line-height: 1.5; }
 .case-steps.live li { cursor: pointer; padding-inline: 6px; }
 .case-steps.live li:hover { background: var(--mist, #f5f6f8); }
 .case-steps.live li.on { background: var(--marker); }

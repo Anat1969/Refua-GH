@@ -386,6 +386,18 @@ const caseBlock = (c) => `<section class="block case-block rise" aria-labelledby
 // The case inside the app: the same bar, the same body, and the story in steps. Each step moves the 3D body.
 const CASE_INKS = { black: ['שחור', '#1b1b1b'], yellow: ['צהוב', '#e8c21a'], green: ['ירוק', '#2e8b4a'], red: ['אדום', '#c8322b'], blue: ['כחול', '#2a55b8'], orange: ['כתום', '#e07b1f'] };
 const caseMm = (v) => { const n = parseFloat(String(v ?? '').replace(/[<>≤~\s]/g, '')); return Number.isFinite(n) ? `${/[<≤]/.test(String(v)) ? 'פחות מ-' : ''}<span class="num">${n}</span> מ״מ` : '·'; };
+// The PET-CT step: what lit up, what did not, how the scan was made, and the source document itself.
+const casePet = (P) => `<section class="block rise" aria-labelledby="h-pet"><h3 id="h-pet"><span class="label">PET-CT · <span class="num">${esc(P.date_he)}</span></span>מה נדלק, כפי שנכתב</h3>
+    <ul class="pet-list">${P.spots.map((sp) => `<li><i class="pet-dot" style="--h:${Math.round(sp.heat * 100)}%"></i><span><b>${esc(sp.he)}</b>${rich(sp.said_he)}</span></li>`).join('')}</ul>
+  </section>
+  <section class="block rise" aria-labelledby="h-pet-clear"><h3 id="h-pet-clear"><span class="label">ומה לא</span>אזור אחרי אזור</h3>
+    <ul class="pet-clear">${P.clear.map(([a, b]) => `<li><b>${esc(a)}</b><span>${esc(b)}</span></li>`).join('')}</ul>
+    <p class="pet-sum">${esc(P.summary_he)}</p>
+  </section>
+  <section class="block rise" aria-labelledby="h-pet-how"><h3 id="h-pet-how"><span class="label">הבדיקה</span>${esc(P.why_he)}</h3>
+    <ul class="pet-how">${P.how_he.map((t) => `<li>${rich(t)}</li>`).join('')}</ul>
+    <a class="to-3d case-go press-soft" href="${P.doc}" target="_blank" rel="noopener"><b>מסמך המקור</b><span>סיכום הבדיקה כפי שנכתב, בלי פרטים מזהים.</span></a>
+  </section>`;
 function caseView(c, k, f) {
   const d = DISEASES.find((x) => x.id === c.disease), R = c.report, i = Math.min(k, c.steps.length - 1);
   const rows = [['עליון', 'gSup', 'dSup', 'inkSup'], ['תחתון', 'gInf', 'dInf', 'inkInf'], ['קדמי', 'gAnt', 'dAnt', 'inkAnt'], ['אחורי', 'gPost', 'dPost', 'inkPost'], ['לטרלי', 'gLat', 'dLat', 'inkLat'], ['מדיאלי', 'gMed', 'dMed', 'inkMed']];
@@ -405,16 +417,16 @@ function caseView(c, k, f) {
       <button class="icon press" data-case-close title="חזרה לכרטיס המחלה" aria-label="חזרה לכרטיס המחלה">${ico.close}</button>
     </div>
   </header>
-  <section class="block rise" aria-labelledby="h-case-steps"><h3 id="h-case-steps"><span class="label">הדרך</span>מהסקר ועד הדוח, שלב אחרי שלב</h3>
+  <section class="block rise" aria-labelledby="h-case-steps"><h3 id="h-case-steps"><span class="label">הדרך</span>מהסקר ועד המעקב, שלב אחרי שלב</h3>
     <ol class="case-steps live">${c.steps.map((st, j) => `<li class="${j === i ? 'on' : ''}" data-case-go="${j}" tabindex="0"><b>${esc(st.k)}</b><span>${rich(st.text_he)}</span></li>`).join('')}</ol>
     <p class="imeta"><span class="ev">לחיצה על שלב מזיזה את הגוף אל מה שהוא מתאר.</span></p>
   </section>
-  <section class="block rise" aria-labelledby="h-case-mg"><h3 id="h-case-mg"><span class="label">השוליים</span>צבע הדיו והמרחק, כפי שנכתב</h3>
+  ${c.steps[i].view === 'pet' && c.pet ? casePet(c.pet) : `<section class="block rise" aria-labelledby="h-case-mg"><h3 id="h-case-mg"><span class="label">השוליים</span>צבע הדיו והמרחק, כפי שנכתב</h3>
     <table class="case-mg"><tr><th>צד</th><th>דיו</th><th>הגוש, בעין</th><th>DCIS, במיקרוסקופ</th></tr>${rows.map((r) => { const ink = CASE_INKS[R[r[3]]] || ['לא נכתב', '#d9d4c8']; return `<tr class="${r === nearest ? 'near' : ''}"><td>${r[0]}</td><td><span class="sw" style="background:${ink[1]}"></span>${ink[0]}</td><td>${caseMm(R[r[1]])}</td><td>${caseMm(R[r[2]])}</td></tr>`; }).join('')}</table>
   </section>
   <section class="block rise"><h3><span class="label">סמנים</span>בתאי הגידול, כפי שנכתב</h3>
     <div class="case-chips">${[['ER', R.er], ['PR', R.pr], ['HER2', R.her2], ['Ki-67', R.ki67 ? `${R.ki67}%` : '']].filter(([, x]) => x !== '' && x != null).map(([n, x]) => `<span>${n} <b dir="ltr">${esc(String(x))}</b></span>`).join('')}</div>
-  </section>
+  </section>`}
   <p class="imeta"><span class="ev">${esc(c.consent_he)} ${esc(c.source_he)}</span></p>
   <p class="quiet-care"><span class="label">ומה זה אומר</span>ההדמיה מציירת את מה שכתוב בדוח, ולא מפרשת אותו. את המשמעות מסבירים הרופאים שמכירים את התמונה כולה.</p>`;
 }
@@ -739,7 +751,7 @@ function atlasFocus(st) {
   if (st.v === 'home') return { whole: true };
   if (st.v === 'system') return { level: st.l };
   if (st.v !== 'disease') return {};
-  if (st.c) { const c = CASES.find((x) => x.id === st.c); return { case: { id: c.id, report: c.report, view: c.steps[Math.min(st.cs, c.steps.length - 1)].view }, sex: 'f', level: 1 }; }
+  if (st.c) { const c = CASES.find((x) => x.id === st.c); return { case: { id: c.id, report: c.report, pet: c.pet, view: c.steps[Math.min(st.cs, c.steps.length - 1)].view }, sex: 'f', level: 1 }; }
   const d = DISEASES.find((x) => x.id === st.d);
   const parts = d && DISEASE3D[d.id];
   if (!parts) return { level: st.l };

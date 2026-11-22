@@ -184,6 +184,19 @@ for (const f of files) {
   for (const w of FORBIDDEN) if (text.includes(w)) err(`${f}: forbidden word "${w}"`);
 }
 
+// Privacy of the example case (CLAUDE.md): clinical findings only. No identity number, phone, address or birth date in the code,
+// and a source document enters only as page images (no text layer to search), after the personal details were blacked out.
+{
+  const t = readFileSync(new URL('../js/case.js', import.meta.url), 'utf8');
+  if (/\b\d{8,9}\b/.test(t) || /\b0\d{1,2}-?\d{7}\b/.test(t) || /תעודת זהות|תאריך לידה|כתובת/.test(t)) err('js/case.js: a personal identifier (number, phone, address or birth date)');
+  for (const m of t.matchAll(/doc: '([^']+)'/g)) {
+    const f = new URL('../' + m[1], import.meta.url);
+    if (!existsSync(f)) { err(`case: source document ${m[1]} is missing`); continue; }
+    const b = readFileSync(f).toString('latin1');
+    if (/\/Font\b/.test(b)) err(`case: ${m[1]} has a text layer. Keep only page images, with the personal details blacked out`);
+  }
+}
+
 // Discovery layer: every wonder has a source and an open question; every image is a real file; every flag is a known country.
 for (const s of SYSTEMS) {
   const w = WONDERS[s.id];
