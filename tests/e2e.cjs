@@ -49,6 +49,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     await page.route('**/bridge.js', (r) => (BRIDGE ? r.fulfill({ body: BRIDGE, contentType: 'text/javascript' }) : r.fulfill({ body: '', contentType: 'text/javascript' })));
     await page.goto(BASE + '#v=home', { waitUntil: 'networkidle' });
     await page.waitForSelector('.panel h2');
+    ok(await page.$eval('.nav a[data-nav="records"]', (a) => a.getAttribute('href') === 'lab/records.html' && a.getBoundingClientRect().height > 0), `${w}: the tests button is in the top bar`);
 
     const m = await page.evaluate(() => {
       const visibleItems = [...document.querySelectorAll('.item, .sysmark, .layers-legend li, .alert')].filter((el) => {

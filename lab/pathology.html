@@ -22,7 +22,7 @@
 [hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; }
 body { font-family: var(--sans); color: var(--ink); background: var(--paper); direction: rtl; }
-.lab { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); height: 100vh; }
+.lab { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); height: calc(100vh - var(--tb-h, 0px)); }
 .lab > .stage { grid-column: 2; grid-row: 1; }
 .lab > .panel { grid-column: 1; grid-row: 1; }
 .stage { position: relative; min-height: 0; overflow: hidden; direction: ltr; background: radial-gradient(120% 90% at 50% 35%, #ffffff 0%, #f7f5f0 70%, #efebe2 100%); }
@@ -202,6 +202,8 @@ import { GLTFLoader } from 'three/addons/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/RoomEnvironment.js';
 import { CASES } from '../js/case.js';
+import { mountTopbar } from '../js/topbar.js';
+mountTopbar('', '../');
 
 // The report is never stored in the repository: it lives in the URL fragment (never sent to a server) and in localStorage.
 // The example below is invented, for illustration only.

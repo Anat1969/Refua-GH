@@ -21,7 +21,17 @@ const ok = (name, cond) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}`); i
   ok('example banner shows on an empty file', await page.locator('#demo').isVisible());
   ok('example plates are drawn', (await page.locator('.plate').count()) >= 4);
   ok('a changed or flagged value lands in the questions', (await page.locator('#qs li').count()) >= 2);
-  ok('the card opens on a test the questions are about', (await page.locator('#fcard h2').innerText()).length > 0);
+  ok('the top bar is on the page, with the tests button marked', (await page.locator('.tb-nav a[aria-current="page"]').innerText()).includes('בדיקות'));
+  ok('the top bar leads back into the atlas', (await page.locator('.tb-nav a[data-nav="diseases"]').getAttribute('href')).includes('v=diseases'));
+  ok('the file opens on the whole body', (await page.locator('#fcard h2').innerText()).includes('על הגוף'));
+  ok('every place the tests touch is listed', (await page.locator('#fcard .place').count()) >= 4);
+  ok('the date strip shows two dates', (await page.locator('#dates .dt').count()) === 2);
+  await page.locator('#dates .dt').first().click();
+  ok('an earlier date moves the file back in time', (await page.locator('#glance').innerText()).includes('התאריך המוצג') && (await page.locator('.row[data-id="inr"]').count()) === 0);
+  await page.locator('#dates .dt').last().click();
+  ok('a value that moved says which way', (await page.locator('.row[data-id="ast"] .mv').innerText()) === 'עלה');
+  await page.locator('#fcard .place').first().click();
+  ok('a place opens a test card', (await page.locator('#fcard .chain li').count()) === 3);
   ok('the card tells the chain in three steps', (await page.locator('#fcard .chain li').count()) === 3);
   ok('the card says what moves the value', (await page.locator('#fcard .moves li').count()) >= 3);
   ok('the card says who fixes it, without a treatment', (await page.locator('#fcard .fix').innerText()).includes('הרופא'));
@@ -33,6 +43,8 @@ const ok = (name, cond) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}`); i
   const pending = await page.locator('#fAsk').innerText();
   await page.locator('#fAsk').click();
   ok('the card button adds the question', (await page.locator('#fAsk').innerText()) !== pending);
+  await page.locator('#toMap').click();
+  ok('back to the whole body', (await page.locator('#fcard .place').count()) >= 4);
 
   // Paste path
   await page.locator('#pastebox summary').click();

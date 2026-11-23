@@ -104,6 +104,27 @@ body:not(.l2):not(.l3) .row .what, body:not(.l3) .row .deep { display: none; }
 .where span { background: var(--marker); padding: 3px 10px; font-weight: 600; }
 .atlas.is-tissue ~ .where span { background: var(--marker); }
 .row { cursor: pointer; }
+.row .mv { font-size: 12px; background: var(--marker); padding: 1px 6px; font-family: var(--sans); }
+.back { align-self: flex-start; font: inherit; font-size: 13.5px; border: 0; background: var(--mist); padding: 5px 12px; cursor: pointer; box-shadow: 0 1px 4px rgba(22,32,43,.1); }
+.back:hover { background: var(--plate); }
+.fcard .lede { margin: 0; font-size: 16px; line-height: 1.5; }
+.places { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.place { width: 100%; text-align: right; font: inherit; border: 0; cursor: pointer; background: var(--plate); padding: 10px 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; box-shadow: 0 1px 0 var(--hair), 0 2px 8px rgba(22,32,43,.06); transition: transform .15s, background .15s; }
+.place:hover { transform: translateY(-1px); background: #fff; }
+.place b { font-family: var(--display); font-size: 20px; font-weight: 700; }
+.place span { grid-column: 1; font-size: 13.5px; color: var(--graphite); }
+.place em { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-style: normal; font-size: 13.5px; white-space: nowrap; }
+.place mark { background: var(--marker); padding: 0 4px; }
+.dates { display: flex; align-items: center; gap: 0; margin-top: 16px; overflow-x: auto; padding: 4px 2px 6px; }
+.dates .dl { font-size: 12.5px; color: var(--graphite); margin-inline-end: 12px; white-space: nowrap; }
+.dates i { flex: 1 0 24px; border-top: 2px solid var(--ink); min-width: 24px; }
+.dt { font: inherit; border: 0; cursor: pointer; background: #fff; padding: 6px 12px; display: grid; text-align: center; box-shadow: 0 1px 0 var(--hair), 0 2px 8px rgba(22,32,43,.08); transition: transform .15s; }
+.dt:hover { transform: translateY(-1px); }
+.dt .n { font-size: 15px; }
+.dt small { font-size: 11.5px; color: var(--graphite); }
+.dt[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.dt[aria-pressed="true"] small { color: rgba(255,255,255,.7); }
+.focus { scroll-margin-top: 96px; }
 .row:hover { background: rgba(255,255,255,.55); }
 .row.on { background: #fff; box-shadow: inset -4px 0 0 var(--ink); }
 .empty { margin-top: 30px; color: var(--graphite); font-size: 16px; }
@@ -163,6 +184,7 @@ input[type=date] { font: inherit; font-size: 14px; border: 0; padding: 5px 8px; 
     </div>
     <p class="demo" id="demo" hidden><b>דוגמה מומצאת.</b> כשתוסיפי דוח, הדוגמה יורדת, והתיק שלך נשמר רק במכשיר הזה.</p>
     <div class="glance" id="glance"></div>
+    <div class="dates" id="dates" role="group" aria-label="ציר הזמן" hidden></div>
     <section class="focus" aria-label="הבדיקה שנבחרה">
       <article class="fcard" id="fcard" aria-live="polite"></article>
       <div class="stage3d">
@@ -218,6 +240,8 @@ input[type=date] { font: inherit; font-size: 14px; border: 0; padding: 5px 8px; 
 
 <script type="module">
 import { LABS, LAB_GROUPS, LAB_SOURCES, LAB_SKIP } from './js/labs.js';
+import { mountTopbar } from './js/topbar.js';
+mountTopbar('records');
 
 // Privacy: values live only in this device (localStorage) and in a backup file the user downloads.
 // The raw report text is never kept: only the test, the value, the unit, and what the lab printed beside it.
@@ -342,12 +366,17 @@ $('#save').addEventListener('click', () => {
   file.reports.sort((a, b) => a.date.localeCompare(b.date));
   pending = null; $('#review').hidden = true; $('#paste').value = '';
   store(); render();
+  mode = 'map'; focus();
+  if (matchMedia('(max-width: 999px)').matches) $('.focus').scrollIntoView({ block: 'start' });
 });
 
 // ---------- Showing the file ----------
 const fmtDate = (d) => d ? d.split('-').reverse().join('.') : '';
 const fmtV = (v) => String(v);
-function series(id) { return file.reports.filter((r) => r.values[id]).map((r) => ({ date: r.date, ...r.values[id] })); }
+// The date on screen: every value, trend and question is read as of that day.
+let at = null;
+const shown = () => file.reports.filter((r) => !at || r.date <= at);
+function series(id) { return shown().filter((r) => r.values[id]).map((r) => ({ date: r.date, ...r.values[id] })); }
 
 function spark(pts) {
   if (pts.length < 2) return '';
@@ -367,16 +396,21 @@ function autoAsk(id) {
 
 function render() {
   $('#demo').hidden = !file.example;
+  if (at && !file.reports.some((r) => r.date === at)) at = null;
   const latest = {};
-  for (const r of file.reports) for (const id of Object.keys(r.values)) latest[id] = r.date;
+  for (const r of shown()) for (const id of Object.keys(r.values)) latest[id] = r.date;
   const ids = Object.keys(latest).filter((id) => byId[id]);
   const groups = LAB_GROUPS.filter((g) => ids.some((id) => byId[id].g === g.id));
-  const last = file.reports[file.reports.length - 1];
+  const last = shown()[shown().length - 1];
   $('#glance').innerHTML = `
     <div><b>${file.reports.length}</b><span>ימי בדיקה</span></div>
     <div><b>${ids.length}</b><span>בדיקות שונות</span></div>
     <div><b>${groups.length}</b><span>רשתות בגוף</span></div>
-    <div><b class="n" style="font-size:22px">${fmtDate(last?.date) || '-'}</b><span>הבדיקה האחרונה</span></div>`;
+    <div><b class="n" style="font-size:22px">${fmtDate(last?.date) || '-'}</b><span>${at && at !== file.reports[file.reports.length - 1].date ? 'התאריך המוצג' : 'הבדיקה האחרונה'}</span></div>`;
+  const dates = $('#dates');
+  dates.hidden = file.reports.length < 2;
+  dates.innerHTML = `<span class="dl">ציר הזמן</span>${file.reports.map((r) => `<button class="dt" data-date="${r.date}" aria-pressed="${r.date === (last?.date)}"><span class="n">${fmtDate(r.date)}</span><small>${Object.keys(r.values).length} בדיקות</small></button>`).join('<i aria-hidden="true"></i>')}`;
+  dates.querySelectorAll('.dt').forEach((b) => b.addEventListener('click', () => { at = b.dataset.date; render(); }));
 
   $('#plates').innerHTML = groups.length ? groups.map((g) => `
     <section class="plate" data-g="${g.id}">
@@ -394,7 +428,8 @@ function render() {
     render();
   }));
 
-  if (!cur || !latest[cur]) cur = ids.find((id) => file.ask?.[id] ?? !!autoAsk(id)) || ids.find((id) => byId[id].g === groups[0]?.id) || null;
+  lastIds = ids;
+  if (cur && !latest[cur]) { cur = null; mode = 'map'; }
   $('#plates').querySelectorAll('.row').forEach((r) => r.addEventListener('click', (e) => { if (e.target.closest('.ask, a')) return; pick(r.dataset.id); }));
   focus();
 
@@ -403,8 +438,9 @@ function render() {
   document.body.dataset.ready = '1';
 }
 
+let mode = 'map'; let lastIds = [];
 function pick(id) {
-  cur = id; focus();
+  cur = id; mode = 'test'; focus();
   if (matchMedia('(max-width: 999px)').matches) $('.focus').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -412,12 +448,13 @@ function pick(id) {
 function focus() {
   document.querySelectorAll('.row.on').forEach((r) => r.classList.remove('on'));
   const box = $('#fcard');
-  if (!cur) { box.innerHTML = '<p class="empty">בחרי בדיקה מהרשימה.</p>'; return; }
+  if (mode === 'map' || !cur) return mapCard(box);
   document.querySelector(`.row[data-id="${cur}"]`)?.classList.add('on');
   const t = byId[cur]; const s = series(cur); const p = s[s.length - 1];
   const auto = autoAsk(cur); const on = file.ask?.[cur] ?? !!auto; const src = LAB_SOURCES[t.src];
   const q = qText(cur);
   box.innerHTML = `
+    <button class="back" id="toMap">כל הגוף</button>
     <div><div class="fk">${esc(t.gname)} · <span dir="ltr">${esc(t.alias[0])}</span></div><h2>${esc(t.he)}</h2></div>
     <div class="fv"><b>${fmtV(p.v)}</b><small>${esc(p.unit || '')}</small><span>${fmtDate(p.date)}${p.flag ? ' · המעבדה סימנה' : ''}${p.range ? ` · בלשון הדוח: <span class="n">${esc(p.range)}</span>` : ''}${s.length > 1 ? ` · קודם: <span class="n">${fmtV(s[s.length - 2].v)}</span>` : ''}</span></div>
     <ol class="chain">
@@ -431,8 +468,31 @@ function focus() {
       <button class="btn ${on ? '' : 'solid'}" id="fAsk">${on ? 'ברשימת השאלות' : 'הוספה לשאלות לרופא'}</button></div>
     <p class="fsrc">מקור: <a href="${src.url}" target="_blank" rel="noopener" dir="ltr">${esc(src.title)}, ${src.year}</a></p>`;
   $('#fAsk').addEventListener('click', () => toggleAsk(cur));
+  $('#toMap').addEventListener('click', () => { mode = 'map'; focus(); });
   $('#where').innerHTML = `<span>בגוף: ${esc(t.where)}</span>`;
   show3d(t);
+}
+
+// The whole file on one body: every organ a test speaks about is lit, and the card is its legend.
+function mapCard(box) {
+  const ids = lastIds;
+  const places = new Map();
+  for (const id of ids) {
+    const t = byId[id];
+    if (!places.has(t.where)) places.set(t.where, { where: t.where, ids: [], groups: new Set() });
+    const pl = places.get(t.where); pl.ids.push(id); pl.groups.add(t.gname);
+  }
+  const asked = (id) => file.ask?.[id] ?? !!autoAsk(id);
+  const list = [...places.values()].sort((a, b) => b.ids.filter(asked).length - a.ids.filter(asked).length || b.ids.length - a.ids.length);
+  box.innerHTML = `
+    <div><div class="fk">מבט על התיק${at ? ` · <span class="n">${fmtDate(at)}</span>` : ''}</div><h2>הבדיקות שלך, על הגוף</h2></div>
+    <p class="lede"><b>${ids.length}</b> בדיקות נוגעות ב-<b>${list.length}</b> מקומות בגוף. כל מקום מואר. לחיצה פותחת את הבדיקות שלו.</p>
+    <ul class="places">${list.map((pl) => { const q = pl.ids.filter(asked).length; return `<li><button class="place" data-first="${pl.ids.find(asked) || pl.ids[0]}"><b>${esc(pl.where)}</b><span>${[...pl.groups].map(esc).join(', ')}</span><em><span class="n">${pl.ids.length}</span> בדיקות${q ? ` · <mark><span class="n">${q}</span> לשאול</mark>` : ''}</em></button></li>`; }).join('')}</ul>`;
+  box.querySelectorAll('.place').forEach((b) => b.addEventListener('click', () => pick(b.dataset.first)));
+  $('#where').innerHTML = '<span>כל המקומות שהבדיקות שלך נוגעות בהם</span>';
+  const map = {};
+  for (const id of ids) { const t = byId[id]; map[t.sys] = [...new Set([...(map[t.sys] || []), ...t.hl])]; }
+  show3d(null, map);
 }
 
 function toggleAsk(id) {
@@ -443,15 +503,16 @@ function toggleAsk(id) {
 }
 
 // The real body from the atlas (js/body3d.js): the organ of the test lights up.
-async function show3d(t) {
-  const opts = { hl: t.hl, label: t.where, level: 1 };
-  if (atlas) return atlas.select(t.sys, opts);
+async function show3d(t, map) {
+  const sel = () => (mode === 'map' || !cur ? ['skeletal', { map: map || show3d.map }] : [byId[cur].sys, { hl: byId[cur].hl, label: byId[cur].where, level: 1 }]);
+  if (map) show3d.map = map;
+  if (atlas) return atlas.select(...sel());
   if (atlasFailed || show3d.loading) return;
   show3d.loading = true;
   try {
     const [{ mountAtlas }, { SYSTEMS }] = await Promise.all([import('./js/body3d.js'), import('./js/data.js')]);
-    atlas = await mountAtlas($('#atlas3d'), SYSTEMS, { selected: t.sys, reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, onPick: () => {} });
-    const now = byId[cur]; atlas.select(now.sys, { hl: now.hl, label: now.where, level: 1 });
+    atlas = await mountAtlas($('#atlas3d'), SYSTEMS, { selected: sel()[0], reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, onPick: () => {} });
+    await atlas.select(...sel());
     document.body.dataset.atlas = '1';
   } catch (e) {
     atlasFailed = true;
@@ -461,12 +522,13 @@ async function show3d(t) {
 
 function row(t) {
   const s = series(t.id); const p = s[s.length - 1];
-  const auto = autoAsk(t.id); const on = file.ask?.[t.id] ?? !!auto;
+  const auto = autoAsk(t.id);
+  const moved = auto === 'השתנה' ? (p.v > s[s.length - 2].v ? 'עלה' : 'ירד') : ''; const on = file.ask?.[t.id] ?? !!auto;
   const src = LAB_SOURCES[t.src];
   const hist = s.map((x) => `<span class="n">${fmtDate(x.date)}: ${fmtV(x.v)}</span>`).join(' · ');
   return `<div class="row" data-id="${t.id}">
     <div class="nm">${esc(t.he)}${t.he === t.alias[0] || t.alias[0].startsWith(t.he + ' ') ? '' : `<span class="code" dir="ltr">${esc(t.alias[0])}</span>`}${p.flag ? `<span class="flag" title="סימון של המעבדה">${esc(p.flag)}</span>` : ''}</div>
-    <div class="val">${spark(s)}<b class="n">${fmtV(p.v)}</b><small class="n">${esc(p.unit || '')}</small></div>
+    <div class="val">${moved ? `<span class="mv">${moved}</span>` : ''}${spark(s)}<b class="n">${fmtV(p.v)}</b><small class="n">${esc(p.unit || '')}</small></div>
     <button class="ask" data-id="${t.id}" aria-pressed="${on}" title="${on ? 'ברשימת השאלות' : 'הוספה לשאלות לרופא'}" aria-label="שאלה לרופא על ${esc(t.he)}">?</button>
     <p class="what">${esc(t.what)}${p.range ? ` <span class="rng">בלשון הדוח: <span class="n">${esc(p.range)}</span></span>` : ''}</p>
     <p class="deep"><span>${hist}</span><a href="${src.url}" target="_blank" rel="noopener" dir="ltr">${esc(src.title)}, ${src.year}</a></p>

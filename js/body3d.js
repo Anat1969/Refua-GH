@@ -85,6 +85,8 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
   // Overview: every system, light, for context. Detail: the selected system, part by part.
   const over = {}; const detail = {}; const loading = {};
   let sel = selected, part = null, isolate = false, partsOpen = false, hl = [], hlLabel = '', level = 1, whole = false;
+  // A map of lit parts across systems ({ sys: [part ids] }): the whole body, and only what is named shines (lab/records.html).
+  let map = null;
   // Three depth levels, as in the panel: 1 the organ, 2 the outer layer translucent, 3 the inner layer alone.
   const depthOf = (id) => ANATOMY3D[id]?.depth || { outer: [], inner: [] };
   // Parts shown for the chosen body: the reproductive system has a woman's and a man's set.
@@ -209,18 +211,37 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
     const hasDetail = !!detail[sel];
     for (const [id, m] of Object.entries(over)) {
       const ctx = id === 'skin';
-      const isSel = !whole && id === sel;
-      m.visible = whole || (!(isSel && hasDetail) && !(ctx && femaleBody()));
-      const ghost = ctx || (!whole && !isSel);
+      const isSel = !whole && !map && id === sel;
+      // In a map, the skeleton has no detail model: its overview is lit whole, like the marrow it holds.
+      const mapLit = !!map && id === 'skeletal' && !!map.skeletal;
+      m.visible = map ? ctx || mapLit || id === 'skeletal' : whole || (!(isSel && hasDetail) && !(ctx && femaleBody()));
+      const ghost = map ? true : ctx || (!whole && !isSel);
       m.material.dispose(); m.material = materialFor(ctx ? '#f2dccb' : tint(id), ghost, moving && whole && !ctx ? motion(MOTION3D[id]?.over, m) : null);
       if (ctx) m.material.opacity = look === 'ink' ? 0.05 : 0.08;
       const ol = m.userData.outline;
-      ol.visible = look === 'ink' && !ghost;
-      ol.material.uniforms.ink.value.set(ghost ? GHOST_INK : INK);
-      ol.material.uniforms.a.value = ghost ? 0.35 : 1;
+      ol.visible = look === 'ink' && (map ? mapLit : !ghost);
+      ol.material.uniforms.ink.value.set(mapLit ? NAVY : ghost ? GHOST_INK : INK);
+      // In a map the bones are a light frame around the lit organs: navy line, almost clear body.
+      if (mapLit) { m.material.opacity = look === 'ink' ? 0.05 : 0.12; m.material.depthWrite = false; }
+      ol.material.uniforms.a.value = mapLit ? 0.16 : ghost ? 0.35 : 1;
       ol.material.uniforms.w.value = ghost ? 0.8 : 0.6;
     }
     for (const [id, d] of Object.entries(detail)) {
+      if (map) {
+        const want = map[id] || [];
+        d.group.visible = want.length > 0 && id !== 'skeletal';
+        if (!d.group.visible) continue;
+        if (d.skin) d.skin.visible = false;
+        for (const [pid, m] of Object.entries(d.meshes)) {
+          m.visible = want.includes(pid);
+          if (!m.visible) continue;
+          m.material.dispose(); m.material = materialFor(m.userData.color, false, null);
+          if (look === 'ink') m.material.color.set('#fff0a0'); else m.material.emissive = new THREE.Color('#5a2a10');
+          const ol = m.userData.outline; ol.visible = look === 'ink';
+          ol.material.uniforms.ink.value.set(NAVY); ol.material.uniforms.a.value = 1; ol.material.uniforms.w.value = 1;
+        }
+        continue;
+      }
       const extra = !whole && cs && id === 'immune' && sel === 'reproductive'; // the case shows the lymph of the armpit beside the breast
       const pet = !whole && petOn() && id !== sel ? (id === 'immune' ? {} : petHeat(id)) : null;
       d.group.visible = !whole && (id === sel || extra || !!pet);
@@ -558,6 +579,18 @@ export async function mountAtlas(host, systems, { selected, onPick, reduced }) {
   let lastKey = '';
   async function select(id, opts = {}) {
     if (!id) return;
+    if (opts.map) {
+      const mkey = `map|${JSON.stringify(opts.map)}`;
+      if (mkey === lastKey) return;
+      lastKey = mkey; map = opts.map; whole = false; part = null; hl = []; clearCase();
+      sel = Object.keys(map).find((k) => k !== 'skeletal') || 'skeletal';
+      $('.b3-cut input').value = 0; setCut(0);
+      restyle(); frameBox(new THREE.Box3().setFromObject(over.skin), VIEW.front, 1.0);
+      await Promise.all(Object.keys(map).filter((k) => k !== 'skeletal').map(ensureDetail));
+      if (lastKey === mkey) restyle();
+      return;
+    }
+    map = null;
     const key = [id, (opts.hl || []).join(','), opts.sex || '', opts.level || 1, opts.whole ? 'w' : '', opts.case ? `${opts.case.id}:${opts.case.view}` : ''].join('|');
     if (key === lastKey) return;
     lastKey = key;
