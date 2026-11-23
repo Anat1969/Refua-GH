@@ -12,7 +12,7 @@ const ok = (name, cond) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}`); i
   ok('declaration is on the page', src.includes('לא מאבחנת ולא מטפלת') && src.includes('tel:101') && src.includes('tel:1201'));
   ok('root is rtl', /<html[^>]+dir="rtl"/.test(src));
 
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const page = await browser.newPage({ viewport: { width: 1280, height: 860 } });
   const errors = []; page.on('pageerror', (e) => errors.push(e.message));
   const sent = []; page.on('request', (r) => { if (r.method() !== 'GET') sent.push(r.url()); });
@@ -21,6 +21,18 @@ const ok = (name, cond) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}`); i
   ok('example banner shows on an empty file', await page.locator('#demo').isVisible());
   ok('example plates are drawn', (await page.locator('.plate').count()) >= 4);
   ok('a changed or flagged value lands in the questions', (await page.locator('#qs li').count()) >= 2);
+  ok('the card opens on a test the questions are about', (await page.locator('#fcard h2').innerText()).length > 0);
+  ok('the card tells the chain in three steps', (await page.locator('#fcard .chain li').count()) === 3);
+  ok('the card says what moves the value', (await page.locator('#fcard .moves li').count()) >= 3);
+  ok('the card says who fixes it, without a treatment', (await page.locator('#fcard .fix').innerText()).includes('הרופא'));
+  await page.locator('.row[data-id="creat"]').click();
+  ok('a row click moves the card', (await page.locator('#fcard h2').innerText()) === 'קריאטינין');
+  ok('the body names the organ', (await page.locator('#where').innerText()).includes('הכליות'));
+  await page.waitForFunction(() => document.body.dataset.atlas === '1', null, { timeout: 90000 });
+  ok('the 3D body is drawn', (await page.locator('#atlas3d canvas').count()) === 1);
+  const pending = await page.locator('#fAsk').innerText();
+  await page.locator('#fAsk').click();
+  ok('the card button adds the question', (await page.locator('#fAsk').innerText()) !== pending);
 
   // Paste path
   await page.locator('#pastebox summary').click();

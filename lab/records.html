@@ -6,7 +6,10 @@
 <title>התיק שלי | רפואה</title>
 <meta name="description" content="קוראים דוח מעבדה בתוך המכשיר: מה כל בדיקה מודדת, איפה בגוף, איך היא השתנתה, ומה לשאול את הרופא.">
 <meta name="robots" content="noindex">
-<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<base href="../">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/atlas3d.css">
+<script type="importmap">{ "imports": { "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.170.0/three.module.min.js" } }</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -65,6 +68,44 @@ a { color: var(--known); }
 .row .flag { font-family: var(--mono); font-size: 12px; background: var(--ink); color: #fff; padding: 0 5px; margin-inline-start: 6px; }
 .spark { display: block; }
 body:not(.l2):not(.l3) .row .what, body:not(.l3) .row .deep { display: none; }
+/* The focus: one test, its chain, and where it lives in the body */
+.focus { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 0; margin-top: 18px; background: #fff; box-shadow: 0 1px 0 var(--hair), 0 4px 22px rgba(22,32,43,.08); min-height: 560px; }
+.fcard { padding: 20px 22px 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.fk { font-size: 12.5px; color: var(--graphite); letter-spacing: .04em; }
+.fcard h2 { margin: 2px 0 0; font-family: var(--display); font-weight: 900; font-size: clamp(30px, 2.8vw, 42px); line-height: 1.05; }
+.fv { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; direction: rtl; }
+.fv b { font-family: var(--mono); font-weight: 500; font-size: 40px; line-height: 1; direction: ltr; unicode-bidi: isolate; }
+.fv small { font-family: var(--mono); font-size: 15px; color: var(--graphite); direction: ltr; unicode-bidi: isolate; }
+.fv span { font-size: 13px; color: var(--graphite); }
+.chain { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.chain li { position: relative; padding: 9px 12px 9px 12px; padding-inline-start: 44px; background: var(--plate); }
+.chain li + li { margin-top: 18px; }
+.chain li + li::before { content: ''; position: absolute; inset-inline-start: 21px; top: -18px; height: 18px; border-inline-start: 2px solid var(--ink); }
+.chain li + li::after { content: ''; position: absolute; inset-inline-start: 16px; top: -7px; border: 6px solid transparent; border-top: 7px solid var(--ink); border-bottom: 0; }
+.chain i { position: absolute; inset-inline-start: 10px; top: 9px; width: 24px; height: 24px; background: var(--ink); color: #fff; font-style: normal; font-family: var(--mono); font-size: 13px; display: grid; place-items: center; }
+.chain b { display: block; font-size: 12.5px; color: var(--graphite); font-weight: 500; letter-spacing: .03em; }
+.chain p { margin: 1px 0 0; font-size: 16px; line-height: 1.45; }
+.chain li.mid { background: var(--ink); color: #fff; }
+.chain li.mid b { color: rgba(255,255,255,.7); }
+.chain li.mid i { background: var(--marker); color: var(--ink); }
+.moves b { display: block; font-size: 12.5px; color: var(--graphite); font-weight: 500; margin-bottom: 6px; }
+.moves ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.moves li { font-size: 14px; padding: 4px 10px; background: var(--mist); }
+.fix { border-inline-start: 4px solid var(--known); padding: 8px 12px; background: #f3f6fa; }
+.fix b { display: block; font-size: 12.5px; color: var(--known); font-weight: 600; margin-bottom: 2px; }
+.fix p { margin: 0; font-size: 15px; line-height: 1.5; }
+.fix .q { margin-top: 8px; font-size: 14.5px; background: #fff; padding: 6px 10px; }
+.fix .btn { margin-top: 8px; }
+.fsrc { font-size: 12.5px; color: var(--graphite); }
+.stage3d { position: relative; min-height: 560px; }
+.stage3d .atlas { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 35%, #ffffff 0%, #f7f5f0 70%, #efebe2 100%); }
+.stage3d .atlas-labels, .stage3d .b3-card, .stage3d .b3-pin { display: none !important; }
+.where { position: absolute; top: 12px; inset-inline: 12px; margin: 0; text-align: center; pointer-events: none; z-index: 3; font-size: 14px; }
+.where span { background: var(--marker); padding: 3px 10px; font-weight: 600; }
+.atlas.is-tissue ~ .where span { background: var(--marker); }
+.row { cursor: pointer; }
+.row:hover { background: rgba(255,255,255,.55); }
+.row.on { background: #fff; box-shadow: inset -4px 0 0 var(--ink); }
 .empty { margin-top: 30px; color: var(--graphite); font-size: 16px; }
 
 /* The reading frame */
@@ -100,6 +141,8 @@ input[type=date] { font: inherit; font-size: 14px; border: 0; padding: 5px 8px; 
   .main { padding: 16px; }
   .panel { padding: 16px; }
   .plates { columns: 1; }
+  .focus { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .stage3d { min-height: 380px; order: -1; }
 }
 </style>
 </head>
@@ -120,6 +163,13 @@ input[type=date] { font: inherit; font-size: 14px; border: 0; padding: 5px 8px; 
     </div>
     <p class="demo" id="demo" hidden><b>דוגמה מומצאת.</b> כשתוסיפי דוח, הדוגמה יורדת, והתיק שלך נשמר רק במכשיר הזה.</p>
     <div class="glance" id="glance"></div>
+    <section class="focus" aria-label="הבדיקה שנבחרה">
+      <article class="fcard" id="fcard" aria-live="polite"></article>
+      <div class="stage3d">
+        <div class="atlas" id="atlas3d"><p class="atlas-wait">טוען את הגוף…</p></div>
+        <p class="where" id="where"></p>
+      </div>
+    </section>
     <div class="plates" id="plates"></div>
   </main>
 
@@ -162,19 +212,23 @@ input[type=date] { font: inherit; font-size: 14px; border: 0; padding: 5px 8px; 
       <p class="note" style="margin-top:8px">הגיבוי הוא קובץ אחד. אפשר לשמור אותו בתיקייה שלך ב-Drive, ולטעון אותו בטלפון.</p>
     </section>
 
-    <p class="decl">האפליקציה לא מאבחנת ולא מטפלת. היא מתרגמת את שפת הדוח לשפת הגוף, ולא מסיקה ממנו. הפירוש של התוצאות שלך נעשה עם הרופא. חירום: מד"א <a href="tel:101">101</a>. ער"ן <a href="tel:1201">1201</a>. <a href="../#v=home">חזרה לאטלס</a></p>
+    <p class="decl">האפליקציה לא מאבחנת ולא מטפלת. היא מתרגמת את שפת הדוח לשפת הגוף, ולא מסיקה ממנו. הפירוש של התוצאות שלך נעשה עם הרופא. חירום: מד"א <a href="tel:101">101</a>. ער"ן <a href="tel:1201">1201</a>. <a href="#v=home">חזרה לאטלס</a></p>
   </aside>
 </div>
 
 <script type="module">
-import { LABS, LAB_GROUPS, LAB_SOURCES, LAB_SKIP } from '../js/labs.js';
+import { LABS, LAB_GROUPS, LAB_SOURCES, LAB_SKIP } from './js/labs.js';
 
 // Privacy: values live only in this device (localStorage) and in a backup file the user downloads.
 // The raw report text is never kept: only the test, the value, the unit, and what the lab printed beside it.
 const KEY = 'refua.records';
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const byId = Object.fromEntries(LABS.map((t) => [t.id, t]));
+const GROUP = Object.fromEntries(LAB_GROUPS.map((g) => [g.id, g]));
+// A test, with what its group knows filled in: where it comes from, what it does, what moves it, and where it lights up.
+const byId = Object.fromEntries(LABS.map((t) => [t.id, { ...GROUP[t.g], ...t, gname: GROUP[t.g].he }]));
+let cur = null;
+let atlas = null; let atlasFailed = false;
 
 const EXAMPLE = {
   example: true,
@@ -326,16 +380,11 @@ function render() {
 
   $('#plates').innerHTML = groups.length ? groups.map((g) => `
     <section class="plate" data-g="${g.id}">
-      <header><div><h2>${g.he}</h2><small>בעיר של הגוף: ${g.city}</small></div><a href="../#s=${g.system}" title="פתיחת המערכת באטלס">בגוף</a></header>
+      <header><div><h2>${g.he}</h2><small>בעיר של הגוף: ${g.city}</small></div><a href="#s=${g.sys}" title="פתיחת המערכת באטלס">בגוף</a></header>
       ${LABS.filter((t) => t.g === g.id && latest[t.id]).map((t) => row(t)).join('')}
     </section>`).join('') : '<p class="empty">עוד אין בדיקות בתיק.</p>';
 
-  $('#plates').querySelectorAll('.ask').forEach((b) => b.addEventListener('click', () => {
-    const id = b.dataset.id; file.ask = file.ask || {};
-    file.ask[id] = !(file.ask[id] ?? !!autoAsk(id));
-    if (!file.example) store();
-    render();
-  }));
+  $('#plates').querySelectorAll('.ask').forEach((b) => b.addEventListener('click', () => toggleAsk(b.dataset.id)));
 
   $('#reports').innerHTML = file.reports.slice().reverse().map((r) => `<li><span><span class="n">${fmtDate(r.date)}</span> · ${Object.keys(r.values).length} בדיקות</span>${file.example ? '' : `<button data-del="${r.date}">מחיקה</button>`}</li>`).join('');
   $('#reports').querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => {
@@ -345,9 +394,69 @@ function render() {
     render();
   }));
 
+  if (!cur || !latest[cur]) cur = ids.find((id) => file.ask?.[id] ?? !!autoAsk(id)) || ids.find((id) => byId[id].g === groups[0]?.id) || null;
+  $('#plates').querySelectorAll('.row').forEach((r) => r.addEventListener('click', (e) => { if (e.target.closest('.ask, a')) return; pick(r.dataset.id); }));
+  focus();
+
   const qs = questions(ids);
   $('#qs').innerHTML = qs.map((q) => `<li>${esc(q)}</li>`).join('');
   document.body.dataset.ready = '1';
+}
+
+function pick(id) {
+  cur = id; focus();
+  if (matchMedia('(max-width: 999px)').matches) $('.focus').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// The card: where it comes from, what the test measures, what it does. Then what moves it, and who fixes it.
+function focus() {
+  document.querySelectorAll('.row.on').forEach((r) => r.classList.remove('on'));
+  const box = $('#fcard');
+  if (!cur) { box.innerHTML = '<p class="empty">בחרי בדיקה מהרשימה.</p>'; return; }
+  document.querySelector(`.row[data-id="${cur}"]`)?.classList.add('on');
+  const t = byId[cur]; const s = series(cur); const p = s[s.length - 1];
+  const auto = autoAsk(cur); const on = file.ask?.[cur] ?? !!auto; const src = LAB_SOURCES[t.src];
+  const q = qText(cur);
+  box.innerHTML = `
+    <div><div class="fk">${esc(t.gname)} · <span dir="ltr">${esc(t.alias[0])}</span></div><h2>${esc(t.he)}</h2></div>
+    <div class="fv"><b>${fmtV(p.v)}</b><small>${esc(p.unit || '')}</small><span>${fmtDate(p.date)}${p.flag ? ' · המעבדה סימנה' : ''}${p.range ? ` · בלשון הדוח: <span class="n">${esc(p.range)}</span>` : ''}${s.length > 1 ? ` · קודם: <span class="n">${fmtV(s[s.length - 2].v)}</span>` : ''}</span></div>
+    <ol class="chain">
+      <li><i>1</i><b>מאיפה זה בא</b><p>${esc(t.from)}</p></li>
+      <li class="mid"><i>2</i><b>מה הבדיקה מודדת</b><p>${esc(t.what)}</p></li>
+      <li><i>3</i><b>על מה זה משפיע</b><p>${esc(t.does)}</p></li>
+    </ol>
+    <div class="moves"><b>מה ידוע שמזיז את הערך</b><ul>${t.moves.map((m) => `<li>${esc(m)}</li>`).join('')}</ul></div>
+    <div class="fix"><b>ואיך מתקנים</b><p>המספר הוא מד, לא התקלה. מתקנים את מה שמזיז אותו, ואת זה מבררים עם הרופא, יחד עם שאר הבדיקות.</p>
+      <p class="q">${esc(q)}</p>
+      <button class="btn ${on ? '' : 'solid'}" id="fAsk">${on ? 'ברשימת השאלות' : 'הוספה לשאלות לרופא'}</button></div>
+    <p class="fsrc">מקור: <a href="${src.url}" target="_blank" rel="noopener" dir="ltr">${esc(src.title)}, ${src.year}</a></p>`;
+  $('#fAsk').addEventListener('click', () => toggleAsk(cur));
+  $('#where').innerHTML = `<span>בגוף: ${esc(t.where)}</span>`;
+  show3d(t);
+}
+
+function toggleAsk(id) {
+  file.ask = file.ask || {};
+  file.ask[id] = !(file.ask[id] ?? !!autoAsk(id));
+  if (!file.example) store();
+  render();
+}
+
+// The real body from the atlas (js/body3d.js): the organ of the test lights up.
+async function show3d(t) {
+  const opts = { hl: t.hl, label: t.where, level: 1 };
+  if (atlas) return atlas.select(t.sys, opts);
+  if (atlasFailed || show3d.loading) return;
+  show3d.loading = true;
+  try {
+    const [{ mountAtlas }, { SYSTEMS }] = await Promise.all([import('./js/body3d.js'), import('./js/data.js')]);
+    atlas = await mountAtlas($('#atlas3d'), SYSTEMS, { selected: t.sys, reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, onPick: () => {} });
+    const now = byId[cur]; atlas.select(now.sys, { hl: now.hl, label: now.where, level: 1 });
+    document.body.dataset.atlas = '1';
+  } catch (e) {
+    atlasFailed = true;
+    $('#atlas3d').innerHTML = '<p class="atlas-wait">הגוף בתלת־ממד לא נטען במכשיר הזה. הכרטיס מספר את אותו הסיפור.</p>';
+  }
 }
 
 function row(t) {
@@ -364,18 +473,18 @@ function row(t) {
   </div>`;
 }
 
+function qText(id) {
+  const auto = autoAsk(id);
+  const t = byId[id]; const s = series(id); const p = s[s.length - 1];
+  const nm = t.he === t.alias[0] || t.alias[0].startsWith(t.he + ' ') ? t.alias[0] : `${t.he} (${t.alias[0]})`;
+  const val = `${fmtV(p.v)} ${p.unit || ''}`.trim();
+  if (s.length > 1 && auto === 'השתנה') return `${nm} עבר מ-${fmtV(s[s.length - 2].v)} ל-${fmtV(p.v)}. האם השינוי חשוב אצלי?`;
+  if (auto === 'המעבדה סימנה') return `המעבדה סימנה את ${nm}: ${val}. מה זה אומר אצלי, יחד עם שאר הבדיקות?`;
+  return `${nm}: ${val}, מ-${fmtDate(p.date)}. מה המשמעות אצלי, ומה מזיז את הערך הזה?`;
+}
+
 function questions(ids) {
-  const out = [];
-  for (const id of ids) {
-    const auto = autoAsk(id); const on = file.ask?.[id] ?? !!auto;
-    if (!on) continue;
-    const t = byId[id]; const s = series(id); const p = s[s.length - 1];
-    const nm = t.he === t.alias[0] || t.alias[0].startsWith(t.he + ' ') ? t.alias[0] : `${t.he} (${t.alias[0]})`;
-    const val = `${fmtV(p.v)} ${p.unit || ''}`.trim();
-    if (s.length > 1 && auto === 'השתנה') out.push(`${nm} עבר מ-${fmtV(s[s.length - 2].v)} ל-${fmtV(p.v)}. האם השינוי חשוב אצלי?`);
-    else if (auto === 'המעבדה סימנה') out.push(`המעבדה סימנה את ${nm}: ${val}. מה זה אומר אצלי, יחד עם שאר הבדיקות?`);
-    else out.push(`${nm}: ${val}, מ-${fmtDate(p.date)}. מה המשמעות אצלי?`);
-  }
+  const out = ids.filter((id) => file.ask?.[id] ?? !!autoAsk(id)).map(qText);
   if (ids.length) out.push('האם יש בדיקה שכדאי לחזור עליה, ומתי?');
   return out;
 }

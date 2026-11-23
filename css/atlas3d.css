@@ -1,0 +1,98 @@
+/* The 3D body (js/body3d.js): shared by the app and by lab/records.html. Uses the DNA tokens of css/app.css or of the page. */
+.atlas-ops { display: flex; gap: 6px; margin-inline-start: auto; }
+.atlas-ops .icon svg { stroke-linejoin: round; }
+.atlas { position: relative; overflow: hidden; }
+.atlas-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.atlas-canvas:active { cursor: grabbing; }
+.atlas-labels { position: absolute; top: 6px; inset-inline: 0; display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; pointer-events: none; z-index: 2; direction: rtl; }
+.atlas-label {
+  pointer-events: auto; white-space: nowrap; cursor: pointer;
+  font: inherit; font-size: 13px; color: #59626d; background: rgba(255,255,255,.9); border: 0; padding: 3px 8px;
+  box-shadow: 0 1px 2px rgba(22,32,43,.12); direction: rtl;
+}
+.atlas-label:hover { color: var(--ink); }
+.atlas-label.on { color: #fff; background: var(--ink); font-weight: 600; }
+/* The real body: two looks. Ink is the paper default; tissue moves to a dark studio. */
+.atlas.is-tissue { background: radial-gradient(120% 90% at 50% 35%, #2a3542 0%, #141b23 55%, #0b1016 100%); }
+.b3-tools { position: absolute; bottom: 30px; inset-inline-end: 8px; display: flex; flex-direction: column; gap: 8px; align-items: stretch; z-index: 2; direction: rtl; width: 140px; }
+.b3-seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--hair); background: #fff; }
+.b3-seg button { font: inherit; font-size: 13px; padding: 5px 0; border: 0; background: transparent; cursor: pointer; color: var(--graphite); }
+.b3-seg button[aria-pressed="true"] { background: var(--ink); color: #fff; font-weight: 600; }
+.b3-cut { display: grid; gap: 2px; font-size: 12px; color: var(--graphite); }
+.b3-cut input { width: 100%; accent-color: var(--ink); direction: ltr; }
+.atlas.is-tissue .b3-cut { color: rgba(255,255,255,.75); }
+.b3-tip { position: absolute; pointer-events: none; padding: 3px 8px; font-size: 13px; background: var(--ink); color: #fff; transform: translate(-50%, -150%); white-space: nowrap; direction: rtl; z-index: 3; }
+.b3-pin { position: absolute; pointer-events: none; transform: translate(-50%, -100%); text-align: center; direction: rtl; z-index: 2; }
+.b3-pin b { display: block; font-family: var(--display); font-size: 20px; font-weight: 700; color: var(--ink); text-shadow: 0 0 6px #fff, 0 0 2px #fff; }
+.b3-pin i { display: block; font-style: normal; font-size: 11.5px; color: var(--graphite); direction: ltr; }
+.b3-pin::after { content: ''; display: block; width: 1px; height: 36px; margin: 3px auto 0; background: var(--ink); }
+.atlas.is-tissue .b3-pin b { color: #fff; text-shadow: 0 1px 10px rgba(0,0,0,.7); }
+.atlas.is-tissue .b3-pin i { color: rgba(255,255,255,.75); }
+.atlas.is-tissue .b3-pin::after { background: linear-gradient(#fff, rgba(255,255,255,.2)); }
+.b3-card { position: absolute; bottom: 30px; inset-inline-start: 8px; width: min(250px, 56%); max-height: 58%; overflow: auto; background: rgba(255,255,255,.94); border-top: 2px solid var(--ink); padding: 8px 10px 10px; z-index: 2; direction: rtl; box-shadow: 0 6px 18px -10px rgba(22,32,43,.45); }
+.b3-card:empty { display: none; }
+.b3-card h4 { margin: 0; font-family: var(--display); font-size: 21px; font-weight: 700; }
+.b3-k { margin: 0 0 4px; font-weight: 700; font-size: 14px; }
+.b3-lit .b3-part { display: inline; padding: 0; font-weight: 700; color: var(--known); }
+.b3-lit span { color: var(--graphite); }
+.b3-sex { margin-bottom: 6px; }
+.b3-depth { margin: 0 0 6px; font-size: 13px; line-height: 1.45; }
+.b3-depth b { font-family: var(--display); }
+.b3-more summary { cursor: pointer; font-size: 13px; color: var(--graphite); list-style-position: inside; }
+.b3-more summary b { color: var(--ink); }
+.b3-more[open] summary { margin-bottom: 4px; }
+.b3-hint, .b3-gap { margin: 0 0 6px; font-size: 12.5px; color: var(--graphite); line-height: 1.45; }
+.b3-gap { border-inline-start: 2px dashed var(--believed); padding-inline-start: 6px; }
+.b3-parts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 6px; }
+.b3-part { font: inherit; font-size: 13px; background: none; border: 0; padding: 3px 0; cursor: pointer; display: flex; align-items: center; gap: 5px; text-align: right; color: var(--ink); }
+.b3-part:hover { text-decoration: underline; }
+.b3-sw { width: 9px; height: 9px; border-radius: 50%; background: var(--c); border: 1px solid rgba(0,0,0,.2); flex: none; }
+.atlas:not(.is-tissue) .b3-sw { background: #fff; border-color: var(--ink); }
+.b3-en { margin: 0 0 6px; font-size: 12px; color: var(--graphite); text-align: right; }
+.b3-role { margin: 0; font-size: 14.5px; line-height: 1.5; }
+.b3-meta { margin: 6px 0 0; font-size: 11.5px; color: var(--graphite); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.b3-layer { color: var(--known); font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+.b3-layer::before { content: ''; width: 14px; border-top: 2px solid var(--known); }
+.b3-iso { display: flex; gap: 6px; align-items: center; font-size: 12.5px; margin-top: 6px; }
+.b3-x { float: left; font: inherit; font-size: 18px; line-height: 1; background: none; border: 0; cursor: pointer; color: var(--graphite); }
+.b3-credit { position: absolute; bottom: 4px; inset-inline: 8px; margin: 0; font-size: 10.5px; color: var(--graphite); direction: rtl; z-index: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.b3-credit a { color: inherit; }
+.atlas.is-tissue .b3-credit { color: rgba(255,255,255,.55); }
+@media (max-width: 720px) {
+  .b3-card { width: auto; inset-inline: 8px; bottom: 74px; max-height: 38%; }
+  .b3-tools { flex-direction: row; width: auto; inset-inline: 8px; bottom: 30px; }
+  .b3-tools .b3-seg { width: 110px; }
+  .b3-cut { flex: 1; grid-template-columns: auto 1fr; align-items: center; gap: 6px; }
+}
+.atlas-hint, .atlas-wait { position: absolute; bottom: 4px; inset-inline-start: 0; font-size: 12.5px; color: var(--graphite); margin: 0; pointer-events: none; }
+.atlas-wait { inset: 0; display: grid; place-items: center; font-size: 14px; }
+/* ---------- The living body: the motion button and its caption ---------- */
+.b3-move[aria-pressed="true"] { background: var(--marker); color: var(--ink); }
+.b3-motion { border-inline-start: 3px solid var(--known); padding-inline-start: 8px; margin-bottom: 6px; }
+.b3-motion p { margin: 0 0 4px; font-size: 13.5px; line-height: 1.5; }
+.b3-motion ul { list-style: none; margin: 0 0 4px; padding: 0; display: grid; gap: 2px; font-size: 12.5px; }
+.b3-motion li { display: flex; align-items: center; gap: 6px; }
+
+/* ---------- An example case on the 3D body: labels of the findings ---------- */
+.b3-tag { position: absolute; pointer-events: none; direction: rtl; transform: translate(-50%, -50%); font-size: 12.5px; line-height: 1.25; padding: 3px 7px; background: rgba(255,255,255,.94); color: var(--ink); white-space: nowrap; box-shadow: 0 1px 6px rgba(22,32,43,.18); z-index: 2; }
+.b3-tag.near { background: var(--marker); }
+.b3-tag.pin { transform: translate(-50%, -100%); text-align: center; padding: 5px 9px; }
+.b3-tag.pin::after { content: ''; position: absolute; left: 50%; top: 100%; width: 1px; height: 22px; background: currentColor; }
+.b3-tag small { display: block; color: var(--graphite); font-size: 11.5px; }
+/* PET-CT: the scan after the operation. Heat colours are a deliberate exception to the palette, as tissue colour is. */
+.b3-tag.hot { text-align: right; padding: 5px 9px; box-shadow: inset -3px 0 0 #e8480c, 0 1px 6px rgba(22,32,43,.18); }
+.atlas:not(.is-tissue) .b3-tag.hot { box-shadow: inset -3px 0 0 var(--ink), 0 1px 6px rgba(22,32,43,.18); }
+.b3-tag.quiet { text-align: right; background: rgba(255,255,255,.72); color: var(--graphite); box-shadow: none; font-size: 11.5px; }
+.b3-tag.quiet small { font-size: 11px; }
+@media (max-width: 700px) { .b3-tag.quiet, .b3-tag.hot small { display: none; } .b3-tag.hot { font-size: 11.5px; padding: 3px 6px; } }
+.b3-heat { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 12px; direction: rtl; }
+.b3-heat i { flex: 1; height: 10px; background: linear-gradient(to left, #3a0803, #a31a06 35%, #e8480c 55%, #ff9a1a 75%, #ffe066 90%, #fff8d6); }
+.atlas:not(.is-tissue) .b3-heat i { background: linear-gradient(to left, #fff, var(--ink)); box-shadow: 0 0 0 1px rgba(22,32,43,.2); }
+.b3-live { font-weight: 700; font-size: 14.5px; background: var(--marker); padding: 3px 6px; min-height: 1.5em; }
+/* While a system moves, its caption card goes to the top left of the stage, so what moves stays in view. */
+@media (min-width: 1000px) { .atlas.is-moving .b3-card { inset-inline-start: auto; inset-inline-end: 8px; bottom: auto; top: 66px; width: min(300px, 38%); max-height: calc(100% - 250px); min-height: 150px; } }
+.b3-why { margin-bottom: 4px; }
+.b3-why summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--known); list-style: none; padding: 2px 8px; display: inline-block; background: linear-gradient(#fff, #e9edf3); box-shadow: var(--lift); }
+.b3-why summary::-webkit-details-marker { display: none; }
+.b3-why[open] summary { background: var(--ink); color: #fff; }
+.b3-note { font-size: 12.5px; color: var(--graphite); border-top: 1px solid var(--hair); padding-top: 3px; }
