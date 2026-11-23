@@ -19,7 +19,7 @@ const CSS = `
 .tb-nav { display: flex; gap: 16px; flex: 1 1 auto; min-width: 0; }
 .tb-nav a { text-decoration: none; padding: 6px 2px; font-size: 15px; color: #6b7480; text-shadow: 0 1px 0 #fff, 0 1px 3px rgba(22,32,43,.18); transition: transform .15s, color .15s; white-space: nowrap; }
 .tb-nav a:hover { color: #16202b; transform: translateY(-1px); }
-.tb-nav a[aria-current="page"] { color: #16202b; font-weight: 700; }
+.tb-nav a[aria-current="page"] { color: #fff; background: #16202b; font-weight: 700; text-shadow: none; }
 .tb-nav .s { display: none; }
 .tb ai-menu { margin-inline-start: auto; }
 @media (max-width: 760px) {

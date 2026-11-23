@@ -1,0 +1,44 @@
+/* Every button looks like a button (Anat, 23.11.2026): a light grey ground, and a lift on hover.
+   Loaded last, in index.html and in the lab pages, so it wins over each component's own ground.
+   A chosen button keeps its own state (ink, marker, layer colour); a primary one (.solid, .enter, .to-3d) stays ink;
+   a card with a picture (.wonder-tile) keeps its paper and gets only the lift. */
+:root {
+  --btn: #eceef1;
+  --btn-hover: #e0e4e9;
+  --btn-lift: 0 1px 0 rgba(22,32,43,.07), 0 2px 6px rgba(22,32,43,.10);
+  --btn-hover-lift: 0 6px 16px rgba(22,32,43,.18);
+}
+:is(button, a.chip, .tb-nav a, label.btn, .drop):not([aria-pressed="true"]):not([aria-current="true"]):not([aria-current="page"]):not([aria-selected="true"]):not(.on):not(.picked):not(.solid):not(.enter):not(.to-3d):not(.wonder-tile):not(:disabled) {
+  background: var(--btn);
+  box-shadow: var(--btn-lift);
+  color: var(--ink, #16202b);
+  text-shadow: none;
+}
+:is(button, a.chip, .tb-nav a, label.btn, .drop, .wonder-tile) {
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+:is(button, a.chip, .tb-nav a, label.btn, .drop):not([aria-pressed="true"]):not([aria-current="true"]):not([aria-current="page"]):not([aria-selected="true"]):not(.on):not(.picked):not(.solid):not(.enter):not(.to-3d):not(.wonder-tile):not(:disabled):hover {
+  background: var(--btn-hover);
+}
+:is(button, a.chip, .tb-nav a, label.btn, .drop, .wonder-tile):not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: var(--btn-hover-lift);
+}
+:is(button, a.chip, .tb-nav a, label.btn, .drop, .wonder-tile):not(:disabled):active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+/* Text-only buttons get room for the ground. */
+:is(.chip, .tb-nav a, .linkish, .linkish-label, .next-depth, .depth-tab, .yr-btn, .chain-row, .moment, .b3-part, .atlas-label) { padding-inline: 10px; }
+.chip, .tb-nav a { padding-block: 5px; }
+/* A chosen chip, tab or year is ink, so the choice reads at a glance. */
+:is(.chip, .tb-nav a, .depth-tab, .yr-btn)[aria-current="true"], .tb-nav a[aria-current="page"], :is(.chip, .depth-tab)[aria-selected="true"], .yr-btn.on, .chain-row.on {
+  background: var(--ink, #16202b); color: #fff; text-shadow: none;
+}
+.yr-btn.on .num, .chain-row.on .num { color: #fff; }
+@media (prefers-reduced-motion: reduce) {
+  :is(button, a.chip, .tb-nav a, label.btn, .drop, .wonder-tile) { transition: none; }
+  :is(button, a.chip, .tb-nav a, label.btn, .drop, .wonder-tile):hover { transform: none; }
+}
+@media print { :is(button, a.chip, .tb-nav a, label.btn, .drop) { box-shadow: none !important; } }
