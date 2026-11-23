@@ -64,6 +64,7 @@ ai-menu { margin-inline-start: auto; }
   color: #6b7480; text-shadow: 0 1px 0 #fff, 0 1px 3px rgba(22,32,43,.18);
   transition: transform .15s, color .15s;
 }
+a.chip { text-decoration: none; display: inline-block; }
 .chip:hover { color: var(--ink); transform: translateY(-1px); }
 .chip:active { transform: translateY(1px); }
 .chip[aria-current='true'] { color: var(--ink); font-weight: 700; }
