@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>התיק שלי | רפואה</title>
+<meta name="description" content="קוראים דוח מעבדה בתוך המכשיר: מה כל בדיקה מודדת, איפה בגוף, איך היא השתנתה, ומה לשאול את הרופא.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #ffffff; --ink: #16202b; --graphite: #4f5965; --hair: #e5e8ec; --mist: #f5f6f8;
+  --known: #1f4e79; --said: #5b7f3a; --believed: #737373; --alarm: #8a1c2b; --marker: #fff0a0; --plate: #f6f1e7;
+  --sans: 'IBM Plex Sans Hebrew', 'Segoe UI', Arial, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --display: 'Frank Ruhl Libre', 'IBM Plex Sans Hebrew', serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { font-family: var(--sans); color: var(--ink); background: var(--paper); direction: rtl; }
+a { color: var(--known); }
+.n { font-family: var(--mono); direction: ltr; unicode-bidi: isolate; }
+.lab { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); min-height: 100vh; }
+.lab > .main { grid-column: 2; grid-row: 1; }
+.lab > .panel { grid-column: 1; grid-row: 1; }
+
+/* The big frame: the file, read as a museum of plates */
+.main { padding: 22px 26px 30px; min-width: 0; }
+.head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.head .k { font-size: 12px; letter-spacing: .06em; color: var(--graphite); }
+.head h1 { margin: 2px 0 0; font-family: var(--display); font-weight: 900; font-size: clamp(30px, 3vw, 44px); line-height: 1.05; }
+.head p { margin: 6px 0 0; font-size: 15px; color: var(--graphite); max-width: 44ch; }
+.levels { display: flex; gap: 6px; }
+.btn { font: inherit; font-size: 14px; padding: 8px 14px; border: 0; background: #fff; color: var(--ink); cursor: pointer; border-radius: 0; box-shadow: 0 1px 0 var(--hair), 0 2px 10px rgba(22,32,43,.08); transition: transform .15s, background .15s; text-decoration: none; display: inline-block; }
+.btn:hover { transform: translateY(-1px); background: var(--mist); }
+.btn[aria-pressed="true"], .btn.solid { background: var(--ink); color: #fff; }
+.btn.solid:hover { background: #2a3746; }
+.demo { margin: 14px 0 0; background: var(--marker); padding: 8px 12px; font-size: 14px; }
+.glance { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1px; background: var(--hair); margin: 18px 0 0; }
+.glance div { background: #fff; padding: 10px 12px; }
+.glance b { display: block; font-family: var(--mono); font-size: 30px; font-weight: 500; line-height: 1.1; }
+.glance span { font-size: 13px; color: var(--graphite); }
+.plates { columns: 2 320px; column-gap: 16px; margin-top: 18px; }
+.plate { background: var(--plate); padding: 14px 16px 10px; break-inside: avoid; margin-bottom: 16px; }
+.plate header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 2px solid var(--ink); padding-bottom: 6px; }
+.plate h2 { margin: 0; font-family: var(--display); font-size: 24px; font-weight: 900; }
+.plate header small { font-size: 12.5px; color: var(--graphite); }
+.plate header a { font-size: 13px; white-space: nowrap; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto 26px; gap: 4px 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(22,32,43,.1); }
+.row:last-child { border-bottom: 0; }
+.row .nm { font-size: 15.5px; font-weight: 600; line-height: 1.3; }
+.row .nm .code { font-family: var(--mono); font-weight: 400; font-size: 12px; color: var(--graphite); margin-inline-start: 6px; }
+.row .val { direction: ltr; text-align: left; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+.row .val b { font-family: var(--mono); font-size: 20px; font-weight: 500; }
+.row .val small { font-family: var(--mono); font-size: 12px; color: var(--graphite); }
+.row .ask { width: 26px; height: 26px; border: 0; background: #fff; cursor: pointer; font-size: 16px; line-height: 1; color: var(--graphite); box-shadow: 0 1px 4px rgba(22,32,43,.12); }
+.row .ask[aria-pressed="true"] { background: var(--marker); color: var(--ink); font-weight: 700; }
+.row .what, .row .deep { grid-column: 1 / -1; font-size: 14px; line-height: 1.5; color: var(--graphite); margin: 0; }
+.row .deep { font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.row .rng { font-size: 12.5px; color: var(--graphite); }
+.row .flag { font-family: var(--mono); font-size: 12px; background: var(--ink); color: #fff; padding: 0 5px; margin-inline-start: 6px; }
+.spark { display: block; }
+body:not(.l2):not(.l3) .row .what, body:not(.l3) .row .deep { display: none; }
+.empty { margin-top: 30px; color: var(--graphite); font-size: 16px; }
+
+/* The reading frame */
+.panel { background: var(--mist); padding: 20px 20px 24px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.panel h3 { margin: 0 0 8px; font-family: var(--display); font-size: 22px; font-weight: 900; }
+.label { font-size: 12.5px; color: var(--graphite); letter-spacing: .04em; font-weight: 500; margin: 0 0 6px; }
+.panel p { margin: 0; font-size: 15px; line-height: 1.55; }
+.drop { display: block; background: #fff; padding: 18px 14px; text-align: center; cursor: pointer; box-shadow: 0 1px 0 var(--hair), 0 2px 10px rgba(22,32,43,.08); transition: transform .15s; }
+.drop:hover, .drop.over { transform: translateY(-1px); background: var(--plate); }
+.drop b { display: block; font-size: 17px; }
+.drop span { font-size: 13px; color: var(--graphite); }
+.drop input { display: none; }
+textarea { width: 100%; min-height: 70px; font: inherit; font-size: 13px; padding: 8px; border: 0; background: #fff; direction: ltr; text-align: left; resize: vertical; }
+details > summary { cursor: pointer; font-size: 14px; color: var(--graphite); margin-bottom: 8px; }
+.review { background: #fff; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.review .ok { font-size: 15px; }
+.review .ok b { font-family: var(--mono); }
+.review .miss { font-size: 13px; color: var(--graphite); }
+.review label { font-size: 14px; display: flex; gap: 8px; align-items: center; }
+input[type=date] { font: inherit; font-size: 14px; border: 0; padding: 5px 8px; background: var(--mist); }
+.reports { list-style: none; margin: 0; padding: 0; }
+.reports li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--hair); font-size: 15px; }
+.reports button { font: inherit; font-size: 13px; border: 0; background: none; color: var(--graphite); cursor: pointer; text-decoration: underline; }
+.qs { margin: 0; padding-inline-start: 22px; font-size: 15px; line-height: 1.55; }
+.qs li { margin-bottom: 6px; }
+.ops { display: flex; flex-wrap: wrap; gap: 6px; }
+.note { font-size: 13px !important; color: var(--graphite); }
+.decl { font-size: 12.5px !important; color: var(--graphite); margin-top: auto !important; border-top: 1px solid var(--hair); padding-top: 10px; }
+
+@media (max-width: 999px) {
+  .lab { grid-template-columns: minmax(0, 1fr); }
+  .lab > .main, .lab > .panel { grid-column: 1; grid-row: auto; }
+  .main { padding: 16px; }
+  .panel { padding: 16px; }
+  .plates { columns: 1; }
+}
+</style>
+</head>
+<body class="l2">
+<div class="lab">
+  <main class="main">
+    <div class="head">
+      <div>
+        <div class="k">רפואה · התיק שלי</div>
+        <h1>הדוח, בשפה של הגוף</h1>
+        <p>כל בדיקה במקום שלה בגוף: מה היא מודדת, איך השתנתה, ומה לשאול.</p>
+      </div>
+      <div class="levels" role="group" aria-label="רמת עומק">
+        <button class="btn" data-l="1" aria-pressed="false">מבט</button>
+        <button class="btn" data-l="2" aria-pressed="true">הבנה</button>
+        <button class="btn" data-l="3" aria-pressed="false">עומק</button>
+      </div>
+    </div>
+    <p class="demo" id="demo" hidden><b>דוגמה מומצאת.</b> כשתוסיפי דוח, הדוגמה יורדת, והתיק שלך נשמר רק במכשיר הזה.</p>
+    <div class="glance" id="glance"></div>
+    <div class="plates" id="plates"></div>
+  </main>
+
+  <aside class="panel" aria-label="הוספה ושאלות">
+    <section>
+      <h3>הוספת דוח</h3>
+      <label class="drop" id="drop">
+        <b>בחירת קובץ PDF</b>
+        <span>אפשר כמה קבצים יחד. הקובץ נקרא בתוך המכשיר, ושום דבר לא נשלח.</span>
+        <input type="file" id="file" accept="application/pdf,.pdf,.txt" multiple>
+      </label>
+      <details id="pastebox">
+        <summary>או הדבקת טקסט מהדוח</summary>
+        <textarea id="paste" placeholder="14.0 g/dL HB"></textarea>
+        <button class="btn" id="readPaste">קריאה</button>
+      </details>
+      <div class="review" id="review" hidden>
+        <p class="ok" id="revOk"></p>
+        <p class="miss" id="revMiss"></p>
+        <label>תאריך הבדיקה <input type="date" id="revDate"></label>
+        <div class="ops"><button class="btn solid" id="save">שמירה בתיק</button><button class="btn" id="cancel">ביטול</button></div>
+      </div>
+    </section>
+
+    <section>
+      <h3>לשאול את הרופא</h3>
+      <p class="note">סמני <b>?</b> ליד בדיקה, והשאלה נכנסת לכאן. בדיקה שהמעבדה סימנה, או שהשתנתה בין בדיקות, נכנסת לבד.</p>
+      <ol class="qs" id="qs"></ol>
+      <div class="ops"><button class="btn" id="copyQs">העתקת השאלות</button></div>
+    </section>
+
+    <section>
+      <h3>הבדיקות בתיק</h3>
+      <ul class="reports" id="reports"></ul>
+      <div class="ops" style="margin-top:10px">
+        <button class="btn" id="export">גיבוי לקובץ</button>
+        <label class="btn" for="import">טעינה מגיבוי</label>
+        <input type="file" id="import" accept="application/json,.json" hidden>
+      </div>
+      <p class="note" style="margin-top:8px">הגיבוי הוא קובץ אחד. אפשר לשמור אותו בתיקייה שלך ב-Drive, ולטעון אותו בטלפון.</p>
+    </section>
+
+    <p class="decl">האפליקציה לא מאבחנת ולא מטפלת. היא מתרגמת את שפת הדוח לשפת הגוף, ולא מסיקה ממנו. הפירוש של התוצאות שלך נעשה עם הרופא. חירום: מד"א <a href="tel:101">101</a>. ער"ן <a href="tel:1201">1201</a>. <a href="../#v=home">חזרה לאטלס</a></p>
+  </aside>
+</div>
+
+<script type="module">
+import { LABS, LAB_GROUPS, LAB_SOURCES, LAB_SKIP } from '../js/labs.js';
+
+// Privacy: values live only in this device (localStorage) and in a backup file the user downloads.
+// The raw report text is never kept: only the test, the value, the unit, and what the lab printed beside it.
+const KEY = 'refua.records';
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const byId = Object.fromEntries(LABS.map((t) => [t.id, t]));
+
+const EXAMPLE = {
+  example: true,
+  reports: [
+    { date: '2026-03-10', values: { hb: { v: 13.1, unit: 'g/dL' }, wbc: { v: 6.2, unit: 'K/µl' }, plt: { v: 240, unit: 'K/µl' }, alt: { v: 22, unit: 'U/L' }, ast: { v: 20, unit: 'U/L' }, creat: { v: 0.8, unit: 'mg/dL' }, glu: { v: 95, unit: 'mg/dL' } } },
+    { date: '2026-08-02', values: { hb: { v: 13.6, unit: 'g/dL' }, wbc: { v: 5.8, unit: 'K/µl' }, plt: { v: 255, unit: 'K/µl' }, alt: { v: 34, unit: 'U/L', range: '0 - 33', flag: 'H' }, ast: { v: 25, unit: 'U/L' }, creat: { v: 0.8, unit: 'mg/dL' }, glu: { v: 90, unit: 'mg/dL' }, inr: { v: 1.0, unit: '' } } },
+  ],
+  ask: {},
+};
+
+let file = load();
+function load() {
+  try { const s = localStorage.getItem(KEY); if (s) { const d = JSON.parse(s); if (d.reports?.length) return d; } } catch { /* private mode */ }
+  return structuredClone(EXAMPLE);
+}
+function store() {
+  delete file.example;
+  try { localStorage.setItem(KEY, JSON.stringify(file)); } catch { /* private mode */ }
+}
+
+// ---------- Reading a report ----------
+const UNIT = /^(%|sec|fl|pg|ratio|[a-zµμ]+\/[a-zµμ0-9]+|[a-zµμ]+\/[a-zµμ]+\/[a-z]+)$/i;
+const ALIAS = [];
+for (const t of LABS) for (const a of t.alias) ALIAS.push([a.replace(/\s+/g, ' ').toUpperCase(), t.id]);
+const norm = (s) => s.replace(/\s+/g, ' ').trim().toUpperCase();
+
+function parseText(text) {
+  const values = {}; const missed = [];
+  const dates = [...text.matchAll(/\b(\d{1,2})[./](\d{1,2})[./](20\d\d)\b/g)]
+    .map((m) => `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`).sort();
+  for (const raw of text.split(/\n+/)) {
+    let line = raw.replace(/[‎‏‪-‮⁦-⁩]/g, ' ').trim();
+    if (!/[A-Za-z]/.test(line) || !/\d/.test(line)) continue;
+    let range = '';
+    line = line.replace(/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)/, (m, a, b) => { range = `${a} - ${b}`; return ' '; });
+    const toks = line.split(/\s+/).filter(Boolean);
+    let v = null; let unit = ''; let flag = ''; const name = [];
+    for (const tk of toks) {
+      if (v === null && /^[<>]?\d+(\.\d+)?$/.test(tk)) { v = parseFloat(tk.replace(/[<>]/, '')); continue; }
+      if (!unit && UNIT.test(tk)) { unit = tk; continue; }
+      if (/^(H|L|HH|LL|\*)$/.test(tk)) { flag = tk; continue; }
+      if (/[֐-׿]/.test(tk)) continue;
+      name.push(tk);
+    }
+    if (v === null || !name.length) continue;
+    const nm = norm(name.join(' '));
+    if (LAB_SKIP.includes(nm)) continue;
+    const cands = [nm, nm + '%', nm + ' %', nm.replace(/\s*%$/, '%')];
+    const hit = ALIAS.filter(([a]) => cands.includes(a)).sort((a, b) => b[0].length - a[0].length)[0];
+    if (!hit) { if (nm.length < 30) missed.push(nm); continue; }
+    values[hit[1]] = { v, unit, ...(range && { range }), ...(flag && { flag }) };
+  }
+  return { values, missed: [...new Set(missed)], date: dates[0] || '' };
+}
+
+async function pdfText(buf) {
+  const pdfjs = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs');
+  pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
+  const doc = await pdfjs.getDocument({ data: buf }).promise;
+  const out = [];
+  for (let p = 1; p <= doc.numPages; p++) {
+    const tc = await (await doc.getPage(p)).getTextContent();
+    // Clalit prints the value a few points above its name: a line is every item within 8pt of the line's first item.
+    const items = tc.items.filter((it) => it.str?.trim()).map((it) => [it.transform[4], it.transform[5], it.str]).sort((a, b) => b[1] - a[1]);
+    let row = []; let top = null;
+    const flush = () => { if (row.length) out.push(row.sort((a, b) => a[0] - b[0]).map((x) => x[2]).join(' ')); row = []; };
+    for (const it of items) { if (top === null || top - it[1] > 8) { flush(); top = it[1]; } row.push(it); }
+    flush();
+  }
+  return out.join('\n');
+}
+
+let pending = null;
+function review(results) {
+  const values = {}; const missed = new Set(); let date = '';
+  for (const r of results) { Object.assign(values, r.values); r.missed.forEach((m) => missed.add(m)); date = date || r.date; }
+  pending = { values };
+  const n = Object.keys(values).length;
+  $('#revOk').innerHTML = n ? `נמצאו <b>${n}</b> בדיקות: ${Object.keys(values).map((id) => esc(byId[id].he)).join(', ')}.` : 'לא נמצאו בדיקות שאני מכירה. אפשר להדביק את הטקסט ידנית.';
+  $('#revMiss').textContent = missed.size ? `לא זוהו: ${[...missed].slice(0, 8).join(', ')}` : '';
+  $('#revDate').value = date || new Date().toISOString().slice(0, 10);
+  $('#save').disabled = !n;
+  $('#review').hidden = false;
+}
+
+async function readFiles(list) {
+  const results = [];
+  for (const f of list) {
+    try {
+      const text = /\.pdf$/i.test(f.name) || f.type === 'application/pdf' ? await pdfText(await f.arrayBuffer()) : await f.text();
+      results.push(parseText(text));
+    } catch (e) { results.push({ values: {}, missed: [`${f.name}: לא נקרא`], date: '' }); }
+  }
+  review(results);
+}
+
+$('#file').addEventListener('change', (e) => { if (e.target.files.length) readFiles([...e.target.files]); e.target.value = ''; });
+const drop = $('#drop');
+drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); readFiles([...e.dataTransfer.files]); });
+$('#readPaste').addEventListener('click', () => review([parseText($('#paste').value)]));
+$('#cancel').addEventListener('click', () => { pending = null; $('#review').hidden = true; });
+$('#save').addEventListener('click', () => {
+  if (!pending) return;
+  if (file.example) file = { reports: [], ask: {} };
+  const date = $('#revDate').value;
+  let rep = file.reports.find((r) => r.date === date);
+  if (!rep) { rep = { date, values: {} }; file.reports.push(rep); }
+  Object.assign(rep.values, pending.values);
+  file.reports.sort((a, b) => a.date.localeCompare(b.date));
+  pending = null; $('#review').hidden = true; $('#paste').value = '';
+  store(); render();
+});
+
+// ---------- Showing the file ----------
+const fmtDate = (d) => d ? d.split('-').reverse().join('.') : '';
+const fmtV = (v) => String(v);
+function series(id) { return file.reports.filter((r) => r.values[id]).map((r) => ({ date: r.date, ...r.values[id] })); }
+
+function spark(pts) {
+  if (pts.length < 2) return '';
+  const w = 90; const h = 26; const vs = pts.map((p) => p.v); const lo = Math.min(...vs); const hi = Math.max(...vs); const span = hi - lo || 1;
+  const xy = pts.map((p, i) => [4 + (i * (w - 8)) / (pts.length - 1), h - 4 - ((p.v - lo) / span) * (h - 8)]);
+  const d = xy.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
+  const [lx, ly] = xy[xy.length - 1];
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="direction:ltr" aria-hidden="true"><path d="${d}" fill="none" stroke="#16202b" stroke-width="1.4"/>${xy.slice(0, -1).map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2" fill="#fff" stroke="#16202b"/>`).join('')}<circle cx="${lx}" cy="${ly}" r="2.6" fill="#16202b"/></svg>`;
+}
+
+function autoAsk(id) {
+  const s = series(id); const last = s[s.length - 1];
+  if (last?.flag) return 'המעבדה סימנה';
+  if (s.length > 1) { const a = s[s.length - 2].v; const b = last.v; if (a && Math.abs(b - a) / Math.abs(a) >= 0.2) return 'השתנה'; }
+  return '';
+}
+
+function render() {
+  $('#demo').hidden = !file.example;
+  const latest = {};
+  for (const r of file.reports) for (const id of Object.keys(r.values)) latest[id] = r.date;
+  const ids = Object.keys(latest).filter((id) => byId[id]);
+  const groups = LAB_GROUPS.filter((g) => ids.some((id) => byId[id].g === g.id));
+  const last = file.reports[file.reports.length - 1];
+  $('#glance').innerHTML = `
+    <div><b>${file.reports.length}</b><span>ימי בדיקה</span></div>
+    <div><b>${ids.length}</b><span>בדיקות שונות</span></div>
+    <div><b>${groups.length}</b><span>רשתות בגוף</span></div>
+    <div><b class="n" style="font-size:22px">${fmtDate(last?.date) || '-'}</b><span>הבדיקה האחרונה</span></div>`;
+
+  $('#plates').innerHTML = groups.length ? groups.map((g) => `
+    <section class="plate" data-g="${g.id}">
+      <header><div><h2>${g.he}</h2><small>בעיר של הגוף: ${g.city}</small></div><a href="../#s=${g.system}" title="פתיחת המערכת באטלס">בגוף</a></header>
+      ${LABS.filter((t) => t.g === g.id && latest[t.id]).map((t) => row(t)).join('')}
+    </section>`).join('') : '<p class="empty">עוד אין בדיקות בתיק.</p>';
+
+  $('#plates').querySelectorAll('.ask').forEach((b) => b.addEventListener('click', () => {
+    const id = b.dataset.id; file.ask = file.ask || {};
+    file.ask[id] = !(file.ask[id] ?? !!autoAsk(id));
+    if (!file.example) store();
+    render();
+  }));
+
+  $('#reports').innerHTML = file.reports.slice().reverse().map((r) => `<li><span><span class="n">${fmtDate(r.date)}</span> · ${Object.keys(r.values).length} בדיקות</span>${file.example ? '' : `<button data-del="${r.date}">מחיקה</button>`}</li>`).join('');
+  $('#reports').querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => {
+    if (!confirm(`למחוק את הבדיקה מ-${fmtDate(b.dataset.del)}?`)) return;
+    file.reports = file.reports.filter((r) => r.date !== b.dataset.del);
+    if (!file.reports.length) { try { localStorage.removeItem(KEY); } catch { /* private */ } file = structuredClone(EXAMPLE); } else store();
+    render();
+  }));
+
+  const qs = questions(ids);
+  $('#qs').innerHTML = qs.map((q) => `<li>${esc(q)}</li>`).join('');
+  document.body.dataset.ready = '1';
+}
+
+function row(t) {
+  const s = series(t.id); const p = s[s.length - 1];
+  const auto = autoAsk(t.id); const on = file.ask?.[t.id] ?? !!auto;
+  const src = LAB_SOURCES[t.src];
+  const hist = s.map((x) => `<span class="n">${fmtDate(x.date)}: ${fmtV(x.v)}</span>`).join(' · ');
+  return `<div class="row" data-id="${t.id}">
+    <div class="nm">${esc(t.he)}${t.he === t.alias[0] || t.alias[0].startsWith(t.he + ' ') ? '' : `<span class="code" dir="ltr">${esc(t.alias[0])}</span>`}${p.flag ? `<span class="flag" title="סימון של המעבדה">${esc(p.flag)}</span>` : ''}</div>
+    <div class="val">${spark(s)}<b class="n">${fmtV(p.v)}</b><small class="n">${esc(p.unit || '')}</small></div>
+    <button class="ask" data-id="${t.id}" aria-pressed="${on}" title="${on ? 'ברשימת השאלות' : 'הוספה לשאלות לרופא'}" aria-label="שאלה לרופא על ${esc(t.he)}">?</button>
+    <p class="what">${esc(t.what)}${p.range ? ` <span class="rng">בלשון הדוח: <span class="n">${esc(p.range)}</span></span>` : ''}</p>
+    <p class="deep"><span>${hist}</span><a href="${src.url}" target="_blank" rel="noopener" dir="ltr">${esc(src.title)}, ${src.year}</a></p>
+  </div>`;
+}
+
+function questions(ids) {
+  const out = [];
+  for (const id of ids) {
+    const auto = autoAsk(id); const on = file.ask?.[id] ?? !!auto;
+    if (!on) continue;
+    const t = byId[id]; const s = series(id); const p = s[s.length - 1];
+    const nm = t.he === t.alias[0] || t.alias[0].startsWith(t.he + ' ') ? t.alias[0] : `${t.he} (${t.alias[0]})`;
+    const val = `${fmtV(p.v)} ${p.unit || ''}`.trim();
+    if (s.length > 1 && auto === 'השתנה') out.push(`${nm} עבר מ-${fmtV(s[s.length - 2].v)} ל-${fmtV(p.v)}. האם השינוי חשוב אצלי?`);
+    else if (auto === 'המעבדה סימנה') out.push(`המעבדה סימנה את ${nm}: ${val}. מה זה אומר אצלי, יחד עם שאר הבדיקות?`);
+    else out.push(`${nm}: ${val}, מ-${fmtDate(p.date)}. מה המשמעות אצלי?`);
+  }
+  if (ids.length) out.push('האם יש בדיקה שכדאי לחזור עליה, ומתי?');
+  return out;
+}
+
+$('#copyQs').addEventListener('click', async () => {
+  const text = [...$('#qs').children].map((li, i) => `${i + 1}. ${li.textContent}`).join('\n');
+  try { await navigator.clipboard.writeText(text); $('#copyQs').textContent = 'הועתק'; setTimeout(() => { $('#copyQs').textContent = 'העתקת השאלות'; }, 1500); } catch { /* no clipboard */ }
+});
+
+$('#export').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({ app: 'refua-records', version: 1, ...file }, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `התיק-שלי-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+$('#import').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { const d = JSON.parse(await f.text()); if (d.app !== 'refua-records' || !Array.isArray(d.reports)) throw 0; file = { reports: d.reports, ask: d.ask || {} }; store(); render(); }
+  catch { alert('זה לא קובץ גיבוי של התיק.'); }
+});
+
+document.querySelectorAll('.levels .btn').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('.levels .btn').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  document.body.classList.toggle('l2', b.dataset.l >= '2'); document.body.classList.toggle('l3', b.dataset.l === '3');
+}));
+
+window.__parseText = parseText;
+render();
+</script>
+</body>
+</html>
