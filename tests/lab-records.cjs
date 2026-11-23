@@ -25,10 +25,13 @@ const ok = (name, cond) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}`); i
   ok('the top bar leads back into the atlas', (await page.locator('.tb-nav a[data-nav="diseases"]').getAttribute('href')).includes('v=diseases'));
   ok('the file opens on the whole body', (await page.locator('#fcard h2').innerText()).includes('על הגוף'));
   ok('every place the tests touch is listed', (await page.locator('#fcard .place').count()) >= 4);
-  ok('the date strip shows two dates', (await page.locator('#dates .dt').count()) === 2);
-  await page.locator('#dates .dt').first().click();
+  ok('the date strip shows two blood tests and one event', (await page.locator('#dates .dt[data-date]').count()) === 2 && (await page.locator('#dates .dt.ev').count()) === 1);
+  ok('every button has a grey ground', await page.$eval('#copyQs', (b) => getComputedStyle(b).backgroundColor === 'rgb(236, 238, 241)'));
+  await page.locator('#dates .dt.ev').click();
+  ok('an event opens its own card, with its place in the body', (await page.locator('#fcard h2').innerText()).includes('אולטרסאונד') && (await page.locator('#where').innerText()).includes('הבטן'));
+  await page.locator('#dates .dt[data-date]').first().click();
   ok('an earlier date moves the file back in time', (await page.locator('#glance').innerText()).includes('התאריך המוצג') && (await page.locator('.row[data-id="inr"]').count()) === 0);
-  await page.locator('#dates .dt').last().click();
+  await page.locator('#dates .dt[data-date]').last().click();
   ok('a value that moved says which way', (await page.locator('.row[data-id="ast"] .mv').innerText()) === 'עלה');
   await page.locator('#fcard .place').first().click();
   ok('a place opens a test card', (await page.locator('#fcard .chain li').count()) === 3);
@@ -48,9 +51,9 @@ const ok = (name, cond) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}`); i
 
   // Paste path
   await page.locator('#pastebox summary').click();
-  await page.locator('#paste').fill('תאריך 03.02.2026\n14.0 g/dL HB\n5.4 K/µl WBC\n0.6 % BASO %\n0 LIPEMIC\n61 U/L ALT (GPT)\n0.9 PT-INR');
+  await page.locator('#paste').fill('תאריך 03.02.2026\n14.0 g/dL HB\n5.4 K/µl WBC\n0.6 % BASO %\n0 LIPEMIC\n61 U/L ALT (GPT)\n0.9 PT-INR\n18.4 U/mL CA 15-3\n2.1 ng/mL CEA');
   await page.locator('#readPaste').click();
-  ok('the review counts five tests', (await page.locator('#revOk').innerText()).includes('5'));
+  ok('the review counts seven tests, tumor markers too', (await page.locator('#revOk').innerText()).includes('7') && (await page.locator('#revOk').innerText()).includes('CA 15-3'));
   ok('the report date is read', (await page.locator('#revDate').inputValue()) === '2026-02-03');
   await page.locator('#save').click();
   ok('the example leaves after a save', !(await page.locator('#demo').isVisible()));
@@ -76,6 +79,26 @@ const ok = (name, cond) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}`); i
   // Persistence and privacy
   await page.reload(); await page.waitForFunction(() => document.body.dataset.ready === '1');
   ok('the file survives a reload', (await page.locator('#reports li').count()) >= 1);
+  // Events and the page for the visit
+  await page.locator('#evbox summary').click();
+  await page.locator('#evform [name="date"]').fill('2026-04-01');
+  await page.locator('#evform [name="title"]').fill('ממוגרפיה');
+  await page.locator('#evform [name="place"]').selectOption('breast');
+  await page.locator('#evform [name="link"]').fill('javascript:alert(1)');
+  await page.locator('#evform button[type="submit"]').click();
+  ok('a new event lands on the timeline and opens', (await page.locator('#fcard h2').innerText()) === 'ממוגרפיה');
+  ok('a link that is not a web address is dropped', (await page.locator('#fcard a[href^="javascript"]').count()) === 0);
+  await page.locator('#evbox summary').click();
+  await page.locator('#evCase').click();
+  await page.waitForFunction(() => document.querySelector('#fcard .fk')?.textContent.includes('16.11.2026'), null, { timeout: 30000 });
+  ok('the PET-CT of the example case comes in with its date', (await page.locator('#fcard .fk').innerText()).includes('16.11.2026') && (await page.locator('#fcard a[href*="c=anat"]').count()) === 1);
+  await page.evaluate(() => { window.print = () => { window.__printed = 1; }; });
+  await page.locator('#visitBtn').click();
+  await page.waitForFunction(() => window.__printed === 1, null, { timeout: 60000 });
+  ok('the visit page holds the questions and the values', (await page.locator('#visit li').count()) >= 2 && (await page.locator('#visit tbody tr').count()) >= 5);
+  await page.emulateMedia({ media: 'print' });
+  ok('only the visit page prints', await page.locator('#visit').isVisible() && !(await page.locator('.lab').isVisible()));
+  await page.emulateMedia({ media: 'screen' });
   ok('nothing was sent from the page', sent.length === 0);
   ok('the address carries no values', !/\d/.test(new URL(page.url()).hash));
 

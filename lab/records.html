@@ -125,6 +125,36 @@ body:not(.l2):not(.l3) .row .what, body:not(.l3) .row .deep { display: none; }
 .dt[aria-pressed="true"] { background: var(--ink); color: #fff; }
 .dt[aria-pressed="true"] small { color: rgba(255,255,255,.7); }
 .focus { scroll-margin-top: 96px; }
+.dt.ev:not([aria-pressed="true"]) { background: var(--plate); }
+.dt.ev[aria-pressed="true"] small { color: rgba(255,255,255,.8); }
+.dt.ev small { color: var(--ink); font-weight: 600; }
+.sum { font-family: var(--display); font-size: 20px; font-weight: 900; color: var(--ink) !important; list-style: none; padding: 8px 12px; background: var(--btn, #eceef1); }
+.sum::-webkit-details-marker { display: none; }
+.evform { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.evform label { display: grid; gap: 4px; font-size: 13px; color: var(--graphite); }
+.evform .wide { grid-column: 1 / -1; }
+.evform input, .evform select, .evform textarea { font: inherit; font-size: 14.5px; border: 0; background: #fff; padding: 7px 9px; color: var(--ink); min-width: 0; }
+.evform textarea { min-height: 60px; direction: rtl; text-align: right; }
+#visit { display: none; }
+@media print {
+  @page { margin: 14mm; }
+  body > :not(#visit) { display: none !important; }
+  #visit { display: block; font-family: var(--sans); color: #000; direction: rtl; }
+  #visit .k { font-size: 11px; color: #555; }
+  #visit h1 { font-family: var(--display); font-size: 28px; margin: 2px 0 4px; }
+  #visit h2 { font-family: var(--display); font-size: 17px; margin: 14px 0 6px; border-bottom: 2px solid #000; }
+  #visit p, #visit li { font-size: 12px; line-height: 1.5; }
+  #visit .vtop { display: grid; grid-template-columns: 38% 1fr; gap: 18px; align-items: start; }
+  #visit figure { margin: 0; } #visit img { width: 100%; max-height: 110mm; object-fit: contain; border: 1px solid #ddd; }
+  #visit figcaption { font-size: 10px; color: #555; }
+  #visit table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  #visit th, #visit td { text-align: right; padding: 3px 6px; border-bottom: 1px solid #ddd; }
+  #visit tr.g td { font-weight: 700; background: #f3f3f3; }
+  #visit tr.ask td { background: #fff0a0; font-weight: 600; }
+  #visit .n { font-family: var(--mono); direction: ltr; unicode-bidi: isolate; }
+  #visit small { color: #555; }
+  #visit .vdecl { margin-top: 12px; font-size: 10px; color: #555; }
+}
 .row:hover { background: rgba(255,255,255,.55); }
 .row.on { background: #fff; box-shadow: inset -4px 0 0 var(--ink); }
 .empty { margin-top: 30px; color: var(--graphite); font-size: 16px; }
@@ -166,6 +196,7 @@ input[type=date] { font: inherit; font-size: 14px; border: 0; padding: 5px 8px; 
   .stage3d { min-height: 380px; order: -1; }
 }
 </style>
+<link rel="stylesheet" href="css/buttons.css">
 </head>
 <body class="l2">
 <div class="lab">
@@ -217,10 +248,25 @@ input[type=date] { font: inherit; font-size: 14px; border: 0; padding: 5px 8px; 
     </section>
 
     <section>
+      <details id="evbox">
+        <summary class="sum">הוספת הדמיה, פעולה או מסמך</summary>
+        <form class="evform" id="evform">
+          <label>תאריך <input type="date" name="date" required></label>
+          <label>סוג <select name="kind"></select></label>
+          <label class="wide">כותרת <input type="text" name="title" required maxlength="80" placeholder="למשל: אולטרסאונד שד"></label>
+          <label>איפה בגוף <select name="place"></select></label>
+          <label class="wide">מה נכתב, במילים שלך <textarea name="note" maxlength="400"></textarea></label>
+          <label class="wide">קישור למסמך (למשל ב-Drive) <input type="url" name="link" dir="ltr" placeholder="https://"></label>
+          <div class="ops wide"><button class="btn solid" type="submit">הוספה לציר הזמן</button><button class="btn" type="button" id="evCase">ייבוא ה-PET-CT מהמקרה לדוגמה</button></div>
+        </form>
+      </details>
+    </section>
+
+    <section>
       <h3>לשאול את הרופא</h3>
       <p class="note">סמני <b>?</b> ליד בדיקה, והשאלה נכנסת לכאן. בדיקה שהמעבדה סימנה, או שהשתנתה בין בדיקות, נכנסת לבד.</p>
       <ol class="qs" id="qs"></ol>
-      <div class="ops"><button class="btn" id="copyQs">העתקת השאלות</button></div>
+      <div class="ops"><button class="btn" id="copyQs">העתקת השאלות</button><button class="btn solid" id="visitBtn">דף לביקור, להדפסה</button></div>
     </section>
 
     <section>
@@ -261,11 +307,30 @@ const EXAMPLE = {
     { date: '2026-08-02', values: { hb: { v: 13.6, unit: 'g/dL' }, wbc: { v: 5.8, unit: 'K/µl' }, plt: { v: 255, unit: 'K/µl' }, alt: { v: 34, unit: 'U/L', range: '0 - 33', flag: 'H' }, ast: { v: 25, unit: 'U/L' }, creat: { v: 0.8, unit: 'mg/dL' }, glu: { v: 90, unit: 'mg/dL' }, inr: { v: 1.0, unit: '' } } },
   ],
   ask: {},
+  events: [{ id: 'ex1', date: '2026-05-20', kind: 'imaging', title: 'אולטרסאונד של הבטן', place: 'belly', note: 'דוגמה מומצאת: כך נראה אירוע על ציר הזמן.' }],
 };
+
+// Imaging, procedures and documents sit on the same timeline as the blood tests. Each has a place in the body.
+const KINDS = { imaging: 'הדמיה', pathology: 'פתולוגיה', procedure: 'ניתוח או פעולה', visit: 'ביקור', doc: 'מסמך אחר' };
+const PLACES = {
+  whole: { he: 'כל הגוף' },
+  breast: { he: 'השד', sys: 'reproductive', hl: ['breast_lobes', 'breast_ducts'], sex: 'f' },
+  axilla: { he: 'בית השחי ובלוטות הלימפה', sys: 'immune', hl: ['nodes_axilla'] },
+  thyroid: { he: 'בלוטת התריס', sys: 'endocrine', hl: ['thyroid'] },
+  lungs: { he: 'הריאות', sys: 'respiratory', hl: ['lungs', 'airways'] },
+  heart: { he: 'הלב', sys: 'cardio', hl: ['lv', 'rv', 'la', 'ra'] },
+  liver: { he: 'הכבד', sys: 'digestive', hl: ['liver'] },
+  belly: { he: 'הבטן', sys: 'digestive', hl: ['stomach', 'liver', 'small', 'large'] },
+  kidneys: { he: 'הכליות', sys: 'urinary', hl: ['kidneys'] },
+  pelvis: { he: 'האגן', sys: 'reproductive', hl: ['uterus', 'ovaries'], sex: 'f' },
+  brain: { he: 'המוח', sys: 'nervous', hl: ['cerebrum_r', 'cerebrum_l'] },
+  bones: { he: 'השלד', sys: 'skeletal', hl: ['spine', 'pelvis', 'thorax'] },
+};
+const safeUrl = (u) => (/^https?:\/\/[^\s<>"]+$/i.test(u || '') ? u : '');
 
 let file = load();
 function load() {
-  try { const s = localStorage.getItem(KEY); if (s) { const d = JSON.parse(s); if (d.reports?.length) return d; } } catch { /* private mode */ }
+  try { const s = localStorage.getItem(KEY); if (s) { const d = JSON.parse(s); if (d.reports?.length || d.events?.length) return { events: [], ...d }; } } catch { /* private mode */ }
   return structuredClone(EXAMPLE);
 }
 function store() {
@@ -276,7 +341,9 @@ function store() {
 // ---------- Reading a report ----------
 const UNIT = /^(%|sec|fl|pg|ratio|[a-zµμ]+\/[a-zµμ0-9]+|[a-zµμ]+\/[a-zµμ]+\/[a-z]+)$/i;
 const ALIAS = [];
-for (const t of LABS) for (const a of t.alias) ALIAS.push([a.replace(/\s+/g, ' ').toUpperCase(), t.id]);
+// Names that hold a dash between digits (CA 15-3) would read as a range: they are sealed before the range is looked for.
+const seal = (x) => x.replace(/\bCA[\s-]?(\d+)[-.](\d+)\b/gi, 'CA$1X$2');
+for (const t of LABS) for (const a of t.alias) ALIAS.push([seal(a.replace(/\s+/g, ' ').toUpperCase()), t.id]);
 const norm = (s) => s.replace(/\s+/g, ' ').trim().toUpperCase();
 
 function parseText(text) {
@@ -286,13 +353,14 @@ function parseText(text) {
   for (const raw of text.split(/\n+/)) {
     let line = raw.replace(/[‎‏‪-‮⁦-⁩]/g, ' ').trim();
     if (!/[A-Za-z]/.test(line) || !/\d/.test(line)) continue;
+    line = seal(line);
     let range = '';
     line = line.replace(/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)/, (m, a, b) => { range = `${a} - ${b}`; return ' '; });
     const toks = line.split(/\s+/).filter(Boolean);
     let v = null; let unit = ''; let flag = ''; const name = [];
     for (const tk of toks) {
       if (v === null && /^[<>]?\d+(\.\d+)?$/.test(tk)) { v = parseFloat(tk.replace(/[<>]/, '')); continue; }
-      if (!unit && UNIT.test(tk)) { unit = tk; continue; }
+      if (!unit && tk.length <= 10 && UNIT.test(tk)) { unit = tk; continue; }
       if (/^(H|L|HH|LL|\*)$/.test(tk)) { flag = tk; continue; }
       if (/[֐-׿]/.test(tk)) continue;
       name.push(tk);
@@ -358,7 +426,7 @@ $('#readPaste').addEventListener('click', () => review([parseText($('#paste').va
 $('#cancel').addEventListener('click', () => { pending = null; $('#review').hidden = true; });
 $('#save').addEventListener('click', () => {
   if (!pending) return;
-  if (file.example) file = { reports: [], ask: {} };
+  if (file.example) file = { reports: [], ask: {}, events: [] };
   const date = $('#revDate').value;
   let rep = file.reports.find((r) => r.date === date);
   if (!rep) { rep = { date, values: {} }; file.reports.push(rep); }
@@ -408,9 +476,13 @@ function render() {
     <div><b>${groups.length}</b><span>רשתות בגוף</span></div>
     <div><b class="n" style="font-size:22px">${fmtDate(last?.date) || '-'}</b><span>${at && at !== file.reports[file.reports.length - 1].date ? 'התאריך המוצג' : 'הבדיקה האחרונה'}</span></div>`;
   const dates = $('#dates');
-  dates.hidden = file.reports.length < 2;
-  dates.innerHTML = `<span class="dl">ציר הזמן</span>${file.reports.map((r) => `<button class="dt" data-date="${r.date}" aria-pressed="${r.date === (last?.date)}"><span class="n">${fmtDate(r.date)}</span><small>${Object.keys(r.values).length} בדיקות</small></button>`).join('<i aria-hidden="true"></i>')}`;
-  dates.querySelectorAll('.dt').forEach((b) => b.addEventListener('click', () => { at = b.dataset.date; render(); }));
+  const items = [...file.reports.map((r) => ({ date: r.date, r })), ...(file.events || []).map((e) => ({ date: e.date, e }))].sort((a, b) => a.date.localeCompare(b.date));
+  dates.hidden = items.length < 2;
+  dates.innerHTML = `<span class="dl">ציר הזמן</span>${items.map((x) => x.r
+    ? `<button class="dt" data-date="${x.r.date}" aria-pressed="${mode !== 'event' && x.r.date === last?.date}"><span class="n">${fmtDate(x.r.date)}</span><small>${Object.keys(x.r.values).length} בדיקות דם</small></button>`
+    : `<button class="dt ev" data-ev="${esc(x.e.id)}" aria-pressed="${mode === 'event' && curEv === x.e.id}"><span class="n">${fmtDate(x.e.date)}</span><small>${esc(KINDS[x.e.kind] || 'אירוע')}</small></button>`).join('<i aria-hidden="true"></i>')}`;
+  dates.querySelectorAll('.dt[data-date]').forEach((b) => b.addEventListener('click', () => { at = b.dataset.date; if (mode === 'event') mode = 'map'; render(); }));
+  dates.querySelectorAll('.dt[data-ev]').forEach((b) => b.addEventListener('click', () => { curEv = b.dataset.ev; mode = 'event'; render(); }));
 
   $('#plates').innerHTML = groups.length ? groups.map((g) => `
     <section class="plate" data-g="${g.id}">
@@ -420,11 +492,14 @@ function render() {
 
   $('#plates').querySelectorAll('.ask').forEach((b) => b.addEventListener('click', () => toggleAsk(b.dataset.id)));
 
-  $('#reports').innerHTML = file.reports.slice().reverse().map((r) => `<li><span><span class="n">${fmtDate(r.date)}</span> · ${Object.keys(r.values).length} בדיקות</span>${file.example ? '' : `<button data-del="${r.date}">מחיקה</button>`}</li>`).join('');
+  $('#reports').innerHTML = items.slice().reverse().map((x) => x.r
+    ? `<li><span><span class="n">${fmtDate(x.r.date)}</span> · ${Object.keys(x.r.values).length} בדיקות דם</span>${file.example ? '' : `<button data-del="${x.r.date}">מחיקה</button>`}</li>`
+    : `<li><span><span class="n">${fmtDate(x.e.date)}</span> · ${esc(KINDS[x.e.kind] || 'אירוע')}: ${esc(x.e.title)}</span>${file.example ? '' : `<button data-del-ev="${esc(x.e.id)}">מחיקה</button>`}</li>`).join('');
+  $('#reports').querySelectorAll('[data-del-ev]').forEach((b) => b.addEventListener('click', () => delEvent(b.dataset.delEv)));
   $('#reports').querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => {
     if (!confirm(`למחוק את הבדיקה מ-${fmtDate(b.dataset.del)}?`)) return;
     file.reports = file.reports.filter((r) => r.date !== b.dataset.del);
-    if (!file.reports.length) { try { localStorage.removeItem(KEY); } catch { /* private */ } file = structuredClone(EXAMPLE); } else store();
+    if (!file.reports.length && !file.events?.length) { try { localStorage.removeItem(KEY); } catch { /* private */ } file = structuredClone(EXAMPLE); } else store();
     render();
   }));
 
@@ -438,7 +513,7 @@ function render() {
   document.body.dataset.ready = '1';
 }
 
-let mode = 'map'; let lastIds = [];
+let mode = 'map'; let lastIds = []; let curEv = null;
 function pick(id) {
   cur = id; mode = 'test'; focus();
   if (matchMedia('(max-width: 999px)').matches) $('.focus').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -448,6 +523,7 @@ function pick(id) {
 function focus() {
   document.querySelectorAll('.row.on').forEach((r) => r.classList.remove('on'));
   const box = $('#fcard');
+  if (mode === 'event') return eventCard(box);
   if (mode === 'map' || !cur) return mapCard(box);
   document.querySelector(`.row[data-id="${cur}"]`)?.classList.add('on');
   const t = byId[cur]; const s = series(cur); const p = s[s.length - 1];
@@ -474,6 +550,33 @@ function focus() {
 }
 
 // The whole file on one body: every organ a test speaks about is lit, and the card is its legend.
+function delEvent(id) {
+  const e = file.events.find((x) => x.id === id); if (!e) return;
+  if (!confirm(`למחוק את "${e.title}" מציר הזמן?`)) return;
+  file.events = file.events.filter((x) => x.id !== id);
+  if (mode === 'event' && curEv === id) mode = 'map';
+  if (!file.reports.length && !file.events.length) { try { localStorage.removeItem(KEY); } catch { /* private */ } file = structuredClone(EXAMPLE); } else store();
+  render();
+}
+
+// An imaging report, a procedure or a document: its date, its place lit in the body, and the way back to the source.
+function eventCard(box) {
+  const e = (file.events || []).find((x) => x.id === curEv);
+  if (!e) { mode = 'map'; return mapCard(box); }
+  const pl = PLACES[e.place] || PLACES.whole; const link = safeUrl(e.link);
+  box.innerHTML = `
+    <button class="back" id="toMap">כל הגוף</button>
+    <div><div class="fk">${esc(KINDS[e.kind] || 'אירוע')} · <span class="n">${fmtDate(e.date)}</span></div><h2>${esc(e.title)}</h2></div>
+    ${e.note ? `<p class="lede">${esc(e.note)}</p>` : ''}
+    <ol class="chain"><li class="mid"><i>1</i><b>איפה בגוף</b><p>${esc(pl.he)}</p></li></ol>
+    <div class="ops">${link ? `<a class="btn solid" href="${esc(link)}" target="_blank" rel="noopener">פתיחת המסמך</a>` : ''}${e.app ? `<a class="btn" href="${esc(e.app)}">פתיחה באפליקציה</a>` : ''}${file.example ? '' : '<button class="btn" id="evDel">מחיקה מציר הזמן</button>'}</div>
+    <div class="fix"><b>מה עושים עם זה</b><p>האירוע עומד על ציר הזמן ליד בדיקות הדם, כדי שאפשר יהיה לשאול על שניהם יחד.</p></div>`;
+  $('#toMap').addEventListener('click', () => { mode = 'map'; render(); });
+  $('#evDel')?.addEventListener('click', () => delEvent(e.id));
+  $('#where').innerHTML = `<span>בגוף: ${esc(pl.he)}</span>`;
+  show3d();
+}
+
 function mapCard(box) {
   const ids = lastIds;
   const places = new Map();
@@ -504,9 +607,15 @@ function toggleAsk(id) {
 
 // The real body from the atlas (js/body3d.js): the organ of the test lights up.
 async function show3d(t, map) {
-  const sel = () => (mode === 'map' || !cur ? ['skeletal', { map: map || show3d.map }] : [byId[cur].sys, { hl: byId[cur].hl, label: byId[cur].where, level: 1 }]);
+  const sel = () => {
+    if (mode === 'event') {
+      const pl = PLACES[(file.events || []).find((x) => x.id === curEv)?.place] || PLACES.whole;
+      return pl.sys ? [pl.sys, { hl: pl.hl, label: pl.he, level: 1, ...(pl.sex ? { sex: pl.sex } : {}) }] : ['cardio', { whole: true }];
+    }
+    return mode === 'map' || !cur ? ['skeletal', { map: map || show3d.map }] : [byId[cur].sys, { hl: byId[cur].hl, label: byId[cur].where, level: 1 }];
+  };
   if (map) show3d.map = map;
-  if (atlas) return atlas.select(...sel());
+  if (atlas) { await atlas.select(...sel()); return; }
   if (atlasFailed || show3d.loading) return;
   show3d.loading = true;
   try {
@@ -551,6 +660,61 @@ function questions(ids) {
   return out;
 }
 
+// ---------- Events: imaging, procedures, documents ----------
+const evf = $('#evform');
+evf.kind.innerHTML = Object.entries(KINDS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+evf.place.innerHTML = Object.entries(PLACES).map(([k, v]) => `<option value="${k}">${v.he}</option>`).join('');
+function addEvent(e) {
+  if (file.example) file = { reports: [], ask: {}, events: [] };
+  file.events = file.events || [];
+  if (file.events.some((x) => x.id === e.id)) return;
+  file.events.push(e); file.events.sort((a, b) => a.date.localeCompare(b.date));
+  curEv = e.id; mode = 'event'; store(); render();
+}
+evf.addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const f = new FormData(evf);
+  const link = safeUrl(String(f.get('link') || '').trim());
+  addEvent({ id: `e${Date.now().toString(36)}`, date: f.get('date'), kind: f.get('kind'), title: String(f.get('title')).trim(), place: f.get('place'), note: String(f.get('note') || '').trim(), ...(link ? { link } : {}) });
+  evf.reset(); $('#evbox').open = false;
+  if (matchMedia('(max-width: 999px)').matches) $('.focus').scrollIntoView({ block: 'start' });
+});
+// The example case of the atlas has one dated document: the PET-CT. Its page in the app is the source.
+$('#evCase').addEventListener('click', async () => {
+  const { CASES } = await import('./js/case.js');
+  const c = CASES.find((x) => x.id === 'anat'); if (!c?.pet) return;
+  const [d, m, y] = c.pet.date_he.split('.');
+  const step = c.steps.findIndex((x) => x.view === 'pet');
+  addEvent({ id: 'case-anat-pet', date: `${y}-${m}-${d}`, kind: 'imaging', title: 'PET-CT, כל הגוף', place: 'whole', note: c.pet.summary_he, app: `#s=reproductive&v=disease&m=3d&f=cancer&d=breast-cancer&c=anat&cs=${step}` });
+  $('#evbox').open = false;
+});
+
+// ---------- A page for the visit: the map, the questions, the values, the timeline ----------
+$('#visitBtn').addEventListener('click', async () => {
+  mode = 'map'; focus();
+  let img = '';
+  try {
+    await show3d();
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    img = $('#atlas3d canvas')?.toDataURL('image/png') || '';
+  } catch { /* the page prints without the body */ }
+  const ids = lastIds; const asOf = shown()[shown().length - 1]?.date;
+  const groups = LAB_GROUPS.filter((g) => ids.some((id) => byId[id].g === g.id));
+  const evs = (file.events || []).filter((e) => !at || e.date <= at);
+  let v = $('#visit'); if (!v) { v = document.createElement('section'); v.id = 'visit'; v.setAttribute('dir', 'rtl'); document.body.append(v); }
+  v.innerHTML = `
+    <header><div class="k">רפואה · התיק שלי</div><h1>לביקור אצל הרופא</h1><p>הוכן ב-<span class="n">${fmtDate(new Date().toISOString().slice(0, 10))}</span>. הבדיקות נכונות ל-<span class="n">${fmtDate(asOf)}</span>.</p></header>
+    <div class="vtop">${img ? `<figure><img src="${img}" alt="הגוף, עם המקומות שהבדיקות נוגעות בהם"><figcaption>המקומות שהבדיקות נוגעות בהם, מוארים.</figcaption></figure>` : ''}
+      <div><h2>השאלות שלי</h2><ol>${questions(ids).map((q) => `<li>${esc(q)}</li>`).join('')}</ol>
+      ${evs.length ? `<h2>ציר הזמן</h2><ul class="vev">${evs.map((e) => `<li><span class="n">${fmtDate(e.date)}</span> · ${esc(KINDS[e.kind] || 'אירוע')}: <b>${esc(e.title)}</b>${e.note ? `. ${esc(e.note)}` : ''}</li>`).join('')}</ul>` : ''}</div></div>
+    <h2>הבדיקות</h2>
+    <table><thead><tr><th>בדיקה</th><th>ערך</th><th>תאריך</th><th>קודם</th><th>בדוח</th></tr></thead><tbody>
+    ${groups.map((g) => `<tr class="g"><td colspan="5">${esc(g.he)}</td></tr>${LABS.filter((t) => t.g === g.id && ids.includes(t.id)).map((t) => { const s = series(t.id); const p = s[s.length - 1]; const q = s[s.length - 2]; return `<tr${(file.ask?.[t.id] ?? !!autoAsk(t.id)) ? ' class="ask"' : ''}><td>${esc(byId[t.id].he)} <small dir="ltr">${esc(t.alias[0])}</small></td><td class="n">${fmtV(p.v)} ${esc(p.unit || '')}</td><td class="n">${fmtDate(p.date)}</td><td class="n">${q ? fmtV(q.v) : ''}</td><td>${p.flag ? 'סומן' : ''}${p.range ? ` <span class="n">${esc(p.range)}</span>` : ''}</td></tr>`; }).join('')}`).join('')}
+    </tbody></table>
+    <p class="vdecl">הדף מתרגם את שפת הדוח לשפת הגוף, ולא מסיק ממנו. האפליקציה לא מאבחנת ולא מטפלת. השורות המודגשות הן השאלות.</p>`;
+  window.print();
+});
+
 $('#copyQs').addEventListener('click', async () => {
   const text = [...$('#qs').children].map((li, i) => `${i + 1}. ${li.textContent}`).join('\n');
   try { await navigator.clipboard.writeText(text); $('#copyQs').textContent = 'הועתק'; setTimeout(() => { $('#copyQs').textContent = 'העתקת השאלות'; }, 1500); } catch { /* no clipboard */ }
@@ -563,7 +727,7 @@ $('#export').addEventListener('click', () => {
 });
 $('#import').addEventListener('change', async (e) => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-  try { const d = JSON.parse(await f.text()); if (d.app !== 'refua-records' || !Array.isArray(d.reports)) throw 0; file = { reports: d.reports, ask: d.ask || {} }; store(); render(); }
+  try { const d = JSON.parse(await f.text()); if (d.app !== 'refua-records' || !Array.isArray(d.reports)) throw 0; file = { reports: d.reports, ask: d.ask || {}, events: Array.isArray(d.events) ? d.events : [] }; store(); render(); }
   catch { alert('זה לא קובץ גיבוי של התיק.'); }
 });
 
