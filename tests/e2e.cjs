@@ -43,6 +43,7 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     await page.route('**/fonts.g*/**', (r) => r.continue());
     // The shared creations component sits on GitHub Pages; the screens here do not need it, and the creations test has its own page and route.
     await page.route('**/creations.js', (r) => r.fulfill({ body: '', contentType: 'text/javascript' }));
+    await page.route(/appofapp-gh\.vercel\.app\/cover\.js/, (r) => r.fulfill({ path: path.join(__dirname, '..', 'js', 'vendor', 'cover.js'), contentType: 'text/javascript' })); // the shared cover, from the local backup copy
     await page.route('**/demo.js', (r) => r.fulfill({ body: '', contentType: 'text/javascript' })); // the shared video player, loaded from the portfolio
     // The demo video button asks the portfolio database for this app's video; tests run without it (the video would keep the network busy).
     await page.route(/\/rest\/v1\/aoa_apps\?select=id,demo/, (r) => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '[]' }));
@@ -151,8 +152,16 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
       ok(await page.evaluate(() => document.querySelector('.sysmark.on').dataset.id === 'respiratory'), 'state restored from URL after reload');
       // Brand goes home
       await page.click('.brand');
+      // The cover (Claude-GH CLAUDE.md, section 4): the logo and the name lead to the cover, "פתיחה" is the first tab.
+      await page.waitForFunction(() => document.body.classList.contains('is-cover') && document.querySelector('app-cover')?.shadowRoot?.querySelector('[data-open]'));
+      const cv = await page.evaluate(() => {
+        const t = document.querySelector('app-cover').shadowRoot.textContent || '';
+        return { haiku: t.includes('שקף על שקף') && t.includes('הגוף נקרא'), vision: t.includes('עיר של רשתות'), goal: t.includes('מערכות'), layers: document.querySelectorAll('.cover-art .cv-sys').length, panel: getComputedStyle(document.querySelector('.panel')).display, fit: document.documentElement.scrollHeight <= innerHeight + 1 };
+      });
+      ok(cv.haiku && cv.vision && cv.goal && cv.layers === 9 && cv.panel === 'none' && cv.fit, `the name leads to the cover: haiku, vision, goal, the art lays ${cv.layers} transparencies, one screen`);
+      await page.click('.nav [data-view="intro"]');
       await page.waitForFunction(() => location.hash === '#v=intro' && document.body.classList.contains('is-intro'));
-      ok(await page.isVisible('#intro-page .hillel') && await page.isVisible('#intro-page .enter') && await page.isHidden('.panel'), 'app name links to the opening page: Hillel, headline, entry button; no reading frame');
+      ok(await page.isVisible('#intro-page .hillel') && await page.isVisible('#intro-page .enter') && await page.isHidden('.panel') && (await page.$$('#intro-page .page-roles .role')).length === 5, 'the first tab opens the opening page: Hillel, headline, entry button, and every page with its role');
       await page.click('#intro-page [data-enter]');
       await page.waitForFunction(() => location.hash === '#v=home' && document.body.classList.contains('is-home'));
       ok(true, 'the entry button opens the atlas page');
@@ -642,6 +651,31 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     ok(cr.styles >= 7, `${tg} creations: ${cr.styles} designs`);
     ok(!cr.hscroll && cr.stageHidden && cr.scrolls && cr.current === 'true', `${tg} creations: full page that scrolls, no horizontal scroll, nav marks it`);
     await cp.screenshot({ path: path.join(SHOTS, `creations-${tg}.png`) });
+    // Four outputs (Claude-GH skill anat-outputs): story, paper, essay and creation, 3 of each, in chains, every fact with a source in the atlas
+    await cp.click('[data-crv="outputs"]');
+    await cp.waitForSelector('.outputs .out-card');
+    const od = await cp.evaluate(async () => {
+      const { OUTPUTS, KINDS, resolveRef, outputById } = await import('./js/outputs.js');
+      const per = Object.fromEntries(KINDS.map((k) => [k.id, OUTPUTS.filter((o) => o.kind === k.id).length]));
+      const factsNoRef = OUTPUTS.flatMap((o) => o.blocks.filter((b) => b.level === 'fact' && !(b.refs || []).length).map(() => o.id));
+      const badRefs = OUTPUTS.flatMap((o) => o.blocks.flatMap((b) => (b.refs || []).filter((r) => !resolveRef(r))));
+      const badFrom = OUTPUTS.filter((o) => o.derivedFrom && !outputById[o.derivedFrom]).map((o) => o.id);
+      return { per, factsNoRef, badRefs, badFrom, cards: document.querySelectorAll('.outputs .out-card').length };
+    });
+    ok(Object.values(od.per).every((n) => n >= 3) && od.cards === 12, `${tg} four outputs: ${JSON.stringify(od.per)}, ${od.cards} cards`);
+    ok(!od.factsNoRef.length && !od.badRefs.length && !od.badFrom.length, `${tg} outputs: every fact has a source that exists, every chain link exists ${JSON.stringify(od)}`);
+    await cp.click('.out-card[data-card="o-paper-galen"]');
+    await cp.waitForSelector('.out-doc[data-output="o-paper-galen"]');
+    const doc = await cp.evaluate(() => ({
+      levels: [...new Set([...document.querySelectorAll('.out-doc .blk')].map((b) => b.dataset.level))].length,
+      cert: !!document.querySelector('.out-doc .certainty'),
+      from: !!document.querySelector('.out-doc .genre-band a[href*="o-story-harvey"]'),
+      child: !!document.querySelector('.out-doc [data-child="o-essay-persist"]'),
+      claude: (document.querySelector('.out-doc [data-transform]')?.href || '').startsWith('https://claude.ai/new?q='),
+      hscroll: document.documentElement.scrollWidth > innerWidth + 1,
+    }));
+    ok(doc.levels >= 3 && doc.cert && doc.from && doc.child && doc.claude && !doc.hscroll, `${tg} an output opens with levels of knowledge, a certainty meter, where it came from, where it leads, and a prompt to Claude`);
+    await cp.screenshot({ path: path.join(SHOTS, `outputs-${tg}.png`), fullPage: true });
     ok(cerr.length === 0, `${tg} creations: no JS errors ${cerr.join(' | ')}`);
     await cc.close();
   }

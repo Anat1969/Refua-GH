@@ -4,6 +4,8 @@ import { CASES, casesFor } from './case.js';
 import { detect, textMatches, normalize } from './match.js';
 import { bodySVG, sheetSVG } from './body.js';
 import { circulationSVG } from './circulation.js';
+import { mountCover, unmountCover } from './cover.js';
+import { outputsView } from './outputs.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -498,6 +500,15 @@ function loadQuiz() { try { return JSON.parse(localStorage.getItem(QUIZ_KEY)) ||
 function saveQuiz(q) { try { localStorage.setItem(QUIZ_KEY, JSON.stringify(q)); } catch { /* private mode: answers stay on screen only */ } }
 let quizState = { answers: {} };
 
+// The page system (Claude-GH CLAUDE.md, section 4): every page speaks to a different power in the reader.
+const PAGE_ROLES = [
+  { to: 'רגש', name: 'כריכה', what: 'השקפים נדלקים אחד אחד, עד שהגוף כולו עיר של רשתות.', href: '#' },
+  { to: 'רוח', name: 'פתיחה', what: 'למה ואיך: על רגל אחת, המספרים והסרטון.', href: '#v=intro' },
+  { to: 'שכל', name: 'מפת הגוף, מחלות, גילויים', what: 'הכלים: תשע מערכות בשלוש רמות עומק, מחלות וציר זמן.', href: '#v=home' },
+  { to: 'יצר', name: 'יצירות', what: 'לוחות A4 לתערוכה, וארבעה תוצרים: כתבה, מאמר, מסה ויצירה.', href: '#v=creations&o=outputs' },
+  { to: 'אמון', name: 'מקורות', what: 'כל משפט עם מקור, ושכבה: ידוע, נאמר או מאמינים.', href: '#v=sources' },
+];
+
 // The opening page: the film, the one-foot teaching, and one way in. The atlas itself is the next page (#v=home).
 function introView() {
   const n = (x) => `<span class="num">${x}</span>`;
@@ -523,7 +534,11 @@ function introView() {
         ${c ? `<a class="enter alt press-soft" href="${caseHref(c)}">מקרה לדוגמה: ${esc(c.name_he)}</a>` : ''}
       </div>
     </div>
-    <div class="intro-video"><div class="home-demo" data-aoa-demo="hero" aria-label="סרטון הדגמה"></div></div>`;
+    <div class="intro-video"><div class="home-demo" data-aoa-demo="hero" aria-label="סרטון הדגמה"></div></div>
+    <section class="page-roles" aria-labelledby="h-roles">
+      <h2 id="h-roles" class="label">כל דף והתפקיד שלו</h2>
+      <ol>${PAGE_ROLES.map((r) => `<li><a class="role press-soft" href="${r.href}"><span class="role-to">${r.to}</span><b>${r.name}</b><span>${r.what}</span></a></li>`).join('')}</ol>
+    </section>`;
 }
 
 function quizHTML() {
@@ -700,7 +715,7 @@ function readState() {
   const p = new URLSearchParams(location.hash.slice(1));
   const s = SYSTEMS.find((x) => x.id === p.get('s')) || SYSTEMS.find((x) => x.id === 'cardio');
   const q = p.get('q') || '';
-  let v = VIEWS.includes(p.get('v')) ? p.get('v') : p.get('s') ? 'system' : 'intro';
+  let v = VIEWS.includes(p.get('v')) ? p.get('v') : p.get('s') ? 'system' : 'cover';
   if (v === 'search' && !normalize(q)) v = 'system';
   if (v === 'deep' && !DEEP[s.id]) v = 'system';
   const D = DEEP[s.id];
@@ -716,12 +731,12 @@ function readState() {
   const cst = Math.max(0, parseInt(p.get('cs'), 10) || 0);
   return { s, v, q, a: p.get('a') || '', t, k, d: p.get('d') || '', m, f, e, h, l, c: cse, cs: cst };
 }
-const VIEWS = ['intro', 'home', 'emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease', 'history', 'creations'];
+const VIEWS = ['cover', 'intro', 'home', 'emergency', 'sources', 'redlist', 'profile', 'about', 'search', 'deep', 'diseases', 'disease', 'history', 'creations'];
 function go(s, v = 'system', extra = {}, replace = false) {
-  const prm = v === 'intro' ? new URLSearchParams() : v === 'home' ? new URLSearchParams({ v: 'home' }) : new URLSearchParams({ s: s.id });
-  if (v !== 'system') prm.set('v', v);
+  const prm = v === 'cover' ? new URLSearchParams() : v === 'intro' || v === 'home' ? new URLSearchParams({ v }) : new URLSearchParams({ s: s.id });
+  if (v !== 'system' && v !== 'cover') prm.set('v', v);
   const mode = extra.m || readState().m;
-  if (v !== 'deep' && v !== 'history' && v !== 'home' && v !== 'intro' && v !== 'creations') {
+  if (v !== 'deep' && v !== 'history' && v !== 'home' && v !== 'intro' && v !== 'cover' && v !== 'creations') {
     if (mode === '3d') prm.set('m', '3d');
     else if (prefMode() === '3d') prm.set('m', '2d');
   }
@@ -905,14 +920,29 @@ function render() {
   const isCr = v === 'creations';
   document.body.classList.toggle('is-creations', isCr);
   $('#creations-page').hidden = !isCr;
-  if (isCr && !$('#creations-page').firstChild) $('#creations-page').innerHTML = '<app-creations src="./creations.json" heading="מה הגוף מלמד: יצירות מהאטלס"></app-creations>';
+  if (isCr) {
+    // Two views of one page: the A4 boards (the shared <app-creations>) and the four outputs (js/outputs.js).
+    const o = new URLSearchParams(location.hash.slice(1)).get('o');
+    const page = $('#creations-page');
+    if (!page.firstChild) page.innerHTML = `<nav class="cr-views" aria-label="תצוגת היצירות"><a class="chip press" data-crv="boards" href="#v=creations">לוחות A4</a><a class="chip press" data-crv="outputs" href="#v=creations&o=outputs">ארבעה תוצרים</a></nav><div class="cr-boards"><app-creations src="./creations.json" heading="מה הגוף מלמד: יצירות מהאטלס"></app-creations></div><div class="cr-outputs" hidden></div>`;
+    page.querySelector('.cr-boards').hidden = !!o;
+    page.querySelector('.cr-outputs').hidden = !o;
+    if (o) page.querySelector('.cr-outputs').innerHTML = outputsView(o);
+    page.querySelectorAll('[data-crv]').forEach((a) => a.setAttribute('aria-current', String((a.dataset.crv === 'outputs') === !!o)));
+    if (o && o !== 'outputs') page.querySelector('.out-doc')?.scrollIntoView({ block: 'start' });
+  }
+  // The cover: the logo and the name lead here. It speaks to feeling, the opening page (#v=intro) to the mind.
+  const isCover = v === 'cover';
+  document.body.classList.toggle('is-cover', isCover);
+  $('#cover-page').hidden = !isCover;
+  if (isCover) mountCover($('#cover-page')); else unmountCover();
   const isIntro = v === 'intro';
   document.body.classList.toggle('is-intro', isIntro);
   const introEl = $('#intro-page');
   introEl.hidden = !isIntro;
   if (!introEl.dataset.ready) { introEl.innerHTML = introView(); introEl.dataset.ready = '1'; }
-  panel.innerHTML = isCr || isIntro ? '' : (views[v] || (() => systemView(s, l)))();
-  if (!isCr && !isIntro) renderStage(s, v, k);
+  panel.innerHTML = isCr || isIntro || isCover ? '' : (views[v] || (() => systemView(s, l)))();
+  if (!isCr && !isIntro && !isCover) renderStage(s, v, k);
   const box = $('#search');
   if (v === 'search' && document.activeElement !== box) box.value = q;
   if (v !== 'search' && document.activeElement !== box) box.value = '';
@@ -931,7 +961,7 @@ function render() {
     g.setAttribute('aria-pressed', String(on));
   });
   $$('[data-view]').forEach((b) => b.setAttribute('aria-current', String((b.dataset.view === v && v !== 'home') || (b.dataset.view === 'system' && v === 'deep') || (b.dataset.view === 'diseases' && v === 'disease'))));
-  document.title = isHome || isIntro ? 'רפואה: גוף, מחלה, בריאות' : v === 'system' ? `${s.name_he} | רפואה` : v === 'deep' ? `${DEEP[s.id].title_he} | רפואה` : v === 'disease' ? `${(DISEASES.find((x) => x.id === d) || DISEASES[0]).name_he} | רפואה` : v === 'history' ? 'ציר זמן | רפואה' : isCr ? 'יצירות | רפואה' : 'רפואה: גוף, מחלה, בריאות';
+  document.title = isHome || isIntro || isCover ? 'רפואה: גוף, מחלה, בריאות' : v === 'system' ? `${s.name_he} | רפואה` : v === 'deep' ? `${DEEP[s.id].title_he} | רפואה` : v === 'disease' ? `${(DISEASES.find((x) => x.id === d) || DISEASES[0]).name_he} | רפואה` : v === 'history' ? 'ציר זמן | רפואה' : isCr ? 'יצירות | רפואה' : 'רפואה: גוף, מחלה, בריאות';
   document.body.classList.toggle('has-alert', !!panel.querySelector('.alert-card'));
   // On narrow screens the panel sits below the figure: bring the change into view.
   // Except where the stage itself is the content (map, circulation): there the stage stays first.
@@ -1147,14 +1177,14 @@ function boot() {
     b.addEventListener('click', () => {
       const { s, v } = readState();
       const want = b.dataset.view;
-      go(s, v === want && want !== 'system' ? 'system' : want);
+      go(s, v === want && want !== 'system' && want !== 'intro' ? 'system' : want);
     }),
   );
 
   addEventListener('keydown', (e) => {
     if (e.target.closest('input, textarea')) return;
     const { s, v } = readState();
-    if (e.key === 'Escape' && v !== 'system' && v !== 'creations') return go(s);
+    if (e.key === 'Escape' && v !== 'system' && v !== 'creations' && v !== 'cover') return go(s);
     if (v === 'history') {
       const dh = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0;
       if (dh && !e.target.closest('.tabs')) { stopHistoryPlay(); eventTo(readState().e + dh); }

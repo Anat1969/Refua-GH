@@ -150,3 +150,11 @@ export function sheetSVG(id, px = 512, vb = '0 0 400 800') {
     : `<g fill="rgba(22,32,43,0.07)" stroke="${ink}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${LAYERS[id]}</g>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="${vb}">${body}</svg>`;
 }
+
+// The cover art (Vesalius, 1543): the outline, and the nine transparencies laid on it one after another.
+// Each layer is a <g data-id>; js/cover.js turns them on in order, and the CSS draws the ink in.
+export function coverSVG(systems) {
+  const layers = systems.map((s, i) => `<g class="cv-sys" data-id="${s.id}" style="--i:${i}">${LAYERS[s.id]}</g>`).join('');
+  return `<svg class="cv-body" viewBox="0 0 400 800" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
+    <g class="cv-outline">${mirror(OUTLINE_HALF)}</g>${layers}</svg>`;
+}

@@ -18,18 +18,20 @@
 <script type="importmap">{ "imports": { "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.170.0/three.module.min.js" } }</script>
 <script src="https://appofapp-gh.vercel.app/ai-menu.js" defer></script>
 <script src="https://arc-and-bina.vercel.app/bridge.js" defer></script>
+<script src="https://appofapp-gh.vercel.app/cover.js" defer onerror="var s=document.createElement('script');s.src='js/vendor/cover.js';document.head.appendChild(s)"></script>
 <script src="https://anat1969.github.io/AppOfApp-GH/creations.js" async onerror="var s=document.createElement('script');s.src='https://appofapp-gh.vercel.app/creations.js';document.head.appendChild(s)"></script>
 </head>
 <body>
 <div class="app-shell">
 
   <header class="bar" dir="rtl">
-    <a class="brand press-soft" href="#v=intro" aria-label="רפואה, לפתיחה">
+    <a class="brand press-soft" href="#" aria-label="רפואה, לכריכה">
       <img src="icons/icon.svg" alt="" width="28" height="28">
       <span class="brand-name">רפואה</span>
       <span class="brand-sub">גוף, מחלה, בריאות</span>
     </a>
     <nav class="nav" aria-label="ניווט">
+      <button class="chip" data-view="intro">פתיחה</button>
       <button class="chip" data-view="system"><span class="xl">מפת </span>הגוף</button>
       <button class="chip" data-view="diseases">מחלות</button>
       <a class="chip" href="lab/records.html" data-nav="records">בדיקות</a>
@@ -49,6 +51,7 @@
 
   <main class="work" dir="rtl">
 
+    <section class="cover-page" id="cover-page" aria-label="כריכה" hidden></section>
     <section class="intro-page" id="intro-page" aria-label="פתיחה" hidden></section>
 
     <div class="frame-main">
