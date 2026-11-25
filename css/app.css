@@ -809,3 +809,92 @@ body.is-home .panel .wt-sys { font-size: 13px; }
   body:not(.is-intro) .work > .frame-main { grid-column: 2; grid-row: 1; }
   body:not(.is-intro) .work > .panel { grid-column: 1; grid-row: 1; }
 }
+
+/* ===== כריכה (25.11.2026): הרכיב המשותף <app-cover>, והאמנות היא אטלס השקפים של וסאליוס ===== */
+.cover-page[hidden] { display: none; }
+body.is-cover .frame-main, body.is-cover .panel, body.is-cover .intro-page { display: none; }
+@media (min-width: 1000px) { body.is-cover .work { grid-template-columns: minmax(0, 1fr); } }
+.cover-page { grid-column: 1 / -1; min-width: 0; min-height: 0; }
+.cover-page app-cover { height: 100%; }
+.cover-art { position: absolute; inset: 0; background: var(--paper); overflow: hidden;
+  background-image: linear-gradient(var(--hair) 1px, transparent 1px), linear-gradient(90deg, var(--hair) 1px, transparent 1px); background-size: 40px 40px; }
+.cv-body { position: absolute; top: 4%; bottom: 4%; right: 6%; width: 46%; height: 92%; direction: ltr; }
+.cv-outline path { fill: #fbfbfc; stroke: #8d96a1; stroke-width: 1.6; stroke-linejoin: round; }
+.cv-sys { fill: rgba(22, 32, 43, .06); stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity .9s ease; }
+.cv-sys > * { stroke-dasharray: 1400; stroke-dashoffset: 1400; transition: stroke-dashoffset 2.2s ease; }
+.cv-sys.on { opacity: 1; } .cv-sys.on > * { stroke-dashoffset: 0; }
+.cv-sys.past { opacity: .22; } .cv-sys.past > * { stroke-dashoffset: 0; }
+.cover-art.cv-all .cv-sys { opacity: .9; stroke: var(--known); }
+.cv-plate { position: absolute; left: 6%; top: 50%; transform: translateY(-50%); width: 40%; background: var(--plate); padding: 18px 20px;
+  box-shadow: 0 1px 2px rgba(22,32,43,.08), 0 18px 34px -22px rgba(22,32,43,.5); display: grid; gap: 4px; direction: rtl; }
+.cv-plate p { margin: 0; }
+.cv-count { font-family: var(--mono); font-size: 12px; color: var(--graphite); letter-spacing: .06em; }
+.cv-name { font-family: var(--display); font-size: clamp(20px, 2.2vw, 30px); font-weight: 700; line-height: 1.15; }
+.cv-big { font-size: 15px; color: var(--graphite); } .cv-n { font-family: var(--display); font-size: clamp(34px, 4vw, 56px); font-weight: 900; color: var(--known); line-height: 1; }
+.cv-line { font-size: 15px; line-height: 1.45; }
+.cv-src { font-size: 11px; color: var(--graphite); direction: ltr; text-align: right; }
+.cv-tag { position: absolute; bottom: 10px; left: 12px; margin: 0; font-size: 11px; color: var(--graphite); background: rgba(255,255,255,.8); padding: 2px 8px; }
+@media (max-width: 640px) { .cv-body { right: 2%; width: 52%; } .cv-plate { left: 3%; width: 46%; padding: 10px 12px; } .cv-line { font-size: 13px; } .cv-src { display: none; } }
+@media (prefers-reduced-motion: reduce) { .cv-sys, .cv-sys > * { transition: none; } }
+
+/* כל דף והתפקיד שלו, בדף הפתיחה */
+.page-roles { grid-column: 1 / -1; }
+.page-roles ol { list-style: none; margin: var(--s2) 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr)); gap: var(--s2); }
+.page-roles .role { display: grid; gap: 2px; align-content: start; height: 100%; padding: 10px 12px; text-decoration: none; color: var(--ink); background: var(--mist); }
+.page-roles .role b { font-size: 16px; }
+.page-roles .role span:last-child { font-size: 13px; color: var(--graphite); line-height: 1.45; }
+.role-to { font-family: var(--mono); font-size: 11px; color: var(--known); letter-spacing: .06em; }
+
+/* ===== ארבעה תוצרים (הסקיל anat-outputs): רמות הידע בצבעי השכבות של האטלס ===== */
+.cr-views { display: flex; gap: var(--s2); margin: 0 0 var(--s3); }
+.cr-views .chip[aria-current="true"] { background: var(--ink); color: #fff; }
+.cr-boards[hidden], .cr-outputs[hidden] { display: none; }
+.outputs { display: grid; gap: var(--s3); direction: rtl; }
+.out-intro { margin: 0; font-size: 16px; line-height: 1.7; max-width: 900px; }
+.genre { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; color: #fff; background: var(--ink); justify-self: start; }
+.genre i { font-style: normal; font-weight: 400; opacity: .75; margin-inline-start: 4px; }
+.lv { display: inline-block; font-size: 11px; padding: 0 6px; border: 1px solid; vertical-align: 1px; white-space: nowrap; }
+.lv-fact { color: var(--known); border-color: var(--known); background: #eef3f8; }
+.lv-interpretation { color: var(--said); border-color: var(--said); background: #f2f6ee; }
+.lv-hypothesis { color: var(--believed); border-color: var(--believed); background: var(--mist); }
+.lv-imagination { color: var(--ink); border-color: var(--ink); border-style: dashed; background: transparent; }
+.chain-head, .chain-row { display: grid; grid-template-columns: 130px repeat(4, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
+.chains { display: grid; gap: 10px; }
+.chain-name { align-self: center; }
+.out-card { display: grid; gap: 4px; align-content: start; padding: 12px 14px; text-decoration: none; color: var(--ink); background: var(--mist); position: relative; }
+.out-card b { font-size: 15px; line-height: 1.35; }
+.oc-lead { font-size: 13px; color: var(--graphite); line-height: 1.45; }
+.out-card.is-on { outline: 2px solid var(--ink); background: #fff; }
+.out-doc { background: #fff; box-shadow: 0 1px 2px rgba(22,32,43,.06), 0 18px 40px -28px rgba(22,32,43,.45); border-top: 4px solid var(--ink); padding: 20px 24px; display: grid; gap: 12px; max-width: 920px; }
+.genre-band { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; font-size: 13px; color: var(--graphite); }
+.genre-band .label { margin-inline-end: 4px; }
+.out-title { margin: 0; font-size: 30px; line-height: 1.2; }
+.out-lead { margin: 0; font-size: 17px; color: var(--graphite); }
+.out-body { display: grid; gap: 10px; }
+.blk p { margin: 0; font-size: 16px; line-height: 1.75; }
+.blk-h { margin: 6px 0 2px; font-size: 12px; font-family: var(--mono); color: var(--graphite); font-weight: 500; letter-spacing: .04em; }
+.blk-imagination p { font-family: var(--display); font-size: 18px; border-right: 2px dashed var(--ink); padding-right: 12px; }
+.blk-hypothesis p { border-right: 2px solid var(--believed); padding-right: 10px; }
+.ev-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.ev-chip { display: inline-flex; gap: 6px; align-items: baseline; font-size: 12px; padding: 2px 8px; background: var(--mist); color: var(--ink); text-decoration: none; }
+.ev-kind { font-family: var(--mono); font-size: 10px; color: var(--known); }
+.out-question { margin: 0; padding: 10px 12px; background: var(--marker); font-size: 16px; }
+.out-question .label { margin-inline-end: 6px; }
+.out-next { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.out-next .btn { text-decoration: none; padding: 8px 12px; font-size: 14px; }
+.out-why { font-size: 13px; color: var(--graphite); }
+.out-quality summary { cursor: pointer; font-size: 13px; color: var(--graphite); }
+.out-quality ul { margin: 6px 0 0; padding-inline-start: 18px; font-size: 13px; }
+.out-hint { margin: 0; color: var(--graphite); }
+.certainty { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.c-track { display: inline-flex; gap: 3px; }
+.c-track i { width: 28px; height: 8px; background: var(--hair); }
+.c-open .c-track i.on { background: var(--believed); } .c-likely .c-track i.on { background: var(--said); } .c-established .c-track i.on { background: var(--known); }
+mark.ins { background: var(--marker); color: inherit; padding: 0 2px; }
+@media (max-width: 760px) {
+  .chain-head { display: none; }
+  .chain-row { grid-template-columns: minmax(0, 1fr); }
+  .out-doc { padding: 16px; } .out-title { font-size: 23px; }
+}
+/* seven tabs since the opening page joined the bar: one row on a laptop */
+@media (min-width: 1000px) { .nav { gap: 6px; flex-wrap: nowrap; } .search .field { width: clamp(150px, 16vw, 260px); } }
