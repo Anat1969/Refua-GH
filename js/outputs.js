@@ -3,28 +3,26 @@
 // כל פסקה מסומנת ברמת ידע, וכל עובדה מצביעה על רשומה באטלס: e: גילוי בציר הזמן, d: מחלה, s: מערכת, src: מקור.
 // בלי עובדות חדשות: כל מה שמסומן "עובדה" כבר כתוב ב-js/data.js, עם המקור שלו.
 import { SYSTEMS, DISEASES, TIMELINE, SOURCES } from './data.js';
+import { forge, TOPICS, topicName, NEXT } from './forge.js';
+import { loadOutputs, addOutput, flushPending } from './cloud.js';
 
 export const KINDS = [
   { id: 'story', name: 'כתבה', mechanism: 'תחקיר', purpose: 'להנגיש ידע בסיפור שמעורר סקרנות.', reader: 'קוראת סקרנית, 5 דקות',
     process: ['בוחרים רגע אחד: גילוי, דמות או אירוע', 'אוספים עובדות מאומתות: מי, מה, מתי, איפה', 'בונים הקשר היסטורי ותרבותי', 'מחפשים פרט מפתיע', 'בודקים כל עובדה מול מקור'],
     structure: ['פתיחה בסצנה', 'השאלה שהיא מעוררת', '3 עד 5 פרקים לפי זמן', 'ההקשר', 'תובנה בשורה', 'שאלה פתוחה', 'מקורות'],
-    quality: ['כל פרק נשען על עובדה עם מקור', 'יש סצנה, דמות, זמן ומקום', 'פרשנות מסומנת כפרשנות', 'מסתיימת בשאלה אמיתית'],
-    prompt: 'כתוב כתבה בעברית. המנגנון: תחקיר שמספר סיפור. אסוף רק עובדות שיש להן מקור, וסדר אותן לפי זמן ומקום. מבנה: פתיחה בסצנה, השאלה שהיא מעוררת, 3 עד 5 פרקים לפי זמן, הקשר היסטורי ותרבותי, תובנה בשורה אחת, ושאלה פתוחה שהכתבה לא עונה עליה. סמן כל משפט שנושא טענה: [עובדה] עם מקור, [פרשנות], [השערה]. אורך: כ-5 דקות קריאה.' },
+    quality: ['כל פרק נשען על עובדה עם מקור', 'יש סצנה, דמות, זמן ומקום', 'פרשנות מסומנת כפרשנות', 'מסתיימת בשאלה אמיתית'], },
   { id: 'paper', name: 'מאמר', mechanism: 'ניתוח', purpose: 'לענות על שאלה ולומר כמה אפשר לסמוך על התשובה.', reader: 'קוראת חוקרת, 7 עד 10 דקות',
     process: ['מנסחים שאלה אחת או טענה שאפשר להפריך', 'אוספים מקורות, גם סותרים', 'משווים מה כל מקור אומר', 'מבקרים: הטיה, מדגם, תקופה', 'בוחנים סתירות', 'מכריעים עם מד ודאות'],
     structure: ['השאלה', 'למה היא חשובה', 'השיטה', 'הראיות', 'השוואה וביקורת', 'הסתירות', 'מסקנה ומד ודאות', 'גבולות ומה לא ידוע', 'מקורות'],
-    quality: ['השאלה ניתנת לבדיקה', 'יש מקור שסותר או מסייג', 'המסקנה לא חזקה מהראיות', 'נאמר מה לא הוכח'],
-    prompt: 'כתוב מאמר בעברית. המנגנון: ניתוח. אסוף מקורות, גם סותרים. השווה ביניהם, בקר כל אחד (הטיה, מדגם, תקופה), ובחן את הסתירות. מבנה: השאלה במשפט אחד, למה היא חשובה, השיטה, הראיות, השוואה וביקורת, הסתירות, מסקנה עם מד ודאות (מבוסס, סביר, לא מוכרע), גבולות המסקנה ומה עוד לא ידוע. סמן כל טענה: [עובדה] עם מקור, [פרשנות] עם מי מפרש, [השערה] עם איך בודקים. אל תכתוב מסקנה חזקה יותר מהראיות.' },
+    quality: ['השאלה ניתנת לבדיקה', 'יש מקור שסותר או מסייג', 'המסקנה לא חזקה מהראיות', 'נאמר מה לא הוכח'], },
   { id: 'essay', name: 'מסה', mechanism: 'חקירה רעיונית', purpose: 'להעלות שאלה חדשה, טובה מזו שהתחילה.', reader: 'קוראת חושבת, 5 עד 8 דקות',
     process: ['בוחרים הנחת יסוד מקובלת', 'מחפשים את הדפוס בתחום רחוק', 'מניחים מקרים זה ליד זה', 'מערערים: מה אם ההפך?', 'לא סוגרים: מנסחים שאלה חדשה'],
     structure: ['הנחה', 'סדק', 'מסע בין תחומים', 'ערעור', 'שאלה חדשה', 'מה עובדה ומה מחשבה', 'מקורות'],
-    quality: ['לפחות שני תחומים רחוקים', 'מנגנון משותף, לא רק דמיון', 'השאלה בסוף חדשה', 'אין מסקנה סגורה'],
-    prompt: 'כתוב מסה בעברית. המנגנון: חקירה רעיונית פתוחה. מצא את אותו דפוס בשניים או שלושה תחומים רחוקים (למשל עיר, מוזיקה, גוף, משפט), זהה את המנגנון המשותף, וערער על הנחת היסוד. מבנה: הנחה, סדק, מסע בין התחומים, ערעור, שאלה חדשה במשפט אחד, ופסקה שמפרידה בין עובדה למחשבה. סמן: [עובדה] עם מקור, [פרשנות], [השערה]. אל תסגור במסקנה.' },
+    quality: ['לפחות שני תחומים רחוקים', 'מנגנון משותף, לא רק דמיון', 'השאלה בסוף חדשה', 'אין מסקנה סגורה'], },
   { id: 'creation', name: 'יצירה', mechanism: 'דמיון מבוסס', purpose: 'ליצור רעיון, עולם אפשרי, ניסוי מחשבתי או משמעות חדשה.', reader: 'במבט אחד, עד 2 דקות',
     process: ['בוחרים עובדה או מנגנון מאומת', 'משנים כלל אחד: "מה אם..."', 'בונים את העולם שנובע מהשינוי', 'בוחרים צורה', 'מצמידים את הבסיס עם מקור'],
     structure: ['הבסיס עם מקור', 'המהלך', 'היצירה, מסומנת כדמיון', 'מה היא מאירה', 'לאן זה מוביל'],
-    quality: ['נקלטת במבט או בדקה', 'הבסיס אמיתי ומקושר', 'הדמיון עקבי עם הכלל שהשתנה', 'אין בלבול בין מה שקרה למה שהומצא'],
-    prompt: 'צור יצירה בעברית. המנגנון: דמיון מבוסס. שנה כלל אחד ("מה אם..."), ובנה ממנו בעקביות עולם אפשרי, ניסוי מחשבתי או משמעות חדשה. מבנה: הבסיס עם מקור, המהלך במשפט אחד, היצירה (מסומנת [דמיון]), מה היא מאירה (פרשנות), ולאן זה יכול להוביל (השערה שאפשר לבדוק). אל תציג שום דבר שהומצא כעובדה.' },
+    quality: ['נקלטת במבט או בדקה', 'הבסיס אמיתי ומקושר', 'הדמיון עקבי עם הכלל שהשתנה', 'אין בלבול בין מה שקרה למה שהומצא'], },
 ];
 export const kindById = Object.fromEntries(KINDS.map((k) => [k.id, k]));
 export const LEVEL = { fact: 'עובדה', interpretation: 'פרשנות', hypothesis: 'השערה', imagination: 'דמיון' };
@@ -173,6 +171,9 @@ export const OUTPUTS = [
     question: 'מה הייתה הארכיונאית זורקת ראשון?',
     transition: { to: 'story', why: 'כל יצירה מחזירה לרגע אמיתי: כתבה חדשה על זיכרון אחר.' } },
 ];
+// כל תוצר לדוגמה שייך לנושא באטלס, כדי ש"להפוך לסוג הבא" יבנה מאותו נושא
+const CHAIN_TOPIC = { blood: 's:cardio', pump: 'd:diarrhoeal', memory: 's:immune' };
+OUTPUTS.forEach((o) => { o.topic = CHAIN_TOPIC[o.chain]; });
 export const outputById = Object.fromEntries(OUTPUTS.map((o) => [o.id, o]));
 export const childrenOf = (id) => OUTPUTS.filter((o) => o.derivedFrom === id);
 
@@ -189,19 +190,12 @@ export function resolveRef(ref) {
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const rich = (s) => esc(s).replace(/==(.+?)==/g, '<mark class="ins">$1</mark>').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
 const plain = (s) => String(s).replace(/\*\*|==/g, '');
-export const claudeUrl = (p) => `https://claude.ai/new?q=${encodeURIComponent(p)}`;
 
-export function buildPrompt(kind, from) {
-  const k = kindById[kind];
-  return [
-    k.prompt,
-    `התוצר הזה מתפתח מ${kindById[from.kind].name}: "${from.title}". השאלה שהיא השאירה: ${from.question}`,
-    `החומר מהתוצר הקודם, עם רמות הידע שלו:\n${from.blocks.map((b) => `- [${LEVEL[b.level]}] ${plain(b.text)}`).join('\n')}`,
-    `המקורות באטלס "רפואה": ${[...new Set(from.blocks.flatMap((b) => b.refs || []))].map((r) => resolveRef(r)?.label).filter(Boolean).join('; ')}`,
-    'שמור על המקורות של התוצר הקודם, וציין בראש התוצר החדש ממה הוא התפתח.',
-    'כתוב בעברית. הפרד בבירור בין עובדה מבוססת, פרשנות, השערה ודמיון. בלי ייעוץ, אבחון או המלצת טיפול.',
-  ].join('\n\n');
-}
+// ===== יצירה בתוך האפליקציה (כלל ענת, 25.11.2026): בלחיצה נוצר תוצר מלא, ערוך ומעוצב כלוח A4,
+// ו"הוספה לאפליקציה" שומרת אותו בענן. משם: הורדה, הדפסה, שיתוף, והוא מופיע לבד במגזין "חוט".
+// אין כאן פרומפט להעתקה ואין קישור ל-Claude: המנוע (js/forge.js) כותב מהנתונים, בלי AI ובלי תשלום.
+const MAG = 'https://maamarim-gh.vercel.app';
+const state = { kind: 'story', topic: 's:cardio', seed: 0, draft: null, saved: [], msg: '', busy: false, loaded: false };
 
 function refChip(r) {
   const x = resolveRef(r);
@@ -209,51 +203,170 @@ function refChip(r) {
   return `<a class="ev-chip press-soft" href="${esc(x.href)}" data-ref="${esc(r)}"${x.ext ? ' target="_blank" rel="noreferrer"' : ''}><span class="ev-kind">${x.kind}</span>${esc(x.label)}</a>`;
 }
 
-function doc(o) {
+/** לוח A4: אותו לוח לתצוגה, לעריכה, להורדה ולהדפסה */
+function sheet(o, { editable = false } = {}) {
   const k = kindById[o.kind];
-  const from = o.derivedFrom && outputById[o.derivedFrom];
-  const next = kindById[o.transition.to];
-  return `<article class="out-doc out-${o.kind}" data-output="${o.id}">
-    <header class="genre-band">
-      <span class="genre">${k.name}</span>
-      <span><span class="label">מנגנון</span> ${k.mechanism}</span>
-      <span><span class="label">למי</span> ${k.reader}</span>
-      ${o.form ? `<span><span class="label">צורה</span> ${o.form}</span>` : ''}
-      ${from ? `<span><span class="label">התפתח מ</span> <a class="linkish" href="#v=creations&o=${from.id}">${kindById[from.kind].name}: ${esc(from.title)}</a></span>` : ''}
-    </header>
-    <h2 class="out-title display">${esc(o.title)}</h2>
-    <p class="out-lead">${esc(o.lead)}</p>
-    ${o.certainty ? `<div class="certainty c-${o.certainty}" role="img" aria-label="מד ודאות: ${CERTAINTY[o.certainty]}"><span class="label">מד ודאות</span><span class="c-track">${['open', 'likely', 'established'].map((c) => `<i class="${c === o.certainty ? 'on' : ''}"></i>`).join('')}</span><b>${CERTAINTY[o.certainty]}</b></div>` : ''}
-    <div class="out-body">
-      ${o.blocks.map((b) => `<section class="blk blk-${b.level}" data-level="${b.level}">
-        ${b.h ? `<h3 class="blk-h">${b.h}</h3>` : ''}
-        <p><span class="lv lv-${b.level}">${LEVEL[b.level]}</span> ${rich(b.text)}</p>
-        ${b.refs ? `<div class="ev-row">${b.refs.map(refChip).join('')}</div>` : ''}
-      </section>`).join('')}
-    </div>
-    <p class="out-question"><span class="label">השאלה שנשארת</span> <b>${esc(o.question)}</b></p>
-    <footer class="out-next">
-      ${childrenOf(o.id).map((c) => `<a class="btn press" href="#v=creations&o=${c.id}" data-child="${c.id}">התפתח אל ${kindById[c.kind].name}: ${esc(c.title)}</a>`).join('')}
-      <a class="btn solid press" href="${claudeUrl(buildPrompt(o.transition.to, o))}" target="_blank" rel="noreferrer" data-transform="${o.transition.to}">להפוך ל${next.name} עם Claude</a>
-      <span class="out-why">${esc(o.transition.why)}</span>
-    </footer>
-    <details class="out-quality"><summary>מדדי האיכות של ${k.name}</summary><ul>${k.quality.map((q) => `<li>${q}</li>`).join('')}</ul></details>
+  const ce = editable ? ' contenteditable="true" spellcheck="false"' : '';
+  const from = o.derivedFrom && (outputById[o.derivedFrom] || state.saved.find((x) => x.id === o.derivedFrom));
+  return `<article class="a4 out-${o.kind}" data-output="${esc(o.id || 'draft')}" dir="rtl">
+    <header class="a4-band"><span class="genre">${k.name}</span><span>${k.mechanism}</span><span>${esc(topicName(o.topic) || '')}</span>${o.form ? `<span>${esc(o.form)}</span>` : ''}${from ? `<span>התפתח מ${kindById[from.kind].name}: ${esc(from.title)}</span>` : ''}</header>
+    <h2 class="a4-title display" data-edit="title"${ce}>${esc(o.title)}</h2>
+    <p class="a4-lead" data-edit="lead"${ce}>${esc(o.lead || '')}</p>
+    ${o.certainty ? `<div class="certainty c-${o.certainty}"><span class="label">מד ודאות</span><span class="c-track">${['open', 'likely', 'established'].map((c) => `<i class="${c === o.certainty ? 'on' : ''}"></i>`).join('')}</span><b>${CERTAINTY[o.certainty]}</b></div>` : ''}
+    <div class="a4-body">${o.blocks.map((b, i) => `<section class="blk blk-${b.level}" data-level="${b.level}">
+      ${b.h ? `<h3 class="blk-h">${esc(b.h)}</h3>` : ''}
+      <p><span class="lv lv-${b.level}">${LEVEL[b.level]}</span> <span data-edit="b${i}"${ce}>${editable ? esc(plain(b.text)) : rich(b.text)}</span></p>
+      ${b.refs ? `<div class="ev-row">${b.refs.map(refChip).join('')}</div>` : ''}
+    </section>`).join('')}</div>
+    <p class="out-question"><span class="label">השאלה שנשארת</span> <b data-edit="question"${ce}>${esc(o.question || '')}</b></p>
+    <footer class="a4-foot"><span>רפואה: גוף, מחלה, בריאות</span><span>${k.name} · לוח A4</span><span>refua-gh.vercel.app</span></footer>
   </article>`;
 }
 
-/** המסך: שלוש שרשראות בשורות, ארבעה סוגים בעמודות, והתוצר שנבחר מתחתן */
-export function outputsView(sel) {
-  const o = outputById[sel] || null;
-  return `<section class="outputs" aria-label="ארבעה תוצרים">
-    <p class="out-intro"><b>כתבה, מאמר, מסה ויצירה</b> הם ארבעה מנגנוני חשיבה, ולא ארבע תבניות עיצוב.<br>
-    כל שורה היא שרשרת: הכתבה מעלה שאלה, המאמר מזהה סתירה, המסה מולידה יצירה.<br>
-    כל פסקה מסומנת: <span class="lv lv-fact">עובדה</span> <span class="lv lv-interpretation">פרשנות</span> <span class="lv lv-hypothesis">השערה</span> <span class="lv lv-imagination">דמיון</span>. כל עובדה מצביעה על רשומה באטלס.</p>
-    <div class="chains">
-      <div class="chain-head" aria-hidden="true"><span></span>${KINDS.map((k) => `<span class="genre">${k.name} <i>${k.mechanism}</i></span>`).join('')}</div>
-      ${CHAINS.map(([id, name]) => `<div class="chain-row" data-chain="${id}"><span class="chain-name label">${name}</span>
-        ${KINDS.map((k) => { const x = OUTPUTS.find((y) => y.chain === id && y.kind === k.id); return x ? `<a class="out-card press${o && o.id === x.id ? ' is-on' : ''}" href="#v=creations${o && o.id === x.id ? '&o=outputs' : `&o=${x.id}`}" data-card="${x.id}" aria-current="${o && o.id === x.id}"><span class="genre">${k.name}</span><b>${esc(x.title)}</b><span class="oc-lead">${esc(x.lead)}</span></a>` : '<span></span>'; }).join('')}
-      </div>`).join('')}
+/** הלוח הוא דף A4 אמיתי (794 על 1123 פיקסלים): הגופן גדל עד שהדף מלא, ויורד עד שאין גלישה.
+ *  במסך צר הדף כולו מוקטן (zoom), כך שהעימוד זהה בטלפון, במחשב ובהדפסה. */
+function fitA4(root) {
+  root.querySelectorAll('.a4').forEach((a) => {
+    let f = 22;
+    a.style.setProperty('--a4f', `${f}px`);
+    while (a.scrollHeight > a.clientHeight + 1 && f > 11) { f -= 0.5; a.style.setProperty('--a4f', `${f}px`); }
+    const stage = a.parentElement;
+    a.style.zoom = String(Math.min(1, (stage.clientWidth - 4) / 794));
+  });
+}
+
+/** קריאת העריכה מהלוח בחזרה לתוצר */
+function readEdits(root, o) {
+  const get = (k) => root.querySelector(`[data-edit="${k}"]`)?.textContent.trim();
+  return { ...o, title: get('title') || o.title, lead: get('lead') ?? o.lead, question: get('question') ?? o.question, blocks: o.blocks.map((b, i) => ({ ...b, text: get(`b${i}`) || b.text })) };
+}
+
+function printSheet(root, o) {
+  const prev = document.title;
+  document.title = `${kindById[o.kind].name} - ${o.title}`; // שם הקובץ כשבוחרים "שמירה כ-PDF"
+  document.body.classList.add('printing-a4');
+  root.querySelector('.a4')?.classList.add('to-print');
+  const done = () => { document.body.classList.remove('printing-a4'); root.querySelector('.a4.to-print')?.classList.remove('to-print'); document.title = prev; removeEventListener('afterprint', done); };
+  addEventListener('afterprint', done);
+  print();
+  setTimeout(done, 1500);
+}
+
+async function share(o) {
+  const url = `${location.origin}${location.pathname}#v=creations&o=${o.id}`;
+  const data = { title: o.title, text: `${kindById[o.kind].name}: ${o.title}`, url };
+  try { if (navigator.share) { await navigator.share(data); return 'נשלח.'; } } catch { /* בוטל */ }
+  try { await navigator.clipboard.writeText(url); return 'הקישור הועתק.'; } catch { return url; }
+}
+
+function forgePanel() {
+  return `<section class="forge" aria-label="יצירת תוצר">
+    <h2 class="forge-h">יצירה בלחיצה</h2>
+    <p class="forge-why">המנוע כותב את התוצר מתוך האטלס עצמו, ומעמד אותו כלוח A4. כל עובדה בו מגיעה עם המקור שלה. עורכים בדף, מוסיפים לאפליקציה, והוא מופיע גם במגזין "חוט".</p>
+    <div class="forge-row" role="group" aria-label="סוג התוצר">${KINDS.map((k) => `<button type="button" class="chip press" data-fk="${k.id}" aria-pressed="${state.kind === k.id}">${k.name} <i>${k.mechanism}</i></button>`).join('')}</div>
+    <div class="forge-row">
+      <label class="forge-topic"><span class="label">על מה</span>
+        <select data-ft>${['מערכות', 'מחלות'].map((g) => `<optgroup label="${g}">${TOPICS.filter((t) => t.group === g).map((t) => `<option value="${t.id}"${t.id === state.topic ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}</optgroup>`).join('')}</select>
+      </label>
+      <button type="button" class="btn solid press" data-act="forge">יצירת ${kindById[state.kind].name}</button>
     </div>
-    ${o ? doc(o) : '<p class="out-hint">בוחרים תוצר כדי לקרוא אותו, לראות ממה התפתח, ולהפוך אותו לסוג הבא.</p>'}
   </section>`;
+}
+
+function draftView() {
+  const d = state.draft;
+  return `<section class="draft" aria-label="טיוטה">
+    <p class="draft-note">זו טיוטה ערוכה. אפשר לתקן כל משפט ישירות בדף, ואז להוסיף אותה לאפליקציה.</p>
+    <div class="draft-acts">
+      <button type="button" class="btn solid press" data-act="save"${state.busy ? ' disabled' : ''}>הוספה לאפליקציה</button>
+      <button type="button" class="btn press" data-act="again">גרסה אחרת</button>
+      <button type="button" class="btn press" data-act="cancel">ביטול</button>
+      ${state.msg ? `<span class="draft-msg" role="status">${esc(state.msg)}</span>` : ''}
+    </div>
+    <div class="a4-stage">${sheet(d, { editable: true })}</div>
+  </section>`;
+}
+
+function docView(o) {
+  const next = kindById[NEXT[o.kind]];
+  const saved = !!o.createdAt || o.local;
+  return `<section class="doc" aria-label="${esc(o.title)}">
+    <div class="draft-acts">
+      <button type="button" class="btn solid press" data-act="pdf">הורדה כ-PDF</button>
+      <button type="button" class="btn press" data-act="print">הדפסה</button>
+      ${o.id && !o.local ? `<button type="button" class="btn press" data-act="share">שיתוף</button>` : ''}
+      ${saved && !o.local ? `<a class="btn press" href="${MAG}" target="_blank" rel="noreferrer">במגזין "חוט"</a>` : ''}
+      <button type="button" class="btn press" data-act="next" data-from="${esc(o.id)}">להפוך ל${next.name}</button>
+      ${state.msg ? `<span class="draft-msg" role="status">${esc(state.msg)}</span>` : ''}
+    </div>
+    <div class="a4-stage">${sheet(o)}</div>
+  </section>`;
+}
+
+function library(sel) {
+  const card = (x) => `<a class="out-card press${sel && sel.id === x.id ? ' is-on' : ''}" href="#v=creations&o=${x.id}" data-card="${esc(x.id)}" aria-current="${!!(sel && sel.id === x.id)}"><span class="genre">${kindById[x.kind].name}</span><b>${esc(x.title)}</b><span class="oc-lead">${esc(topicName(x.topic) || '')}${x.local ? ' · ממתין לרשת' : ''}</span></a>`;
+  return `<section class="lib" aria-label="ספריית התוצרים">
+    <h2 class="forge-h">הספרייה <span class="num">${state.saved.length}</span></h2>
+    ${state.saved.length ? `<div class="lib-grid">${state.saved.map(card).join('')}</div>` : `<p class="out-hint">${state.loaded ? 'עוד אין כאן תוצרים. יצירה בלחיצה למעלה מוסיפה את הראשון.' : 'טוען את הספרייה...'}</p>`}
+    <h3 class="label lib-sub">לדוגמה: שלוש שרשראות, מכתבה ועד יצירה</h3>
+    <div class="chains">
+      ${CHAINS.map(([id, name]) => `<div class="chain-row" data-chain="${id}"><span class="chain-name label">${name}</span>${KINDS.map((k) => { const x = OUTPUTS.find((y) => y.chain === id && y.kind === k.id); return x ? card(x) : '<span></span>'; }).join('')}</div>`).join('')}
+    </div>
+  </section>`;
+}
+
+let host = null, selId = '';
+function paint() {
+  if (!host) return;
+  const sel = outputById[selId] || state.saved.find((x) => x.id === selId) || null;
+  host.innerHTML = `<section class="outputs" aria-label="ארבעה תוצרים">
+    <p class="out-intro"><b>כתבה, מאמר, מסה ויצירה</b> הם ארבעה מנגנוני חשיבה. כל פסקה מסומנת: <span class="lv lv-fact">עובדה</span> <span class="lv lv-interpretation">פרשנות</span> <span class="lv lv-hypothesis">השערה</span> <span class="lv lv-imagination">דמיון</span>, וכל עובדה מצביעה על רשומה באטלס.</p>
+    ${forgePanel()}
+    ${state.draft ? draftView() : sel ? docView(sel) : ''}
+    ${library(sel)}
+  </section>`;
+  fitA4(host);
+}
+
+async function onClick(e) {
+  const b = e.target.closest('[data-fk], [data-act]');
+  if (!b) return;
+  const act = b.dataset.act;
+  if (b.dataset.fk) { state.kind = b.dataset.fk; return paint(); }
+  if (act === 'forge') { state.seed = 0; state.msg = ''; state.draft = forge(state.kind, state.topic, 0); paint(); host.querySelector('.draft')?.scrollIntoView({ block: 'start' }); return; }
+  if (act === 'again') { state.draft = forge(state.draft.kind, state.draft.topic, ++state.seed, state.draft.derivedFrom ? { id: state.draft.derivedFrom } : null); return paint(); }
+  if (act === 'cancel') { state.draft = null; state.msg = ''; return paint(); }
+  if (act === 'next') {
+    const from = outputById[b.dataset.from] || state.saved.find((x) => x.id === b.dataset.from);
+    state.kind = NEXT[from.kind]; state.topic = from.topic; state.seed = 0; state.msg = '';
+    state.draft = forge(state.kind, from.topic, 0, from); paint(); host.querySelector('.draft')?.scrollIntoView({ block: 'start' }); return;
+  }
+  if (act === 'save') {
+    const o = readEdits(host.querySelector('.draft'), state.draft);
+    state.busy = true; state.msg = 'שומר...'; paint();
+    const r = await addOutput(o);
+    state.busy = false;
+    if (r.ok) { state.saved = [r.out, ...state.saved]; state.draft = null; state.msg = 'נוסף לאפליקציה, ויופיע גם במגזין "חוט".'; location.hash = `v=creations&o=${r.out.id}`; return; }
+    if (r.local) { state.saved = [r.local, ...state.saved]; state.draft = null; }
+    state.msg = r.error; return paint();
+  }
+  const sel = outputById[selId] || state.saved.find((x) => x.id === selId);
+  if (!sel) return;
+  if (act === 'pdf' || act === 'print') return printSheet(host.querySelector('.doc'), sel);
+  if (act === 'share') { state.msg = await share(sel); return paint(); }
+}
+
+/** נקרא מ-app.js בכל מעבר לדף התוצרים */
+export function mountOutputs(el, o) {
+  if (host !== el) {
+    host = el;
+    el.addEventListener('click', onClick);
+    el.addEventListener('change', (e) => { if (e.target.matches('[data-ft]')) { state.topic = e.target.value; } });
+    flushPending().finally(() => loadOutputs().then((xs) => { state.saved = xs; state.loaded = true; paint(); }));
+  }
+  selId = o === 'outputs' ? '' : o;
+  if (selId) state.draft = null;
+  if (!state.msg.startsWith('נוסף')) state.msg = '';
+  paint();
+  if (selId) host.querySelector('.doc')?.scrollIntoView({ block: 'start' });
 }

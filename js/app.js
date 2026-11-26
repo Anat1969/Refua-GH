@@ -5,7 +5,7 @@ import { detect, textMatches, normalize } from './match.js';
 import { bodySVG, sheetSVG } from './body.js';
 import { circulationSVG } from './circulation.js';
 import { mountCover, unmountCover } from './cover.js';
-import { outputsView } from './outputs.js';
+import { mountOutputs } from './outputs.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -711,7 +711,9 @@ function eventIndex(raw) {
   if (byId >= 0) return byId;
   return Math.min(Math.max(parseInt(raw, 10) || 0, 0), TIMELINE.length - 1);
 }
+// The magazine "חוט" links back to an output as #/a/<id> (MaAmarim-GH originUrl): open it on the creations page.
 function readState() {
+  if (/^#\/a\/u-[a-z]+-[0-9a-z]+$/.test(location.hash)) history.replaceState(null, '', `#v=creations&o=${location.hash.slice(4)}`);
   const p = new URLSearchParams(location.hash.slice(1));
   const s = SYSTEMS.find((x) => x.id === p.get('s')) || SYSTEMS.find((x) => x.id === 'cardio');
   const q = p.get('q') || '';
@@ -927,9 +929,8 @@ function render() {
     if (!page.firstChild) page.innerHTML = `<nav class="cr-views" aria-label="תצוגת היצירות"><a class="chip press" data-crv="boards" href="#v=creations">לוחות A4</a><a class="chip press" data-crv="outputs" href="#v=creations&o=outputs">ארבעה תוצרים</a></nav><div class="cr-boards"><app-creations src="./creations.json" heading="מה הגוף מלמד: יצירות מהאטלס"></app-creations></div><div class="cr-outputs" hidden></div>`;
     page.querySelector('.cr-boards').hidden = !!o;
     page.querySelector('.cr-outputs').hidden = !o;
-    if (o) page.querySelector('.cr-outputs').innerHTML = outputsView(o);
+    if (o) mountOutputs(page.querySelector('.cr-outputs'), o);
     page.querySelectorAll('[data-crv]').forEach((a) => a.setAttribute('aria-current', String((a.dataset.crv === 'outputs') === !!o)));
-    if (o && o !== 'outputs') page.querySelector('.out-doc')?.scrollIntoView({ block: 'start' });
   }
   // The cover: the logo and the name lead here. It speaks to feeling, the opening page (#v=intro) to the mind.
   const isCover = v === 'cover';

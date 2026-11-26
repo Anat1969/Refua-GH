@@ -898,3 +898,46 @@ mark.ins { background: var(--marker); color: inherit; padding: 0 2px; }
 }
 /* seven tabs since the opening page joined the bar: one row on a laptop */
 @media (min-width: 1000px) { .nav { gap: 6px; flex-wrap: nowrap; } .search .field { width: clamp(150px, 16vw, 260px); } }
+
+/* ===== יצירה בלחיצה ולוח A4 (25.11.2026) ===== */
+.forge { display: grid; gap: 10px; padding: 16px 18px; background: var(--mist); }
+.forge-h { margin: 0; font-size: 20px; }
+.forge-why { margin: 0; font-size: 15px; color: var(--graphite); max-width: 760px; line-height: 1.6; }
+.forge-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.forge-row .chip i { font-style: normal; font-size: 12px; opacity: .7; margin-inline-start: 4px; }
+.forge-row .chip[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.forge-topic { display: grid; gap: 4px; }
+.forge-topic select { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--hair); background: #fff; min-width: 240px; }
+.draft, .doc { display: grid; gap: 10px; }
+.draft-note { margin: 0; font-size: 14px; color: var(--graphite); }
+.draft-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.draft-acts .btn { text-decoration: none; }
+.draft-msg { font-size: 14px; color: var(--known); }
+.a4-stage { display: flex; justify-content: center; padding: 8px 0 16px; overflow: hidden; }
+.a4 { --a4f: 18px; flex: 0 0 auto; width: 794px; height: 1123px; overflow: hidden; background: #fff; color: var(--ink); font-size: var(--a4f);
+  box-shadow: 0 1px 2px rgba(22,32,43,.08), 0 24px 50px -30px rgba(22,32,43,.55); border-top: 5px solid var(--ink);
+  padding: 64px 70px 48px; display: flex; flex-direction: column; gap: .7em; box-sizing: border-box; }
+.a4-band { display: flex; flex-wrap: wrap; gap: .3em 1.2em; font-size: .85em; color: var(--graphite); align-items: center; }
+.a4-title { margin: 0; font-size: 2.3em; line-height: 1.15; }
+.a4-lead { margin: 0; font-size: 1.15em; color: var(--graphite); }
+.a4-body { display: grid; gap: .55em; flex: 1 1 auto; align-content: start; }
+.a4 .blk p { font-size: 1em; line-height: 1.6; }
+.a4 .blk-h { font-size: .78em; margin: .3em 0 0; }
+.a4 .blk-imagination p { font-size: 1.12em; }
+.a4 .ev-row { gap: 4px; } .a4 .ev-chip { font-size: .78em; }
+.a4 .out-question { font-size: 1em; }
+.a4-foot { display: flex; justify-content: space-between; font-size: .72em; color: var(--graphite); border-top: 1px solid var(--hair); padding-top: .5em; }
+.a4 [contenteditable="true"] { outline: 1px dashed transparent; transition: outline-color .15s; }
+.a4 [contenteditable="true"]:hover, .a4 [contenteditable="true"]:focus { outline-color: var(--known); background: #f7faff; }
+.lib { display: grid; gap: 10px; }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 10px; }
+.lib-sub { margin: 8px 0 0; }
+@media print {
+  @page { size: A4; margin: 0; }
+  body.printing-a4 * { visibility: hidden !important; }
+  body.printing-a4 .a4.to-print, body.printing-a4 .a4.to-print * { visibility: visible !important; }
+  body.printing-a4 .a4.to-print { position: fixed; inset: 0; width: 210mm; height: 297mm; box-shadow: none; zoom: 1 !important; }
+  body.printing-a4 .app-shell { height: auto; }
+}
+.draft, .doc { scroll-margin-top: calc(var(--topbar-h, 72px) + 16px); }
+@media (max-width: 999px) { .draft, .doc { scroll-margin-top: 150px; } }
