@@ -5,7 +5,7 @@ import { detect, textMatches, normalize } from './match.js';
 import { bodySVG, sheetSVG } from './body.js';
 import { circulationSVG } from './circulation.js';
 import { mountCover, unmountCover } from './cover.js';
-import { mountOutputs } from './outputs.js';
+import { mountOutputs, unmountOutputs } from './outputs.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -929,9 +929,10 @@ function render() {
     if (!page.firstChild) page.innerHTML = `<nav class="cr-views" aria-label="תצוגת היצירות"><a class="chip press" data-crv="boards" href="#v=creations">לוחות A4</a><a class="chip press" data-crv="outputs" href="#v=creations&o=outputs">ארבעה תוצרים</a></nav><div class="cr-boards"><app-creations src="./creations.json" heading="מה הגוף מלמד: יצירות מהאטלס"></app-creations></div><div class="cr-outputs" hidden></div>`;
     page.querySelector('.cr-boards').hidden = !!o;
     page.querySelector('.cr-outputs').hidden = !o;
-    if (o) mountOutputs(page.querySelector('.cr-outputs'), o);
+    if (o) mountOutputs(page.querySelector('.cr-outputs'), o); else unmountOutputs();
     page.querySelectorAll('[data-crv]').forEach((a) => a.setAttribute('aria-current', String((a.dataset.crv === 'outputs') === !!o)));
   }
+  if (!isCr) unmountOutputs();
   // The cover: the logo and the name lead here. It speaks to feeling, the opening page (#v=intro) to the mind.
   const isCover = v === 'cover';
   document.body.classList.toggle('is-cover', isCover);

@@ -315,34 +315,48 @@ function library(sel) {
   </section>`;
 }
 
-let host = null, selId = '';
+let host = null, selId = '', root = null;
+function sheetRoot() {
+  if (!root) { root = document.createElement('div'); root.id = 'sheet-root'; root.dir = 'rtl'; document.body.appendChild(root); root.addEventListener('click', onClick); }
+  return root;
+}
 function paint() {
   if (!host) return;
   const sel = outputById[selId] || state.saved.find((x) => x.id === selId) || null;
   host.innerHTML = `<section class="outputs" aria-label="ארבעה תוצרים">
     <p class="out-intro"><b>כתבה, מאמר, מסה ויצירה</b> הם ארבעה מנגנוני חשיבה. כל פסקה מסומנת: <span class="lv lv-fact">עובדה</span> <span class="lv lv-interpretation">פרשנות</span> <span class="lv lv-hypothesis">השערה</span> <span class="lv lv-imagination">דמיון</span>, וכל עובדה מצביעה על רשומה באטלס.</p>
     ${forgePanel()}
-    ${state.draft ? draftView() : sel ? docView(sel) : ''}
     ${library(sel)}
   </section>`;
-  fitA4(host);
+  // The window lives on <body>: an ancestor with a transform would otherwise trap position: fixed inside the page.
+  sheetRoot().innerHTML = `${state.draft || sel ? `<div class="sheet-over" role="dialog" aria-modal="true" aria-label="${esc((state.draft || sel).title)}">
+    <div class="sheet-box">
+      <button type="button" class="sheet-x press" data-act="close" aria-label="סגירה" title="סגירה"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      ${state.draft ? draftView() : docView(sel)}
+    </div>
+  </div>` : ''}`;
+  document.documentElement.classList.toggle('sheet-open', !!(state.draft || sel));
+  fitA4(sheetRoot());
 }
+// The open sheet is a window over the page (the anat-outputs skill, rule 5): the library stays put underneath.
+const closeSheet = () => { if (state.draft) { state.draft = null; state.msg = ''; paint(); } else if (selId) location.hash = 'v=creations&o=outputs'; };
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && host && root && root.querySelector('.sheet-over')) { e.stopImmediatePropagation(); closeSheet(); } }, true);
 
 async function onClick(e) {
   const b = e.target.closest('[data-fk], [data-act]');
   if (!b) return;
   const act = b.dataset.act;
   if (b.dataset.fk) { state.kind = b.dataset.fk; return paint(); }
-  if (act === 'forge') { state.seed = 0; state.msg = ''; state.draft = forge(state.kind, state.topic, 0); paint(); host.querySelector('.draft')?.scrollIntoView({ block: 'start' }); return; }
+  if (act === 'forge') { state.seed = 0; state.msg = ''; state.draft = forge(state.kind, state.topic, 0); paint(); return; }
   if (act === 'again') { state.draft = forge(state.draft.kind, state.draft.topic, ++state.seed, state.draft.derivedFrom ? { id: state.draft.derivedFrom } : null); return paint(); }
-  if (act === 'cancel') { state.draft = null; state.msg = ''; return paint(); }
+  if (act === 'cancel' || act === 'close') return closeSheet();
   if (act === 'next') {
     const from = outputById[b.dataset.from] || state.saved.find((x) => x.id === b.dataset.from);
     state.kind = NEXT[from.kind]; state.topic = from.topic; state.seed = 0; state.msg = '';
-    state.draft = forge(state.kind, from.topic, 0, from); paint(); host.querySelector('.draft')?.scrollIntoView({ block: 'start' }); return;
+    state.draft = forge(state.kind, from.topic, 0, from); paint(); return;
   }
   if (act === 'save') {
-    const o = readEdits(host.querySelector('.draft'), state.draft);
+    const o = readEdits(sheetRoot().querySelector('.draft'), state.draft);
     state.busy = true; state.msg = 'שומר...'; paint();
     const r = await addOutput(o);
     state.busy = false;
@@ -352,7 +366,7 @@ async function onClick(e) {
   }
   const sel = outputById[selId] || state.saved.find((x) => x.id === selId);
   if (!sel) return;
-  if (act === 'pdf' || act === 'print') return printSheet(host.querySelector('.doc'), sel);
+  if (act === 'pdf' || act === 'print') return printSheet(sheetRoot().querySelector('.doc'), sel);
   if (act === 'share') { state.msg = await share(sel); return paint(); }
 }
 
@@ -368,5 +382,10 @@ export function mountOutputs(el, o) {
   if (selId) state.draft = null;
   if (!state.msg.startsWith('נוסף')) state.msg = '';
   paint();
-  if (selId) host.querySelector('.doc')?.scrollIntoView({ block: 'start' });
+}
+
+/** Leaving the outputs view closes the window (it sits on <body>, outside the page) */
+export function unmountOutputs() {
+  if (root) root.innerHTML = '';
+  document.documentElement.classList.remove('sheet-open');
 }
