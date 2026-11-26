@@ -687,6 +687,12 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     await cp.click('.doc [data-act="next"]');
     await cp.waitForSelector('.draft .a4.out-creation');
     ok(await cp.$eval('.draft .a4-band', (b) => b.textContent.includes('התפתח מ')), `${tg} "להפוך ל..." builds the next kind inside the app, and says where it came from`);
+    ok(await cp.evaluate(() => { const o = document.querySelector('#sheet-root .sheet-over'); const r = o && o.getBoundingClientRect(); return !!o && o.getAttribute('role') === 'dialog' && Math.round(r.height) === innerHeight; }), `${tg} the sheet opens in a window over the page, the whole screen`);
+    await cp.keyboard.press('Escape'); // closes the new draft, back to the saved output under it
+    await cp.waitForSelector('#sheet-root .doc');
+    await cp.keyboard.press('Escape'); // closes the output, back to the library
+    await cp.waitForFunction(() => !document.querySelector('#sheet-root .sheet-over')).catch(() => {});
+    ok(await cp.evaluate(() => !document.querySelector('#sheet-root .sheet-over') && !document.documentElement.classList.contains('sheet-open')), `${tg} Esc closes the window, and the library stays`);
     ok(await cp.evaluate(() => !document.documentElement.outerHTML.includes('claude.ai/new')), `${tg} no prompt and no link to Claude anywhere on the page`);
     await cp.goto(BASE + '#/a/u-test-1');
     await cp.waitForSelector('.doc .a4[data-output="u-test-1"]').catch(() => {});

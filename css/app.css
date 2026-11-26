@@ -941,3 +941,12 @@ mark.ins { background: var(--marker); color: inherit; padding: 0 2px; }
 }
 .draft, .doc { scroll-margin-top: calc(var(--topbar-h, 72px) + 16px); }
 @media (max-width: 999px) { .draft, .doc { scroll-margin-top: 150px; } }
+
+/* The open sheet: a window over the library, not inside the list (anat-outputs, rule 5) */
+.sheet-over { position: fixed; inset: 0; z-index: 60; background: rgba(22, 32, 43, .55); overflow-y: auto; overscroll-behavior: contain; padding: 24px 16px 40px; display: grid; justify-items: center; align-content: start; }
+.sheet-box { width: min(100%, 860px); background: var(--paper); padding: 16px; box-shadow: 0 24px 60px -20px rgba(0,0,0,.5); }
+.sheet-x { position: sticky; top: 0; float: left; z-index: 3; width: 44px; height: 44px; margin: -4px -4px 0 8px; border: 0; background: var(--mist); cursor: pointer; display: grid; place-items: center; box-shadow: var(--lift); }
+.sheet-x svg { width: 20px; height: 20px; stroke: var(--ink); stroke-width: 2; fill: none; }
+.draft-acts .btn.solid { background: var(--ink); color: #fff; }
+html.sheet-open { overflow: hidden; }
+@media (max-width: 640px) { .sheet-over { padding: 8px 0 24px; } .sheet-box { padding: 10px; } }
