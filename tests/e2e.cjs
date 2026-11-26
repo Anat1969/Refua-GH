@@ -651,30 +651,46 @@ const SIZES = [[1920, 1080], [1440, 900], [1280, 720], [390, 844]];
     ok(cr.styles >= 7, `${tg} creations: ${cr.styles} designs`);
     ok(!cr.hscroll && cr.stageHidden && cr.scrolls && cr.current === 'true', `${tg} creations: full page that scrolls, no horizontal scroll, nav marks it`);
     await cp.screenshot({ path: path.join(SHOTS, `creations-${tg}.png`) });
-    // Four outputs (Claude-GH skill anat-outputs): story, paper, essay and creation, 3 of each, in chains, every fact with a source in the atlas
+    // Four outputs, created inside the app (Anat, 25.11.2026): one click builds a whole A4 sheet from the atlas, it is saved
+    // to the cloud (RPC mocked here), and from the library it is downloaded, printed and shared. No prompt, no link to Claude.
+    await cp.route(/refua_outputs\?/, (r) => r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '[]' }));
+    await cp.route(/rpc\/refua_add_output/, (r) => { const pb = JSON.parse(r.request().postData()).p; r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ id: 'u-test-1', ...pb, derived_from: pb.derivedFrom || null, created_at: new Date().toISOString() }) }); });
     await cp.click('[data-crv="outputs"]');
-    await cp.waitForSelector('.outputs .out-card');
+    await cp.waitForSelector('.outputs .forge');
     const od = await cp.evaluate(async () => {
       const { OUTPUTS, KINDS, resolveRef, outputById } = await import('./js/outputs.js');
+      const { forge, TOPICS } = await import('./js/forge.js');
       const per = Object.fromEntries(KINDS.map((k) => [k.id, OUTPUTS.filter((o) => o.kind === k.id).length]));
-      const factsNoRef = OUTPUTS.flatMap((o) => o.blocks.filter((b) => b.level === 'fact' && !(b.refs || []).length).map(() => o.id));
-      const badRefs = OUTPUTS.flatMap((o) => o.blocks.flatMap((b) => (b.refs || []).filter((r) => !resolveRef(r))));
+      const all = [...OUTPUTS, ...TOPICS.flatMap((t) => KINDS.map((k) => forge(k.id, t.id)))];
+      const factsNoRef = all.flatMap((o) => o.blocks.filter((b) => b.level === 'fact' && !(b.refs || []).length).map(() => o.title));
+      const badRefs = all.flatMap((o) => o.blocks.flatMap((b) => (b.refs || []).filter((r) => !resolveRef(r))));
+      const thin = all.filter((o) => o.blocks.length < 4).map((o) => o.title);
       const badFrom = OUTPUTS.filter((o) => o.derivedFrom && !outputById[o.derivedFrom]).map((o) => o.id);
-      return { per, factsNoRef, badRefs, badFrom, cards: document.querySelectorAll('.outputs .out-card').length };
+      return { per, forged: all.length - OUTPUTS.length, factsNoRef, badRefs, thin, badFrom };
     });
-    ok(Object.values(od.per).every((n) => n >= 3) && od.cards === 12, `${tg} four outputs: ${JSON.stringify(od.per)}, ${od.cards} cards`);
-    ok(!od.factsNoRef.length && !od.badRefs.length && !od.badFrom.length, `${tg} outputs: every fact has a source that exists, every chain link exists ${JSON.stringify(od)}`);
-    await cp.click('.out-card[data-card="o-paper-galen"]');
-    await cp.waitForSelector('.out-doc[data-output="o-paper-galen"]');
-    const doc = await cp.evaluate(() => ({
-      levels: [...new Set([...document.querySelectorAll('.out-doc .blk')].map((b) => b.dataset.level))].length,
-      cert: !!document.querySelector('.out-doc .certainty'),
-      from: !!document.querySelector('.out-doc .genre-band a[href*="o-story-harvey"]'),
-      child: !!document.querySelector('.out-doc [data-child="o-essay-persist"]'),
-      claude: (document.querySelector('.out-doc [data-transform]')?.href || '').startsWith('https://claude.ai/new?q='),
-      hscroll: document.documentElement.scrollWidth > innerWidth + 1,
-    }));
-    ok(doc.levels >= 3 && doc.cert && doc.from && doc.child && doc.claude && !doc.hscroll, `${tg} an output opens with levels of knowledge, a certainty meter, where it came from, where it leads, and a prompt to Claude`);
+    ok(Object.values(od.per).every((n) => n >= 3), `${tg} four outputs: ${JSON.stringify(od.per)} examples`);
+    ok(!od.factsNoRef.length && !od.badRefs.length && !od.badFrom.length && !od.thin.length, `${tg} the engine: ${od.forged} outputs (every kind on every topic), every fact with a source that exists ${JSON.stringify({ ...od, per: undefined })}`);
+    // One click: an essay about asthma, as an editable A4 sheet that fills one page
+    await cp.click('[data-fk="essay"]');
+    await cp.selectOption('[data-ft]', 'd:asthma');
+    await cp.click('[data-act="forge"]');
+    await cp.waitForSelector('.draft .a4');
+    const dr = await cp.evaluate(() => { const a = document.querySelector('.draft .a4'); return { fits: a.scrollHeight <= a.clientHeight + 1, editable: a.querySelectorAll('[contenteditable="true"]').length, levels: new Set([...a.querySelectorAll('.blk')].map((b) => b.dataset.level)).size, w: a.offsetWidth, h: a.offsetHeight }; });
+    ok(dr.fits && dr.editable >= 4 && dr.levels >= 3 && Math.abs(dr.h / dr.w - 297 / 210) < 0.01, `${tg} one click makes a whole A4 sheet, editable, ${dr.levels} levels of knowledge, no overflow`);
+    await cp.click('.draft [data-edit="title"]');
+    await cp.keyboard.press('End');
+    await cp.keyboard.type(' (נערך)');
+    await cp.click('[data-act="save"]');
+    await cp.waitForSelector('.doc .a4');
+    const sv = await cp.evaluate(() => ({ hash: location.hash, title: document.querySelector('.doc .a4-title').textContent, lib: document.querySelectorAll('.lib-grid .out-card').length, pdf: !!document.querySelector('.doc [data-act="pdf"]'), print: !!document.querySelector('.doc [data-act="print"]'), share: !!document.querySelector('.doc [data-act="share"]'), mag: !!document.querySelector('.doc a[href*="maamarim-gh"]') }));
+    ok(sv.hash.includes('o=u-test-1') && sv.title.includes('(נערך)') && sv.lib === 1 && sv.pdf && sv.print && sv.share && sv.mag, `${tg} "הוספה לאפליקציה" saves the edited sheet to the library, with download, print, share and the magazine`);
+    await cp.click('.doc [data-act="next"]');
+    await cp.waitForSelector('.draft .a4.out-creation');
+    ok(await cp.$eval('.draft .a4-band', (b) => b.textContent.includes('התפתח מ')), `${tg} "להפוך ל..." builds the next kind inside the app, and says where it came from`);
+    ok(await cp.evaluate(() => !document.documentElement.outerHTML.includes('claude.ai/new')), `${tg} no prompt and no link to Claude anywhere on the page`);
+    await cp.goto(BASE + '#/a/u-test-1');
+    await cp.waitForSelector('.doc .a4[data-output="u-test-1"]').catch(() => {});
+    ok(await cp.evaluate(() => location.hash === '#v=creations&o=u-test-1'), `${tg} the magazine's link back (#/a/<id>) opens the output`);
     await cp.screenshot({ path: path.join(SHOTS, `outputs-${tg}.png`), fullPage: true });
     ok(cerr.length === 0, `${tg} creations: no JS errors ${cerr.join(' | ')}`);
     await cc.close();
